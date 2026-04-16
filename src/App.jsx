@@ -50,6 +50,7 @@ function Tracker({uid}){
   var [tab,setTab]=useState("day");
   var [dayOff,setDayOff]=useState(0);
   var [mOff,setMOff]=useState(0);
+  var [habitModal,setHabitModal]=useState(null);
 
   var today=argDate(0);
   var habits=data.habits||DEF_HABITS;
@@ -104,21 +105,125 @@ function Tracker({uid}){
       </div>
 
       {tab==="day"&&<DayView days={days} habits={habits} today={today} dayOff={dayOff} setDayOff={setDayOff}
-        setDay={setDay} getDayData={getDayData} streak={streak} bestStreak={bestStreak} recurring={recurring}/>}
+        setDay={setDay} getDayData={getDayData} streak={streak} bestStreak={bestStreak} recurring={recurring}
+        openHabitModal={function(h){setHabitModal(h);}}/>}
       {tab==="week"&&<WeekView days={days} habits={habits} today={today} dayOff={dayOff} setDayOff={setDayOff} setTab={setTab}/>}
       {tab==="month"&&<MonthView days={days} habits={habits} today={today} mOff={mOff} setMOff={setMOff} setDayOff={setDayOff} setTab={setTab}/>}
       {tab==="log"&&<LogView logs={logs} setLogs={setLogs} today={today}/>}
       {tab==="goals"&&<GoalsView goals={goals} setGoals={setGoals}/>}
-      {tab==="settings"&&<SettingsView habits={habits} setHabits={setHabits} recurring={recurring} setRecurring={setRecurring} data={data}/>}
+      {tab==="settings"&&<SettingsView habits={habits} setHabits={setHabits} recurring={recurring} setRecurring={setRecurring} data={data} setDay={setDay} getDayData={getDayData} today={today}/>}
 
       <div style={{marginTop:30,height:2,background:"linear-gradient(90deg,transparent,"+C.r+"20,transparent)"}}/>
       <div style={{textAlign:"center",marginTop:10,fontSize:8,color:"#2a2430",letterSpacing:3}}>SUBTRACTION IS THE STRATEGY</div>
+    </div>
+
+    {/* Habit calendar modal */}
+    {habitModal&&<HabitCalendarModal habit={habitModal} days={days} today={today} onClose={function(){setHabitModal(null);}}/>}
+  </div>;
+}
+
+/* ══════ HABIT CALENDAR MODAL ══════ */
+function HabitCalendarModal({habit,days,today,onClose}){
+  var [mOff,setMOff]=useState(0);
+  var now=new Date();
+  var vm=new Date(now.getFullYear(),now.getMonth()+mOff,1);
+  var mDays=monthDays(vm.getFullYear(),vm.getMonth());
+  var fO=monStart(vm.getFullYear(),vm.getMonth());
+
+  // Stats
+  var curStreak=0;
+  for(var i=0;i<365;i++){
+    var k=argDate(-i);var x=days[k];
+    if(x&&x.checks&&x.checks[habit.id])curStreak++;
+    else break;
+  }
+  var bestStreak=0,running=0,totalDone=0,totalTracked=0;
+  var allDates=Object.keys(days).sort();
+  for(var j=0;j<allDates.length;j++){
+    var kk=allDates[j];var xx=days[kk];
+    if(xx&&xx.checks){
+      totalTracked++;
+      if(xx.checks[habit.id]){
+        totalDone++;running++;
+        if(running>bestStreak)bestStreak=running;
+      }else{running=0;}
+    }
+  }
+  var compliance=totalTracked>0?Math.round(totalDone/totalTracked*100):0;
+
+  return <div onClick={onClose} style={{
+    position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.8)",
+    display:"flex",alignItems:"center",justifyContent:"center",padding:16,zIndex:100,
+  }}>
+    <div onClick={function(e){e.stopPropagation();}} style={{
+      background:C.bg,borderRadius:14,padding:20,maxWidth:420,width:"100%",
+      border:"1px solid "+C.brdOn,position:"relative",maxHeight:"90vh",overflow:"auto",
+    }}>
+      <div onClick={onClose} style={{position:"absolute",top:12,right:14,fontSize:18,color:C.t3,cursor:"pointer"}}>{"×"}</div>
+
+      <div style={{marginBottom:4,fontSize:10,letterSpacing:3,color:C.r,fontWeight:700}}>HABIT</div>
+      <div style={{fontSize:16,fontWeight:700,color:C.t1,marginBottom:2}}>{habit.text}</div>
+      {habit.sub&&<div style={{fontSize:10,color:C.t3,marginBottom:16}}>{habit.sub}</div>}
+
+      {/* Stats */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,marginBottom:18}}>
+        <div style={{padding:"10px 8px",borderRadius:8,background:C.item,border:"1px solid "+C.brd,textAlign:"center"}}>
+          <div style={{fontSize:18,fontWeight:700,color:curStreak>0?C.r:C.t3}}>{curStreak}</div>
+          <div style={{fontSize:8,color:C.t3,letterSpacing:1}}>STREAK</div>
+        </div>
+        <div style={{padding:"10px 8px",borderRadius:8,background:C.item,border:"1px solid "+C.brd,textAlign:"center"}}>
+          <div style={{fontSize:18,fontWeight:700,color:bestStreak>0?C.r2:C.t3}}>{bestStreak}</div>
+          <div style={{fontSize:8,color:C.t3,letterSpacing:1}}>BEST</div>
+        </div>
+        <div style={{padding:"10px 8px",borderRadius:8,background:C.item,border:"1px solid "+C.brd,textAlign:"center"}}>
+          <div style={{fontSize:18,fontWeight:700,color:C.t2}}>{totalDone}</div>
+          <div style={{fontSize:8,color:C.t3,letterSpacing:1}}>TOTAL</div>
+        </div>
+        <div style={{padding:"10px 8px",borderRadius:8,background:C.item,border:"1px solid "+C.brd,textAlign:"center"}}>
+          <div style={{fontSize:18,fontWeight:700,color:compliance>=80?C.r:C.t2}}>{compliance}%</div>
+          <div style={{fontSize:8,color:C.t3,letterSpacing:1}}>RATE</div>
+        </div>
+      </div>
+
+      {/* Month nav */}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+        <div onClick={function(){setMOff(mOff-1);}} style={{fontSize:18,color:C.r,cursor:"pointer",padding:"4px 12px"}}>{"‹"}</div>
+        <div style={{fontSize:11,letterSpacing:3,color:C.t2,fontWeight:600}}>{MONTHS[vm.getMonth()]} {vm.getFullYear()}</div>
+        <div onClick={function(){if(mOff<0)setMOff(mOff+1);}} style={{fontSize:18,color:mOff<0?C.r:C.brd,cursor:mOff<0?"pointer":"default",padding:"4px 12px"}}>{"›"}</div>
+      </div>
+
+      {/* Weekday labels */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,marginBottom:6}}>
+        {WDAYS.map(function(l,i){return <div key={i} style={{textAlign:"center",fontSize:8,color:C.t3,padding:2}}>{l}</div>;})}
+      </div>
+
+      {/* Calendar grid */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3}}>
+        {Array.from({length:fO}).map(function(_,i){return <div key={"e"+i}/>;})}
+        {mDays.map(function(day){
+          var x=days[day]||{};var done=x.checks&&x.checks[habit.id];
+          var hasData=x.checks&&Object.keys(x.checks).length>0;
+          var isTd=day===today;var fut=day>today;
+          var dn=parseInt(day.split("-")[2]);
+          return <div key={day} style={{
+            aspectRatio:"1",borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",
+            background:done?"linear-gradient(135deg,"+C.r+","+C.r2+")":hasData&&!fut?"#1a1520":C.item,
+            border:isTd?"2px solid "+C.r:"1px solid "+C.brd,opacity:fut?0.3:1,
+          }}>
+            <div style={{fontSize:11,color:done?"#fff":hasData&&!fut?C.t2:"#3a3440",fontWeight:done||isTd?700:400}}>{dn}</div>
+          </div>;
+        })}
+      </div>
+
+      <div style={{marginTop:14,padding:10,borderLeft:"2px solid "+C.r+"30",fontSize:10,color:C.t3,lineHeight:1.5}}>
+        Red = held. Dark = day tracked but habit missed. Gray = no data.
+      </div>
     </div>
   </div>;
 }
 
 /* ══════ DAY VIEW ══════ */
-function DayView({days,habits,today,dayOff,setDayOff,setDay,getDayData,streak,bestStreak,recurring}){
+function DayView({days,habits,today,dayOff,setDayOff,setDay,getDayData,streak,bestStreak,recurring,openHabitModal}){
   var [nt,setNt]=useState("");var [tag,setTag]=useState("");var [tgt,setTgt]=useState("this");
   var [pk,setPk]=useState("");var [spk,setSpk]=useState(false);
   var [eid,setEid]=useState(null);var [ev,setEv]=useState("");
@@ -233,17 +338,21 @@ function DayView({days,habits,today,dayOff,setDayOff,setDay,getDayData,streak,be
     {!isFuture&&<div>
       <Section label="DAILY CHECKLIST" count={checksDone} total={habits.length}/>
       <div style={{marginBottom:20}}>
-        {habits.map(function(h){var on=!!ch[h.id];var hs=habitStreak(h.id);return <div key={h.id} onClick={function(){toggleCheck(h.id);}} style={{
-          display:"flex",alignItems:"center",gap:10,padding:"11px 14px",borderRadius:10,marginBottom:4,position:"relative",overflow:"hidden",cursor:"pointer",
+        {habits.map(function(h){var on=!!ch[h.id];var hs=habitStreak(h.id);return <div key={h.id} style={{
+          display:"flex",alignItems:"center",gap:10,padding:"11px 14px",borderRadius:10,marginBottom:4,position:"relative",overflow:"hidden",
           background:on?C.itemOn:C.item,border:"1px solid "+(on?C.brdOn:C.brd),userSelect:"none",WebkitTapHighlightColor:"transparent",
         }}>
           {on&&<div style={{position:"absolute",left:0,top:0,bottom:0,width:2,background:"linear-gradient(180deg,"+C.r+","+C.r2+")"}}/>}
-          <Box on={on}/>
-          <div style={{flex:1}}>
+          <div onClick={function(){toggleCheck(h.id);}} style={{cursor:"pointer"}}><Box on={on}/></div>
+          <div onClick={function(){toggleCheck(h.id);}} style={{flex:1,cursor:"pointer"}}>
             <div style={{fontSize:12,color:on?C.t2:C.t1,textDecoration:on?"line-through":"none",textDecorationColor:C.r+"30",lineHeight:1.4}}>{h.text}</div>
             {h.sub?<div style={{fontSize:9,color:C.t3,marginTop:1}}>{h.sub}</div>:null}
           </div>
           {hs>1&&<div style={{fontSize:9,color:C.r+"90",fontWeight:600}}>{hs}d</div>}
+          <div onClick={function(){openHabitModal(h);}} style={{
+            padding:"4px 8px",fontSize:10,color:C.t3,cursor:"pointer",borderRadius:6,
+            background:C.card,border:"1px solid "+C.brd,
+          }}>📊</div>
         </div>;})}
       </div>
     </div>}
@@ -444,42 +553,216 @@ function LogView({logs,setLogs,today}){
 /* ══════ GOALS VIEW ══════ */
 function GoalsView({goals,setGoals}){
   var [editId,setEditId]=useState(null);var [val,setVal]=useState(0);
-  function saveGoal(id){setGoals(goals.map(function(g){return g.id===id?Object.assign({},g,{current:val}):g;}));setEditId(null);}
+  var [fullEditId,setFullEditId]=useState(null);
+  var [form,setForm]=useState({text:"",target:0,unit:"",quarter:"Q2",current:0});
+  var [adding,setAdding]=useState(false);
+
+  function saveProgress(id){setGoals(goals.map(function(g){return g.id===id?Object.assign({},g,{current:val}):g;}));setEditId(null);}
+  function saveFullEdit(id){
+    if(!form.text.trim())return;
+    setGoals(goals.map(function(g){return g.id===id?Object.assign({},g,{text:form.text.trim(),target:Number(form.target)||0,unit:form.unit.trim(),quarter:form.quarter,current:Number(form.current)||0}):g;}));
+    setFullEditId(null);
+  }
+  function delGoal(id){if(!confirm("Delete this goal?"))return;setGoals(goals.filter(function(g){return g.id!==id;}));setFullEditId(null);}
+  function addGoal(){
+    if(!form.text.trim())return;
+    var newGoal={id:"g"+Date.now(),text:form.text.trim(),target:Number(form.target)||0,unit:form.unit.trim()||"units",quarter:form.quarter,current:Number(form.current)||0};
+    setGoals(goals.concat([newGoal]));
+    setForm({text:"",target:0,unit:"",quarter:"Q2",current:0});
+    setAdding(false);
+  }
+  function startFullEdit(g){setFullEditId(g.id);setForm({text:g.text,target:g.target,unit:g.unit,quarter:g.quarter,current:g.current});}
+  function startAdd(q){setAdding(true);setFullEditId(null);setEditId(null);setForm({text:"",target:0,unit:"",quarter:q||"Q2",current:0});}
+
   var quarters=["Q2","Q3","Q4"];
+
+  function EditForm({onSave,onCancel,showDelete,onDelete}){
+    return <div style={{padding:12,background:C.card,borderRadius:10,border:"1px solid "+C.brdOn,marginBottom:5}}>
+      <div style={{fontSize:9,color:C.t3,letterSpacing:1,marginBottom:4}}>GOAL</div>
+      <input value={form.text} onChange={function(e){setForm(Object.assign({},form,{text:e.target.value}));}} placeholder="Goal text" autoFocus
+        style={{width:"100%",background:"transparent",border:"none",borderBottom:"1px solid "+C.brd,color:C.t1,fontSize:13,outline:"none",padding:"4px 0",marginBottom:10,boxSizing:"border-box"}}/>
+      <div style={{display:"flex",gap:8,marginBottom:10}}>
+        <div style={{flex:1}}>
+          <div style={{fontSize:9,color:C.t3,letterSpacing:1,marginBottom:4}}>CURRENT</div>
+          <input type="number" value={form.current} onChange={function(e){setForm(Object.assign({},form,{current:e.target.value}));}}
+            style={{width:"100%",background:"transparent",border:"none",borderBottom:"1px solid "+C.brd,color:C.t1,fontSize:13,outline:"none",padding:"4px 0",boxSizing:"border-box"}}/>
+        </div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:9,color:C.t3,letterSpacing:1,marginBottom:4}}>TARGET</div>
+          <input type="number" value={form.target} onChange={function(e){setForm(Object.assign({},form,{target:e.target.value}));}}
+            style={{width:"100%",background:"transparent",border:"none",borderBottom:"1px solid "+C.brd,color:C.t1,fontSize:13,outline:"none",padding:"4px 0",boxSizing:"border-box"}}/>
+        </div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:9,color:C.t3,letterSpacing:1,marginBottom:4}}>UNIT</div>
+          <input value={form.unit} onChange={function(e){setForm(Object.assign({},form,{unit:e.target.value}));}} placeholder="videos, $, etc"
+            style={{width:"100%",background:"transparent",border:"none",borderBottom:"1px solid "+C.brd,color:C.t1,fontSize:12,outline:"none",padding:"4px 0",boxSizing:"border-box"}}/>
+        </div>
+      </div>
+      <div style={{fontSize:9,color:C.t3,letterSpacing:1,marginBottom:4}}>QUARTER</div>
+      <div style={{display:"flex",gap:4,marginBottom:12}}>
+        {["Q2","Q3","Q4"].map(function(q){return <div key={q} onClick={function(){setForm(Object.assign({},form,{quarter:q}));}} style={{
+          flex:1,padding:"6px 0",textAlign:"center",fontSize:10,letterSpacing:2,borderRadius:6,cursor:"pointer",
+          background:form.quarter===q?C.r+"20":C.item,color:form.quarter===q?C.r:C.t3,
+          border:"1px solid "+(form.quarter===q?C.r+"40":C.brd),
+        }}>{q}</div>;})}
+      </div>
+      <div style={{display:"flex",gap:6,justifyContent:"space-between"}}>
+        <div style={{display:"flex",gap:6}}>
+          <div onClick={onSave} style={{padding:"6px 14px",background:C.r+"18",color:C.r,borderRadius:6,cursor:"pointer",fontSize:10,fontWeight:600,border:"1px solid "+C.r+"30"}}>SAVE</div>
+          <div onClick={onCancel} style={{padding:"6px 14px",color:C.t3,cursor:"pointer",fontSize:10}}>CANCEL</div>
+        </div>
+        {showDelete&&<div onClick={onDelete} style={{padding:"6px 14px",color:"#cc3333",cursor:"pointer",fontSize:10,border:"1px solid #cc333340",borderRadius:6}}>DELETE</div>}
+      </div>
+    </div>;
+  }
+
   return <div>
     {quarters.map(function(q){
       var qGoals=goals.filter(function(g){return g.quarter===q;});
-      if(qGoals.length===0)return null;
       return <div key={q} style={{marginBottom:20}}>
         <div style={{fontSize:10,letterSpacing:3,color:C.t2,marginBottom:10,display:"flex",alignItems:"center",gap:8}}>
           <div style={{width:14,height:2,background:C.r,borderRadius:1}}/>{q} 2026<div style={{flex:1,height:1,background:C.brd}}/>
+          <div onClick={function(){startAdd(q);}} style={{fontSize:9,color:C.r,cursor:"pointer",letterSpacing:1}}>+ ADD</div>
         </div>
         {qGoals.map(function(g){
+          if(fullEditId===g.id)return <EditForm key={g.id}
+            onSave={function(){saveFullEdit(g.id);}}
+            onCancel={function(){setFullEditId(null);}}
+            showDelete={true}
+            onDelete={function(){delGoal(g.id);}}/>;
+
           var p=g.target>0?Math.min(100,Math.round(g.current/g.target*100)):0;
           return <div key={g.id} style={{padding:"12px 14px",background:C.item,borderRadius:10,marginBottom:5,border:"1px solid "+C.brd}}>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-              <span style={{fontSize:12,color:C.t1}}>{g.text}</span>
-              {editId===g.id
-                ?<div style={{display:"flex",gap:4,alignItems:"center"}}>
-                  <input type="number" value={val} onChange={function(e){setVal(Number(e.target.value));}} autoFocus
-                    style={{width:60,background:"transparent",border:"none",borderBottom:"1px solid "+C.brdOn,color:C.t1,fontSize:12,outline:"none",textAlign:"right"}}/>
-                  <div onClick={function(){saveGoal(g.id);}} style={{fontSize:9,color:C.r,cursor:"pointer"}}>OK</div>
-                </div>
-                :<div onClick={function(){setEditId(g.id);setVal(g.current);}} style={{fontSize:11,color:p>=100?C.r:C.t2,cursor:"pointer"}}>{g.current}/{g.target} {g.unit}</div>
-              }
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6,gap:8}}>
+              <span style={{fontSize:12,color:C.t1,flex:1}}>{g.text}</span>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                {editId===g.id
+                  ?<div style={{display:"flex",gap:4,alignItems:"center"}}>
+                    <input type="number" value={val} onChange={function(e){setVal(Number(e.target.value));}} autoFocus
+                      style={{width:60,background:"transparent",border:"none",borderBottom:"1px solid "+C.brdOn,color:C.t1,fontSize:12,outline:"none",textAlign:"right"}}/>
+                    <div onClick={function(){saveProgress(g.id);}} style={{fontSize:9,color:C.r,cursor:"pointer"}}>OK</div>
+                  </div>
+                  :<div onClick={function(){setEditId(g.id);setVal(g.current);}} style={{fontSize:11,color:p>=100?C.r:C.t2,cursor:"pointer"}}>{g.current}/{g.target} {g.unit}</div>
+                }
+                <div onClick={function(){startFullEdit(g);}} style={{fontSize:10,color:C.t3,cursor:"pointer"}}>edit</div>
+              </div>
             </div>
             <div style={{height:4,background:"#1e1a24",borderRadius:3,overflow:"hidden"}}>
               <div style={{height:"100%",background:p>=100?C.r:"linear-gradient(90deg,"+C.r+","+C.r2+")",borderRadius:3,width:p+"%",transition:"width 0.3s"}}/>
             </div>
           </div>;
         })}
+        {adding&&form.quarter===q&&<EditForm
+          onSave={addGoal}
+          onCancel={function(){setAdding(false);}}/>}
       </div>;
     })}
   </div>;
 }
 
+/* ══════ IMPORT TASKS ══════ */
+function ImportTasks({setDay,getDayData,today}){
+  var [text,setText]=useState("");
+  var [preview,setPreview]=useState(null);
+  var [error,setError]=useState("");
+
+  function parseDate(s){
+    s=s.trim().toLowerCase();
+    if(s==="today")return today;
+    if(s==="tomorrow")return argDate(1);
+    if(s==="yesterday")return argDate(-1);
+    // Day of week: monday, tuesday, etc — next occurrence
+    var dayMap={sunday:0,monday:1,tuesday:2,wednesday:3,thursday:4,friday:5,saturday:6};
+    if(dayMap[s]!==undefined){
+      var todayDate=new Date(today+"T12:00:00");
+      var targetDay=dayMap[s];var curDay=todayDate.getDay();
+      var diff=targetDay-curDay;if(diff<=0)diff+=7;
+      var future=new Date(todayDate);future.setDate(future.getDate()+diff);
+      return future.toISOString().split("T")[0];
+    }
+    // YYYY-MM-DD
+    if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+    return null;
+  }
+
+  function doPreview(){
+    setError("");
+    var lines=text.split("\n").map(function(l){return l.trim();}).filter(function(l){return l&&!l.startsWith("#");});
+    if(lines.length===0){setError("No tasks to parse");return;}
+    var parsed=[];var errors=[];
+    lines.forEach(function(line,idx){
+      var parts=line.split("|").map(function(p){return p.trim();});
+      if(parts.length<2){errors.push("Line "+(idx+1)+": need at least date | text");return;}
+      var date=parseDate(parts[0]);
+      if(!date){errors.push("Line "+(idx+1)+": bad date '"+parts[0]+"'");return;}
+      var tag="",taskText="";
+      if(parts.length===2){taskText=parts[1];}
+      else if(parts.length>=3){
+        var maybeTag=parts[1];
+        if(TAGS.includes(maybeTag)){tag=maybeTag;taskText=parts.slice(2).join(" | ");}
+        else{taskText=parts.slice(1).join(" | ");}
+      }
+      if(!taskText){errors.push("Line "+(idx+1)+": empty task text");return;}
+      parsed.push({date:date,tag:tag,text:taskText});
+    });
+    if(errors.length>0){setError(errors.join("\n"));return;}
+    // Group by date
+    var grouped={};
+    parsed.forEach(function(p){if(!grouped[p.date])grouped[p.date]=[];grouped[p.date].push(p);});
+    setPreview({tasks:parsed,grouped:grouped,total:parsed.length});
+  }
+
+  function doImport(){
+    if(!preview)return;
+    Object.keys(preview.grouped).forEach(function(date){
+      var dd=getDayData(date);
+      var newTasks=(dd.tasks||[]).slice();
+      preview.grouped[date].forEach(function(p,i){
+        newTasks.push({id:Date.now()+""+i+Math.floor(Math.random()*1000),text:p.text,tag:p.tag,done:false});
+      });
+      setDay(date,Object.assign({},dd,{tasks:newTasks}));
+    });
+    setText("");setPreview(null);setError("");
+    alert("Imported "+preview.total+" tasks");
+  }
+
+  var exampleText="# Format: DATE | TAG (optional) | TASK\n# Dates: YYYY-MM-DD, today, tomorrow, monday, tuesday...\n# Tags: Work 1, Work 2, Channel, Personal\n\n2026-04-20 | Channel | Red Team cat niche\ntomorrow | Work 1 | Review Ars brief\nfriday | Personal | Dentist follow-up";
+
+  return <div style={{marginTop:24}}>
+    <Section label="IMPORT TASKS"/>
+    <div style={{padding:12,background:C.item,borderRadius:10,border:"1px solid "+C.brd,marginBottom:8}}>
+      <div style={{fontSize:9,color:C.t3,lineHeight:1.5,marginBottom:8}}>
+        Paste list: <span style={{color:C.t2}}>DATE | TAG | TASK</span> per line. Tag is optional.<br/>
+        Dates: <span style={{color:C.t2}}>YYYY-MM-DD, today, tomorrow, monday..sunday</span>.
+      </div>
+      <textarea value={text} onChange={function(e){setText(e.target.value);setPreview(null);setError("");}} rows={8}
+        placeholder={exampleText}
+        style={{width:"100%",background:C.card,border:"1px solid "+C.brd,borderRadius:6,color:C.t1,fontSize:11,outline:"none",padding:8,resize:"vertical",boxSizing:"border-box",fontFamily:"monospace"}}/>
+      {error&&<div style={{marginTop:8,padding:8,background:"#2a1010",borderRadius:6,color:"#cc3333",fontSize:10,whiteSpace:"pre-wrap"}}>{error}</div>}
+      <div style={{display:"flex",gap:6,marginTop:8}}>
+        <div onClick={doPreview} style={{padding:"8px 14px",background:C.r+"18",color:C.r,borderRadius:6,cursor:"pointer",fontSize:10,fontWeight:600,border:"1px solid "+C.r+"30"}}>PREVIEW</div>
+        {preview&&<div onClick={doImport} style={{padding:"8px 14px",background:C.r2+"20",color:C.r2,borderRadius:6,cursor:"pointer",fontSize:10,fontWeight:600,border:"1px solid "+C.r2+"40"}}>IMPORT {preview.total} TASKS</div>}
+        {(text||preview)&&<div onClick={function(){setText("");setPreview(null);setError("");}} style={{padding:"8px 14px",color:C.t3,cursor:"pointer",fontSize:10}}>CLEAR</div>}
+      </div>
+    </div>
+
+    {preview&&<div style={{padding:12,background:C.card,borderRadius:10,border:"1px solid "+C.brdOn,marginBottom:8}}>
+      <div style={{fontSize:9,color:C.t3,letterSpacing:2,marginBottom:8}}>PREVIEW — {preview.total} tasks across {Object.keys(preview.grouped).length} days</div>
+      {Object.keys(preview.grouped).sort().map(function(date){
+        return <div key={date} style={{marginBottom:10}}>
+          <div style={{fontSize:10,color:C.r,fontWeight:600,marginBottom:4}}>{date} ({preview.grouped[date].length})</div>
+          {preview.grouped[date].map(function(p,i){return <div key={i} style={{fontSize:11,color:C.t2,padding:"3px 0 3px 12px",borderLeft:"1px solid "+C.brd,marginLeft:4,display:"flex",gap:6}}>
+            {p.tag&&<span style={{fontSize:8,color:TAG_COLORS[p.tag]||C.t3,padding:"1px 5px",borderRadius:3,background:(TAG_COLORS[p.tag]||C.t3)+"15"}}>{p.tag}</span>}
+            <span>{p.text}</span>
+          </div>;})}
+        </div>;
+      })}
+    </div>}
+  </div>;
+}
+
 /* ══════ SETTINGS VIEW ══════ */
-function SettingsView({habits,setHabits,recurring,setRecurring,data}){
+function SettingsView({habits,setHabits,recurring,setRecurring,data,setDay,getDayData,today}){
   var [newH,setNewH]=useState("");var [newHS,setNewHS]=useState("");
   var [eId,setEId]=useState(null);var [eT,setET]=useState("");var [eS,setES]=useState("");
   var [newR,setNewR]=useState("");var [newRTag,setNewRTag]=useState("");var [newRDays,setNewRDays]=useState([]);
@@ -548,6 +831,9 @@ function SettingsView({habits,setHabits,recurring,setRecurring,data}){
       </div>
       <div onClick={addR} style={{display:"inline-block",padding:"6px 14px",background:C.r+"18",color:C.r,borderRadius:6,cursor:"pointer",fontSize:9,fontWeight:600,border:"1px solid "+C.r+"30"}}>ADD RECURRING</div>
     </div>
+
+    {/* Import tasks */}
+    <ImportTasks setDay={setDay} getDayData={getDayData} today={today}/>
 
     {/* Export */}
     <div style={{marginTop:24}}><Section label="DATA"/></div>
