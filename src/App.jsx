@@ -712,19 +712,22 @@ function ImportTasks({setDay,getDayData,today}){
     setPreview({tasks:parsed,grouped:grouped,total:parsed.length});
   }
 
-  function doImport(){
+   function doImport(){
     if(!preview)return;
+    var allUpdates={};
     Object.keys(preview.grouped).forEach(function(date){
       var dd=getDayData(date);
       var newTasks=(dd.tasks||[]).slice();
       preview.grouped[date].forEach(function(p,i){
         newTasks.push({id:Date.now()+""+i+Math.floor(Math.random()*1000),text:p.text,tag:p.tag,done:false});
       });
-      setDay(date,Object.assign({},dd,{tasks:newTasks}));
+      allUpdates[date]=Object.assign({},dd,{tasks:newTasks});
     });
+    bulkSetDays(allUpdates);
     setText("");setPreview(null);setError("");
     alert("Imported "+preview.total+" tasks");
   }
+
 
   var exampleText="# Format: DATE | TAG (optional) | TASK\n# Dates: YYYY-MM-DD, today, tomorrow, monday, tuesday...\n# Tags: Work 1, Work 2, Channel, Personal\n\n2026-04-20 | Channel | Red Team cat niche\ntomorrow | Work 1 | Review Ars brief\nfriday | Personal | Dentist follow-up";
 
