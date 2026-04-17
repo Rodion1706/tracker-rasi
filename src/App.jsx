@@ -64,6 +64,7 @@ function Tracker({uid}){
   function setRecurring(r){save(Object.assign({},data,{recurring:r}));}
   function setLogs(l){save(Object.assign({},data,{logs:l}));}
   function setDay(key,val){var nd=Object.assign({},data);nd.days=Object.assign({},nd.days);nd.days[key]=val;save(nd);}
+  function bulkSetDays(updates){var nd=Object.assign({},data);nd.days=Object.assign({},nd.days,updates);save(nd);}
 
   // Apply recurring tasks
   function getDayData(key){
@@ -111,7 +112,7 @@ function Tracker({uid}){
       {tab==="month"&&<MonthView days={days} habits={habits} today={today} mOff={mOff} setMOff={setMOff} setDayOff={setDayOff} setTab={setTab}/>}
       {tab==="log"&&<LogView logs={logs} setLogs={setLogs} today={today}/>}
       {tab==="goals"&&<GoalsView goals={goals} setGoals={setGoals}/>}
-      {tab==="settings"&&<SettingsView habits={habits} setHabits={setHabits} recurring={recurring} setRecurring={setRecurring} data={data} setDay={setDay} getDayData={getDayData} today={today}/>}
+      {tab==="settings"&&<SettingsView habits={habits} setHabits={setHabits} recurring={recurring} setRecurring={setRecurring} data={data} setDay={setDay} getDayData={getDayData} today={today} bulkSetDays={bulkSetDays}/>}
 
       <div style={{marginTop:30,height:2,background:"linear-gradient(90deg,transparent,"+C.r+"20,transparent)"}}/>
       <div style={{textAlign:"center",marginTop:10,fontSize:8,color:"#2a2430",letterSpacing:3}}>SUBTRACTION IS THE STRATEGY</div>
@@ -661,7 +662,7 @@ function GoalsView({goals,setGoals}){
 }
 
 /* ══════ IMPORT TASKS ══════ */
-function ImportTasks({setDay,getDayData,today}){
+function ImportTasks({setDay,getDayData,today,bulkSetDays}){
   var [text,setText]=useState("");
   var [preview,setPreview]=useState(null);
   var [error,setError]=useState("");
@@ -765,7 +766,7 @@ function ImportTasks({setDay,getDayData,today}){
 }
 
 /* ══════ SETTINGS VIEW ══════ */
-function SettingsView({habits,setHabits,recurring,setRecurring,data,setDay,getDayData,today}){
+function SettingsView({habits,setHabits,recurring,setRecurring,data,setDay,getDayData,today,bulkSetDays}){
   var [newH,setNewH]=useState("");var [newHS,setNewHS]=useState("");
   var [eId,setEId]=useState(null);var [eT,setET]=useState("");var [eS,setES]=useState("");
   var [newR,setNewR]=useState("");var [newRTag,setNewRTag]=useState("");var [newRDays,setNewRDays]=useState([]);
@@ -836,7 +837,7 @@ function SettingsView({habits,setHabits,recurring,setRecurring,data,setDay,getDa
     </div>
 
     {/* Import tasks */}
-    <ImportTasks setDay={setDay} getDayData={getDayData} today={today}/>
+    <ImportTasks setDay={setDay} getDayData={getDayData} today={today} bulkSetDays={bulkSetDays}/>
 
     {/* Export */}
     <div style={{marginTop:24}}><Section label="DATA"/></div>
