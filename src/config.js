@@ -21,7 +21,7 @@ export var DEF_GOALS = [
 ];
 
 export var TAGS = ["Work 1","Work 2","Channel","Personal"];
-export var TAG_COLORS = { "Work 1":"#4488cc", "Work 2":"#44aa88", "Channel":"#e8102a", "Personal":"#aa88cc" };
+export var TAG_COLORS = { "Work 1":"#5b7fbf", "Work 2":"#d4a54a", "Channel":"#e8102a", "Personal":"#9977cc" };
 export var MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
 export var WDAYS = ["M","T","W","T","F","S","S"];
 export var QUOTES = [

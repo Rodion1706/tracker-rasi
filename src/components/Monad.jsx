@@ -1,28 +1,28 @@
-// Monas Hieroglyphica (John Dee, 1564) — rendered in Ghostmane-style red glow.
+// Monas Hieroglyphica (John Dee, 1564) — red stroke, rose-pink outer glow.
 // Three layered SVGs: outer ring (counter-rotating), main monad (rotating), inner glow.
-export default function Monad({ size = 180, color = "#e8102a" }) {
+export default function Monad({ size = 180, color = "#e8102a", glow = "#ff4d9e" }) {
   const h = Math.round(size * (240 / 180));
-  const rh = Math.round(h * (272 / 240));
   return (
     <div className="monad" style={{ width: size, height: h }}>
-      {/* Outer dashed ring */}
+      {/* Outer dashed ring — pink shimmer */}
       <svg
         className="monad-ring"
         viewBox="0 0 212 272"
         fill="none"
-        stroke={color}
+        stroke={glow}
         strokeWidth="0.6"
+        style={{ filter: `drop-shadow(0 0 4px ${glow})` }}
       >
-        <ellipse cx="106" cy="136" rx="100" ry="128" strokeDasharray="4 3" opacity="0.5" />
+        <ellipse cx="106" cy="136" rx="100" ry="128" strokeDasharray="4 3" opacity="0.55" />
       </svg>
-      {/* Main monad */}
+      {/* Main monad — red stroke, layered pink + red shadow */}
       <svg
         className="monad-rotate"
         viewBox="0 0 180 240"
         fill="none"
         stroke={color}
         strokeLinecap="round"
-        style={{ filter: `drop-shadow(0 0 10px ${color})` }}
+        style={{ filter: `drop-shadow(0 0 12px ${glow}) drop-shadow(0 0 6px ${color})` }}
       >
         {/* Crescent moon (horns up) */}
         <path d="M 50 42 A 40 40 0 0 0 130 42" strokeWidth="2.4" />
@@ -39,14 +39,14 @@ export default function Monad({ size = 180, color = "#e8102a" }) {
         <path d="M 68 200 A 10 14 0 0 1 66 224" strokeWidth="1.8" />
         <path d="M 112 200 A 10 14 0 0 0 114 224" strokeWidth="1.8" />
       </svg>
-      {/* Inner pulsing glow — pure red, no pink */}
+      {/* Inner pulsing core — pink glow */}
       <svg
         className="monad-core"
         viewBox="0 0 180 240"
         fill="none"
-        stroke={color}
+        stroke={glow}
         strokeWidth="1"
-        style={{ opacity: 0.5, filter: `drop-shadow(0 0 4px ${color})` }}
+        style={{ opacity: 0.6, filter: `drop-shadow(0 0 8px ${glow})` }}
       >
         <circle cx="90" cy="110" r="20" strokeDasharray="1 2" />
       </svg>
