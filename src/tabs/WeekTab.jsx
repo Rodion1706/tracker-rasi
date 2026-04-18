@@ -1,10 +1,14 @@
 import { niceDate, dayDiff, argDate, getWeekDays } from "../config";
+import { WeekBigStrip } from "../components/StatCards";
 
 export default function WeekTab({ days, habits, today, dayOff, setDayOff, setTab }) {
   const weekDays = getWeekDays(argDate(dayOff));
 
   return (
     <div>
+      {/* Big week strip — matches YearStrip style */}
+      <WeekBigStrip weekDays={weekDays} today={today} habits={habits} days={days} />
+
       <div style={{
         fontSize: 11, letterSpacing: "0.26em", color: "var(--red-b)",
         marginBottom: 16, fontWeight: 700, fontFamily: "'Cinzel', serif",
@@ -13,7 +17,7 @@ export default function WeekTab({ days, habits, today, dayOff, setDayOff, setTab
         Week of {niceDate(weekDays[0])}
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{ display: "flex", flexDirection: "column" }}>
         {weekDays.map(day => {
           const x = days[day] || { checks: {}, tasks: [] };
           const dc = habits.filter(h => x.checks && x.checks[h.id]).length;
@@ -31,18 +35,18 @@ export default function WeekTab({ days, habits, today, dayOff, setDayOff, setTab
           return (
             <div
               key={day}
-              className="task-row"
+              className="row"
               style={{
                 gap: 14,
                 cursor: "pointer",
-                opacity: future ? 0.5 : 1,
+                opacity: future ? 0.55 : 1,
                 background: pf ? "linear-gradient(90deg, rgba(28, 10, 16, 0.8), var(--item))" : "var(--item)",
                 border: isToday ? "1px solid var(--red)" : "1px solid var(--brd)",
                 boxShadow: pf ? "0 0 18px rgba(232, 16, 42, 0.18)" : "none",
               }}
               onClick={() => { setDayOff(dayDiff(day, today)); setTab("day"); }}
             >
-              <div style={{ width: 44, textAlign: "center" }}>
+              <div style={{ width: 44, textAlign: "center", flexShrink: 0 }}>
                 <div style={{
                   fontSize: 10, color: isToday ? "var(--red)" : "var(--t3)",
                   letterSpacing: "0.16em", fontWeight: 700, fontFamily: "'Cinzel', serif",
@@ -59,20 +63,20 @@ export default function WeekTab({ days, habits, today, dayOff, setDayOff, setTab
                 <div style={{ height: 5, background: "#1e1a24", borderRadius: 3, overflow: "hidden" }}>
                   <div style={{
                     height: "100%",
-                    background: pf ? "linear-gradient(90deg, var(--red), var(--red-b))" : "var(--red)",
+                    background: pf ? "linear-gradient(90deg, var(--red), var(--red-b))" : "linear-gradient(90deg, var(--red-d), var(--red))",
                     boxShadow: "0 0 6px var(--red)",
                     borderRadius: 3, width: p + "%",
-                    transition: "width 0.5s cubic-bezier(0.4, 1.2, 0.3, 1)",
+                    transition: "width 0.6s cubic-bezier(0.4, 1.2, 0.3, 1)",
                   }} />
                 </div>
               </div>
               <div style={{
                 fontSize: 13, color: pf ? "var(--red)" : "var(--t2)",
-                fontWeight: 700, minWidth: 36, textAlign: "right",
+                fontWeight: 700, minWidth: 40, textAlign: "right",
                 fontFamily: "'Oswald', sans-serif",
               }}>{p}%</div>
               {tt > 0 && (
-                <div style={{ fontSize: 11, color: "var(--t3)", fontFamily: "'JetBrains Mono', monospace", fontWeight: 500 }}>
+                <div style={{ fontSize: 11, color: "var(--t3)", fontFamily: "'JetBrains Mono', monospace", fontWeight: 500, flexShrink: 0 }}>
                   {tc}/{tt}
                 </div>
               )}

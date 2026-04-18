@@ -392,6 +392,124 @@ body::after {
 .ss-value { font-family: 'Oswald', sans-serif; font-size: 14px; font-weight: 700; color: var(--t1); }
 .ss-value.r { color: var(--red-b); text-shadow: 0 0 8px var(--red); }
 
+/* Week tick-style indicator — matches YearStrip */
+.ws-ticks { display: flex; gap: 3px; }
+.ws-tick {
+  width: 10px; height: 18px;
+  background: rgba(232, 16, 42, 0.14);
+  border-radius: 2px;
+  transform-origin: bottom;
+  animation: tickIn 0.35s cubic-bezier(0.4, 1.4, 0.3, 1) both;
+  transition: all 0.3s;
+}
+.ws-tick.partial { background: linear-gradient(180deg, var(--red-d), rgba(232, 16, 42, 0.4)); }
+.ws-tick.done {
+  background: linear-gradient(180deg, var(--red-b), var(--red));
+  box-shadow: 0 0 6px rgba(232, 16, 42, 0.5);
+}
+.ws-tick.current {
+  background: linear-gradient(180deg, var(--red-b), var(--red));
+  animation: currentPulse 2s infinite, tickIn 0.35s cubic-bezier(0.4, 1.4, 0.3, 1) both;
+}
+.ws-tick.future { background: rgba(42, 36, 48, 0.35); }
+
+/* Week big strip on WeekTab */
+.wbs {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 24px;
+  align-items: center;
+  padding: 16px 22px;
+  background: rgba(16, 8, 18, 0.5);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(232, 16, 42, 0.22);
+  border-radius: 14px;
+  margin-bottom: 22px;
+  position: relative;
+  overflow: hidden;
+}
+.wbs::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--red), transparent);
+  box-shadow: 0 0 8px var(--red);
+  opacity: 0.6;
+}
+.wbs-label { min-width: 120px; }
+.wbs-title {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.16em;
+  color: #fff;
+  text-shadow: 0 0 14px var(--red);
+  text-transform: uppercase;
+}
+.wbs-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--red-b);
+  letter-spacing: 0.14em;
+  margin-top: 5px;
+  font-weight: 600;
+  text-shadow: 0 0 4px var(--red);
+}
+.wbs-track {
+  flex: 1;
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+.wbs-cell { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.wbs-tick {
+  width: 100%;
+  height: 40px;
+  background: rgba(232, 16, 42, 0.14);
+  border-radius: 3px;
+  transform-origin: bottom;
+  animation: tickIn 0.45s cubic-bezier(0.4, 1.4, 0.3, 1) both;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+/* Partial progress uses CSS variable --p (0..1) for fill height */
+.wbs-tick.partial {
+  background: rgba(232, 16, 42, 0.08);
+}
+.wbs-tick.partial::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: calc(var(--p, 0) * 100%);
+  background: linear-gradient(180deg, var(--red-b), var(--red-d));
+  box-shadow: 0 0 6px rgba(232, 16, 42, 0.4);
+  border-radius: 0 0 3px 3px;
+}
+.wbs-tick.done {
+  background: linear-gradient(180deg, var(--red-b), var(--red), var(--red-d));
+  box-shadow: 0 0 10px rgba(232, 16, 42, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+.wbs-tick.current {
+  animation: currentPulse 2s infinite, tickIn 0.45s cubic-bezier(0.4, 1.4, 0.3, 1) both;
+  box-shadow: 0 0 14px var(--red), 0 0 28px var(--red-b);
+}
+.wbs-tick.future { background: rgba(42, 36, 48, 0.35); opacity: 0.6; }
+.wbs-day-name {
+  font-family: 'Oswald', sans-serif;
+  font-size: 10px;
+  color: #a8a8ae;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+}
+
+@media (max-width: 620px) {
+  .wbs { grid-template-columns: 1fr; gap: 12px; }
+  .wbs-label { text-align: center; }
+}
+
 /* ════════ PROGRESS BAR ════════ */
 .progress {
   height: 4px;
@@ -784,6 +902,137 @@ body::after {
   border-bottom: 1px solid rgba(232, 16, 42, 0.15);
   justify-items: center;
 }
+
+/* Day hero — monad + stats */
+.day-hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  justify-items: center;
+  margin-bottom: 22px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(232, 16, 42, 0.15);
+}
+.day-hero-stats {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+@media (min-width: 700px) {
+  .day-hero {
+    grid-template-columns: auto 1fr;
+    gap: 30px;
+    align-items: center;
+    justify-items: initial;
+  }
+}
+
+/* Chart icon button (replaces 📊 emoji) */
+.chart-btn {
+  width: 28px; height: 28px;
+  border-radius: 7px;
+  background: rgba(232, 16, 42, 0.06);
+  border: 1px solid rgba(232, 16, 42, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  color: var(--red-b);
+}
+.chart-btn:hover {
+  background: rgba(232, 16, 42, 0.15);
+  border-color: var(--red);
+  box-shadow: 0 0 10px rgba(232, 16, 42, 0.3);
+}
+.chart-btn svg { width: 14px; height: 14px; display: block; }
+
+/* Unified row style — used by both habits and tasks */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin-bottom: 5px;
+  position: relative;
+  overflow: hidden;
+  background: var(--item);
+  border: 1px solid var(--brd);
+  transition: all 0.25s;
+  cursor: pointer;
+  user-select: none;
+  animation: fadeIn 0.3s ease-out both;
+}
+.row.done {
+  background: var(--item-on);
+  border-color: var(--brd-on);
+}
+.row.done::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--red), var(--red-b));
+  box-shadow: 0 0 8px var(--red);
+}
+.row:hover { padding-left: 22px; background: rgba(232, 16, 42, 0.05); }
+.row-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.row-text {
+  font-size: 14px;
+  color: var(--t1);
+  line-height: 1.35;
+  font-weight: 500;
+  word-break: break-word;
+}
+.row.done .row-text {
+  color: var(--t3);
+  text-decoration: line-through;
+  text-decoration-color: rgba(232, 16, 42, 0.4);
+  text-decoration-thickness: 1.5px;
+}
+.row-sub { font-size: 11px; color: var(--t3); }
+.row-streak {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--red-b);
+  text-shadow: 0 0 8px var(--red);
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+.row-tag {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  padding: 3px 9px;
+  border-radius: 20px;
+  color: #fff;
+  font-weight: 600;
+  flex-shrink: 0;
+  background: linear-gradient(90deg, var(--red-d), var(--red));
+}
+.row-tag.work1 { background: linear-gradient(90deg, #2a5588, var(--tag-work1)); }
+.row-tag.work2 { background: linear-gradient(90deg, #2a6652, var(--tag-work2)); }
+.row-tag.channel { background: linear-gradient(90deg, var(--red-d), var(--red)); }
+.row-tag.personal { background: linear-gradient(90deg, #66528a, var(--tag-personal)); }
+
+.row-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a8a8ae; font-weight: 600; flex-shrink: 0; letter-spacing: 0.06em; }
+.row-delete {
+  font-size: 18px;
+  color: var(--t3);
+  cursor: pointer;
+  padding: 0 4px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+  line-height: 1;
+}
+.row:hover .row-delete { opacity: 1; }
+.row-delete:hover { color: var(--red); }
 
 /* Nav for day */
 .day-nav {

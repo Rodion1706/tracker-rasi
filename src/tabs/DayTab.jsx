@@ -3,6 +3,7 @@ import { TAGS, QUOTES, argDate, niceDate, getWeekDays } from "../config";
 import { RadialCheck, DiamondCheck } from "../components/Checks";
 import SectionHeader from "../components/SectionHeader";
 import { BigStat, BestStat, WeekStat } from "../components/StatCards";
+import Monad from "../components/Monad";
 
 function tagClass(tag) {
   if (tag === "Work 1") return "work1";
@@ -10,6 +11,19 @@ function tagClass(tag) {
   if (tag === "Channel") return "channel";
   if (tag === "Personal") return "personal";
   return "";
+}
+
+// Chart/graph SVG icon (replaces 📊 emoji)
+function ChartIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+      <path d="M2 14 L2 2" />
+      <path d="M2 14 L14 14" />
+      <rect x="4" y="9" width="2" height="4" fill="currentColor" stroke="none" rx="0.3" />
+      <rect x="7.5" y="5" width="2" height="8" fill="currentColor" stroke="none" rx="0.3" />
+      <rect x="11" y="7" width="2" height="6" fill="currentColor" stroke="none" rx="0.3" />
+    </svg>
+  );
 }
 
 export default function DayTab({
@@ -32,7 +46,6 @@ export default function DayTab({
   const ch = dd.checks;
   const tasks = dd.tasks;
 
-  // Apply recurring tasks to today
   const dayNames = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
   const dayOfWeek = new Date(viewDay + "T12:00:00").getDay();
   const recToday = recurring.filter(r => r.days.includes(dayNames[dayOfWeek]));
@@ -109,7 +122,6 @@ export default function DayTab({
     return s;
   }
 
-  // Overdue
   const yest = argDate(-1);
   const yd = getDayData(yest);
   const overdue = (yd.tasks || []).filter(t => !t.done);
@@ -135,19 +147,23 @@ export default function DayTab({
         <div className="day-nav-arrow" onClick={() => setDayOff(dayOff + 1)}>›</div>
       </div>
 
-      {/* Stats 2×2 */}
-      <div className="stats-grid">
-        <BigStat label="Streak" value={streak} unit="d" />
-        <BigStat label="Done" value={totDone} unit={"/" + total} accent={totDone === total && total > 0 ? "done-all" : "plain"} />
-      </div>
-      <div className="stats-row">
-        <BestStat best={bestStreak} />
-        <WeekStat weekDays={weekDays} today={today} habits={habits} days={days} />
-      </div>
-
-      {/* Overall progress */}
-      <div className="progress">
-        <div className="progress-fill" style={{ "--pct": pct / 100 }} />
+      {/* Hero: Monad + stats */}
+      <div className="day-hero">
+        <Monad size={150} />
+        <div className="day-hero-stats">
+          <div className="stats-grid">
+            <BigStat label="Streak" value={streak} unit="d" />
+            <BigStat label="Done" value={totDone} unit={"/" + total}
+              accent={totDone === total && total > 0 ? "done-all" : "plain"} />
+          </div>
+          <div className="stats-row">
+            <BestStat best={bestStreak} />
+            <WeekStat weekDays={weekDays} today={today} habits={habits} days={days} />
+          </div>
+          <div className="progress" style={{ marginBottom: 0 }}>
+            <div className="progress-fill" style={{ "--pct": pct / 100 }} />
+          </div>
+        </div>
       </div>
 
       {/* Overdue */}
@@ -163,28 +179,25 @@ export default function DayTab({
         </div>
       )}
 
-      {/* Daily checklist */}
+      {/* Daily checklist — using .row style (same as tasks) */}
       {!isFuture && (
         <div style={{ marginBottom: 20 }}>
           <SectionHeader label="DAILY CHECKLIST" count={checksDone} total={habits.length} />
-          <div className="panel">
-            {habits.map((h, i) => {
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {habits.map(h => {
               const on = !!ch[h.id];
               const hs = habitStreak(h.id);
               return (
-                <div
-                  key={h.id}
-                  className={`task-row ${on ? "done" : ""}`}
-                  style={{ borderRadius: 0, borderLeft: "none", borderRight: "none", borderTop: i === 0 ? "none" : undefined, marginBottom: 0 }}
-                >
-                  <DiamondCheck done={on} onClick={() => toggleCheck(h.id)} />
-                  <div className="task-body" onClick={() => toggleCheck(h.id)} style={{ cursor: "pointer" }}>
-                    <div className="task-text">{h.text}</div>
-                    {h.sub && <div className="task-sub">{h.sub}</div>}
+                <div key={h.id} className={`row ${on ? "done" : ""}`}
+                  onClick={() => toggleCheck(h.id)}>
+                  <DiamondCheck done={on} onClick={(e) => { if (e) e.stopPropagation(); toggleCheck(h.id); }} />
+                  <div className="row-body">
+                    <div className="row-text">{h.text}</div>
+                    {h.sub && <div className="row-sub">{h.sub}</div>}
                   </div>
-                  {hs > 1 && <div className="task-streak">{hs}d</div>}
-                  <div className="task-stat-btn" onClick={(e) => { e.stopPropagation(); openHabitModal(h); }}>
-                    📊
+                  {hs > 1 && <div className="row-streak">{hs}d</div>}
+                  <div className="chart-btn" onClick={(e) => { e.stopPropagation(); openHabitModal(h); }} title="Calendar">
+                    <ChartIcon />
                   </div>
                 </div>
               );
@@ -223,28 +236,30 @@ export default function DayTab({
         </div>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <div style={{ display: "flex", flexDirection: "column" }}>
         {filteredTasks.map(t => (
-          <div key={t.id} className={`task-row ${t.done ? "done" : ""}`}>
+          <div key={t.id} className={`row ${t.done ? "done" : ""}`}
+            onClick={() => toggleTask(t.id)}>
             <RadialCheck done={t.done} onClick={(e) => { if (e) e.stopPropagation(); toggleTask(t.id); }} />
-            <div className="task-body">
+            <div className="row-body">
               {eid === t.id ? (
                 <input
                   className="task-edit-input"
                   value={ev}
                   onChange={e => setEv(e.target.value)}
                   onBlur={() => saveEdit(t.id)}
+                  onClick={e => e.stopPropagation()}
                   onKeyDown={e => { if (e.key === "Enter") saveEdit(t.id); if (e.key === "Escape") setEid(null); }}
                   autoFocus
                 />
               ) : (
-                <div className="task-text" onClick={() => { setEid(t.id); setEv(t.text); }}>
+                <div className="row-text" onClick={(e) => { e.stopPropagation(); setEid(t.id); setEv(t.text); }}>
                   {t.text}
                 </div>
               )}
             </div>
-            {t.tag && <div className={`task-tag ${tagClass(t.tag)}`}>{t.tag}</div>}
-            <div className="task-delete" onClick={(e) => { e.stopPropagation(); delTask(t.id); }}>×</div>
+            {t.tag && <div className={`row-tag ${tagClass(t.tag)}`}>{t.tag}</div>}
+            <div className="row-delete" onClick={(e) => { e.stopPropagation(); delTask(t.id); }}>×</div>
           </div>
         ))}
       </div>
