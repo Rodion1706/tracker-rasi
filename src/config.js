@@ -21,7 +21,7 @@ export var DEF_GOALS = [
 ];
 
 export var TAGS = ["Work 1","Work 2","Channel","Personal"];
-export var TAG_COLORS = { "Work 1":"#5b7fbf", "Work 2":"#d4a54a", "Channel":"#e8102a", "Personal":"#9977cc" };
+export var TAG_COLORS = { "Work 1":"#5b7fbf", "Work 2":"#d4a54a", "Channel":"#e8102a", "Personal":"#ff6fb2" };
 export var MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
 export var WDAYS = ["M","T","W","T","F","S","S"];
 export var QUOTES = [
@@ -64,10 +64,14 @@ export function monthDays(y,m) {
 export function monStart(y,m){var d=new Date(y,m,1).getDay();return d===0?6:d-1;}
 
 export function getWeekId(dateStr) {
-  var d = new Date(dateStr+"T12:00:00");
-  var jan1 = new Date(d.getFullYear(),0,1);
-  var wk = Math.ceil(((d-jan1)/86400000+jan1.getDay()+1)/7);
-  return d.getFullYear()+"-W"+String(wk).padStart(2,"0");
+  // ISO 8601 week number: week 1 is the week containing the year's first Thursday.
+  var src = new Date(dateStr+"T12:00:00");
+  var d = new Date(Date.UTC(src.getFullYear(), src.getMonth(), src.getDate()));
+  var dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  var wk = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return d.getUTCFullYear()+"-W"+String(wk).padStart(2,"0");
 }
 
 export function getWeekDays(dateStr) {

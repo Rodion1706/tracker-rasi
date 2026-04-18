@@ -29,10 +29,10 @@
   --tag-channel: #e8102a;
   --tag-work1: #5b7fbf;
   --tag-work2: #d4a54a;
-  --tag-personal: #9977cc;
+  --tag-personal: #ff6fb2;
   --tag-work1-d: #2f4a80;
   --tag-work2-d: #8a6420;
-  --tag-personal-d: #5a3f87;
+  --tag-personal-d: #b53476;
 
   --overdue: #9a2030;
 }
@@ -131,9 +131,9 @@ body::after {
   100% { transform: scale(1); }
 }
 @keyframes checkBurst {
-  0% { box-shadow: 0 0 0 0 rgba(255, 77, 158, 0.7), 0 0 20px var(--red); }
-  80% { box-shadow: 0 0 0 14px rgba(255, 77, 158, 0), 0 0 20px var(--red); }
-  100% { box-shadow: 0 0 0 14px rgba(255, 77, 158, 0), 0 0 20px var(--red); }
+  0% { box-shadow: 0 0 0 0 rgba(232, 16, 42, 0.7), 0 0 20px var(--red); }
+  80% { box-shadow: 0 0 0 14px rgba(232, 16, 42, 0), 0 0 20px var(--red); }
+  100% { box-shadow: 0 0 0 14px rgba(232, 16, 42, 0), 0 0 20px var(--red); }
 }
 @keyframes numberPop {
   0% { opacity: 0; transform: scale(0.7); }
@@ -191,8 +191,8 @@ body::after {
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 3px;
-  background: linear-gradient(90deg, transparent, var(--pink-d), var(--pink), var(--pink-b), var(--pink), var(--pink-d), transparent);
-  box-shadow: 0 0 12px var(--pink), 0 0 24px rgba(255, 77, 158, 0.4);
+  background: linear-gradient(90deg, transparent, var(--red-d), var(--red), var(--red-b), var(--red), var(--red-d), transparent);
+  box-shadow: 0 0 12px var(--red), 0 0 24px rgba(232, 16, 42, 0.35);
   z-index: 2;
   animation: stripShimmer 6s ease-in-out infinite;
 }
@@ -247,9 +247,9 @@ body::after {
 .tab:active { transform: scale(0.96); }
 .tab.active {
   color: #fff;
-  background: linear-gradient(135deg, var(--pink), var(--red), var(--red-d));
+  background: linear-gradient(135deg, var(--red-b), var(--red), var(--red-d));
   background-size: 200% 200%;
-  box-shadow: 0 4px 20px rgba(232, 16, 42, 0.45), 0 0 24px rgba(255, 77, 158, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(232, 16, 42, 0.5), 0 0 24px rgba(232, 16, 42, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
   animation: tabGradient 5s ease-in-out infinite;
 }
 @keyframes tabGradient {
@@ -295,14 +295,14 @@ body::after {
   gap: 4px;
 }
 .ys-w .n {
-  color: var(--pink);
+  color: var(--red);
   font-size: 48px;
-  text-shadow: 0 0 14px var(--pink), 0 0 28px rgba(255, 77, 158, 0.55);
+  text-shadow: 0 0 14px var(--red), 0 0 28px rgba(232, 16, 42, 0.55);
   animation: weekNumGlow 3.2s ease-in-out infinite;
 }
 @keyframes weekNumGlow {
-  0%, 100% { text-shadow: 0 0 14px var(--pink), 0 0 28px rgba(255, 77, 158, 0.55); }
-  50% { text-shadow: 0 0 22px var(--pink-b), 0 0 40px rgba(255, 77, 158, 0.75); }
+  0%, 100% { text-shadow: 0 0 14px var(--red), 0 0 28px rgba(232, 16, 42, 0.55); }
+  50% { text-shadow: 0 0 22px var(--red-b), 0 0 40px rgba(232, 16, 42, 0.85); }
 }
 .ys-w .of {
   font-family: 'JetBrains Mono', monospace;
@@ -377,16 +377,12 @@ body::after {
 /* ════════ MONAD ════════ */
 .monad { position: relative; flex-shrink: 0; }
 .monad-rotate { position: absolute; inset: 0; animation: rotate 80s linear infinite, monadBreathe 4.5s ease-in-out infinite; transform-origin: center; }
-.monad-core { position: absolute; inset: 0; animation: pulsePink 4s ease-in-out infinite; }
-.monad-ring { position: absolute; inset: -16px; animation: rotater 28s linear infinite; opacity: 0.55; }
+.monad-core { position: absolute; inset: 0; animation: pulse 4s infinite; }
+.monad-ring { position: absolute; inset: -16px; animation: rotater 28s linear infinite; opacity: 0.5; }
 
-@keyframes pulsePink {
-  0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 77, 158, 0.75)); opacity: 0.55; }
-  50% { filter: drop-shadow(0 0 18px rgba(255, 77, 158, 0.95)) drop-shadow(0 0 32px rgba(255, 123, 189, 0.5)); opacity: 0.9; }
-}
 @keyframes monadBreathe {
-  0%, 100% { filter: drop-shadow(0 0 12px rgba(255, 77, 158, 0.7)) drop-shadow(0 0 6px rgba(232, 16, 42, 0.6)); }
-  50% { filter: drop-shadow(0 0 22px rgba(255, 77, 158, 0.95)) drop-shadow(0 0 12px rgba(232, 16, 42, 0.8)) drop-shadow(0 0 40px rgba(255, 77, 158, 0.35)); }
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(232, 16, 42, 0.7)); }
+  50% { filter: drop-shadow(0 0 20px rgba(232, 16, 42, 0.95)) drop-shadow(0 0 36px rgba(122, 10, 21, 0.55)); }
 }
 
 /* ════════ STAT CARDS ════════ */
@@ -435,7 +431,7 @@ body::after {
   animation: numberPop 0.55s cubic-bezier(0.3, 1.6, 0.5, 1) both;
   transition: transform 0.3s, text-shadow 0.3s;
 }
-.stat-card:hover .sc-value { transform: scale(1.06); text-shadow: 0 0 20px var(--red), 0 0 32px rgba(255, 77, 158, 0.45); }
+.stat-card:hover .sc-value { transform: scale(1.06); text-shadow: 0 0 20px var(--red), 0 0 32px rgba(232, 16, 42, 0.55); }
 .sc-value.plain { color: var(--t1); text-shadow: 0 0 10px rgba(232, 16, 42, 0.3); }
 .sc-value.done-all { color: var(--red); text-shadow: 0 0 16px var(--red), 0 0 32px rgba(232, 16, 42, 0.5); }
 .sc-value .unit {
@@ -635,10 +631,10 @@ body::after {
   background: linear-gradient(180deg, var(--red-b), var(--red), var(--red-d));
   box-shadow: 0 0 5px rgba(232, 16, 42, 0.5);
 }
-.wk-tick.task:not(.done) { background: rgba(170, 136, 204, 0.14); }
+.wk-tick.task:not(.done) { background: rgba(255, 111, 178, 0.14); }
 .wk-tick.task.done {
-  background: linear-gradient(180deg, #bb9fe0, var(--tag-personal));
-  box-shadow: 0 0 5px rgba(170, 136, 204, 0.5);
+  background: linear-gradient(180deg, #ffa5cf, var(--tag-personal));
+  box-shadow: 0 0 5px rgba(255, 111, 178, 0.5);
 }
 .wk-row-empty { font-size: 11px; color: var(--t3); font-family: 'JetBrains Mono', monospace; }
 .wk-row-pct {
@@ -797,8 +793,8 @@ body::after {
 }
 .goal-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--red-d), var(--red), var(--pink));
-  box-shadow: 0 0 8px var(--red), 0 0 12px rgba(255, 77, 158, 0.45);
+  background: linear-gradient(90deg, var(--red-d), var(--red), var(--red-b));
+  box-shadow: 0 0 8px var(--red), 0 0 14px rgba(232, 16, 42, 0.45);
   border-radius: 4px;
   transform: scaleX(0);
   transform-origin: left;
@@ -865,7 +861,7 @@ body::after {
   transition: all 0.25s cubic-bezier(0.3, 1.2, 0.4, 1);
   animation: popIn 0.35s cubic-bezier(0.3, 1.4, 0.4, 1) both;
 }
-.month-cell:hover { border-color: var(--pink); transform: scale(1.08) rotate(-1deg); z-index: 2; box-shadow: 0 0 18px rgba(255, 77, 158, 0.35); }
+.month-cell:hover { border-color: var(--red); transform: scale(1.08) rotate(-1deg); z-index: 2; box-shadow: 0 0 18px rgba(232, 16, 42, 0.4); }
 .month-cell.partial { background: #18121c; }
 .month-cell.perfect {
   background: linear-gradient(135deg, #2a1020, #1e0a10);
@@ -1010,9 +1006,9 @@ body::after {
 .check-radial svg path { stroke: #fff; stroke-width: 2.8; fill: none; stroke-linecap: round; }
 .check-radial:active { transform: scale(0.88); }
 .check-radial.done {
-  background: radial-gradient(circle at 30% 30%, var(--pink-b), var(--red) 60%, var(--red-d) 100%);
-  border-color: var(--pink);
-  box-shadow: 0 0 20px var(--red), 0 0 12px rgba(255, 77, 158, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  background: radial-gradient(circle at 30% 30%, var(--red-b), var(--red) 60%, var(--red-d) 100%);
+  border-color: var(--red-b);
+  box-shadow: 0 0 22px var(--red), inset 0 1px 0 rgba(255, 255, 255, 0.3);
   animation: checkBurst 0.6s ease-out;
 }
 .check-radial.done svg { opacity: 1; transform: scale(1); }
@@ -1036,7 +1032,7 @@ body::after {
 }
 .check-diamond svg path { stroke: #fff; stroke-width: 3; fill: none; stroke-linecap: round; }
 .check-diamond:active { transform: rotate(8deg) scale(0.9); }
-.check-diamond.done { background: var(--red); box-shadow: 0 0 16px var(--red), 0 0 10px rgba(255, 77, 158, 0.55); animation: checkBurst 0.6s ease-out; }
+.check-diamond.done { background: var(--red); box-shadow: 0 0 20px var(--red); animation: checkBurst 0.6s ease-out; }
 .check-diamond.done svg { opacity: 1; transform: scale(1); }
 
 /* ════════ PANELS (tasks + habits) ════════ */
@@ -1105,8 +1101,8 @@ body::after {
 .task-row:hover {
   padding-left: 22px;
   background: rgba(232, 16, 42, 0.05);
-  border-color: rgba(255, 77, 158, 0.35);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 12px rgba(255, 77, 158, 0.12);
+  border-color: var(--red-b);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 12px rgba(232, 16, 42, 0.2);
   transform: translateY(-1px);
 }
 .task-row:active { transform: scale(0.995); transition: transform 0.08s; }
@@ -1143,7 +1139,7 @@ body::after {
 .task-tag.work1 { background: linear-gradient(90deg, var(--tag-work1-d), var(--tag-work1)); box-shadow: 0 0 8px rgba(91, 127, 191, 0.35); }
 .task-tag.work2 { background: linear-gradient(90deg, var(--tag-work2-d), var(--tag-work2)); box-shadow: 0 0 8px rgba(212, 165, 74, 0.35); color: #1a1015; }
 .task-tag.channel { background: linear-gradient(90deg, var(--red-d), var(--red)); box-shadow: 0 0 8px rgba(232, 16, 42, 0.4); }
-.task-tag.personal { background: linear-gradient(90deg, var(--tag-personal-d), var(--tag-personal)); box-shadow: 0 0 8px rgba(153, 119, 204, 0.35); }
+.task-tag.personal { background: linear-gradient(90deg, var(--tag-personal-d), var(--tag-personal)); box-shadow: 0 0 8px rgba(255, 111, 178, 0.4); }
 
 .task-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a8a8ae; font-weight: 600; flex-shrink: 0; letter-spacing: 0.06em; }
 .task-streak { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 14px; color: var(--red-b); text-shadow: 0 0 8px var(--red); flex-shrink: 0; }
@@ -1274,7 +1270,7 @@ body::after {
 }
 .add-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 18px rgba(232, 16, 42, 0.5), 0 0 24px rgba(255, 77, 158, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 18px rgba(232, 16, 42, 0.55), 0 0 22px rgba(232, 16, 42, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 .add-btn:active { transform: translateY(1px) scale(0.97); animation: ripple 0.5s ease-out; }
 
@@ -1306,7 +1302,7 @@ body::after {
 .chip.work1.active { background: rgba(91, 127, 191, 0.18); color: var(--tag-work1); border-color: rgba(91, 127, 191, 0.6); box-shadow: 0 0 10px rgba(91, 127, 191, 0.3); text-shadow: 0 0 6px rgba(91, 127, 191, 0.6); }
 .chip.work2.active { background: rgba(212, 165, 74, 0.18); color: var(--tag-work2); border-color: rgba(212, 165, 74, 0.6); box-shadow: 0 0 10px rgba(212, 165, 74, 0.3); text-shadow: 0 0 6px rgba(212, 165, 74, 0.6); }
 .chip.channel.active { background: rgba(232, 16, 42, 0.18); color: var(--red); border-color: rgba(232, 16, 42, 0.6); box-shadow: 0 0 10px rgba(232, 16, 42, 0.35); text-shadow: 0 0 6px rgba(232, 16, 42, 0.6); }
-.chip.personal.active { background: rgba(153, 119, 204, 0.18); color: var(--tag-personal); border-color: rgba(153, 119, 204, 0.6); box-shadow: 0 0 10px rgba(153, 119, 204, 0.3); text-shadow: 0 0 6px rgba(153, 119, 204, 0.6); }
+.chip.personal.active { background: rgba(255, 111, 178, 0.18); color: var(--tag-personal); border-color: rgba(255, 111, 178, 0.6); box-shadow: 0 0 10px rgba(255, 111, 178, 0.35); text-shadow: 0 0 6px rgba(255, 111, 178, 0.65); }
 
 .add-date-input {
   margin-top: 8px;
@@ -1501,8 +1497,8 @@ body::after {
 .row:hover {
   padding-left: 22px;
   background: rgba(232, 16, 42, 0.05);
-  border-color: rgba(255, 77, 158, 0.35);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 12px rgba(255, 77, 158, 0.12);
+  border-color: var(--red-b);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 12px rgba(232, 16, 42, 0.2);
   transform: translateY(-1px);
 }
 .row:active { transform: scale(0.995); transition: transform 0.08s; }
@@ -1556,7 +1552,7 @@ body::after {
 .row-tag.work1 { background: linear-gradient(90deg, var(--tag-work1-d), var(--tag-work1)); box-shadow: 0 0 8px rgba(91, 127, 191, 0.35); }
 .row-tag.work2 { background: linear-gradient(90deg, var(--tag-work2-d), var(--tag-work2)); box-shadow: 0 0 8px rgba(212, 165, 74, 0.35); color: #1a1015; }
 .row-tag.channel { background: linear-gradient(90deg, var(--red-d), var(--red)); box-shadow: 0 0 8px rgba(232, 16, 42, 0.4); }
-.row-tag.personal { background: linear-gradient(90deg, var(--tag-personal-d), var(--tag-personal)); box-shadow: 0 0 8px rgba(153, 119, 204, 0.35); }
+.row-tag.personal { background: linear-gradient(90deg, var(--tag-personal-d), var(--tag-personal)); box-shadow: 0 0 8px rgba(255, 111, 178, 0.4); }
 
 .row-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a8a8ae; font-weight: 600; flex-shrink: 0; letter-spacing: 0.06em; }
 .row-delete {
