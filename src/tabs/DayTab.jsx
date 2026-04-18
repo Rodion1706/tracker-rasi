@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { TAGS, QUOTES, argDate, niceDate, getWeekDays } from "../config";
-import { RadialCheck, DiamondCheck } from "../components/Checks";
+import { DiamondCheck } from "../components/Checks";
 import SectionHeader from "../components/SectionHeader";
 import { BigStat, BestStat, WeekStat } from "../components/StatCards";
 import Monad from "../components/Monad";
@@ -240,7 +240,7 @@ export default function DayTab({
         {filteredTasks.map(t => (
           <div key={t.id} className={`row ${t.done ? "done" : ""}`}
             onClick={() => toggleTask(t.id)}>
-            <RadialCheck done={t.done} onClick={(e) => { if (e) e.stopPropagation(); toggleTask(t.id); }} />
+            <DiamondCheck done={t.done} onClick={(e) => { if (e) e.stopPropagation(); toggleTask(t.id); }} />
             <div className="row-body">
               {eid === t.id ? (
                 <input

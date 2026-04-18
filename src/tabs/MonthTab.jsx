@@ -1,4 +1,5 @@
 import { MONTHS, WDAYS, monthDays, monStart, dayDiff } from "../config";
+import TabHeader from "../components/TabHeader";
 
 export default function MonthTab({ days, habits, today, mOff, setMOff, setDayOff, setTab }) {
   const now = new Date();
@@ -20,30 +21,28 @@ export default function MonthTab({ days, habits, today, mOff, setMOff, setDayOff
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
-        <div onClick={() => setMOff(mOff - 1)} style={{ fontSize: 22, color: "var(--red)", cursor: "pointer", padding: "4px 14px" }}>‹</div>
-        <div style={{
-          fontSize: 13, letterSpacing: "0.32em", color: "var(--t1)",
-          fontWeight: 700, fontFamily: "'Oswald', sans-serif", textTransform: "uppercase",
-          textShadow: "0 0 10px var(--red)",
-        }}>
+      <TabHeader
+        title={`${MONTHS[vm.getMonth()]} ${vm.getFullYear()}`}
+        subtitle={`Month view · ${perf}/${past.length} clean days`}
+      />
+
+      <div className="month-nav">
+        <div onClick={() => setMOff(mOff - 1)} className="day-nav-arrow">‹</div>
+        <div className="month-nav-title">
           {MONTHS[vm.getMonth()]} {vm.getFullYear()}
         </div>
-        <div onClick={() => setMOff(mOff + 1)} style={{ fontSize: 22, color: "var(--red)", cursor: "pointer", padding: "4px 14px" }}>›</div>
+        <div onClick={() => setMOff(mOff + 1)} className="day-nav-arrow">›</div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4, marginBottom: 8 }}>
         {WDAYS.map((l, i) => (
-          <div key={i} style={{
-            textAlign: "center", fontSize: 10, color: "var(--t3)",
-            padding: 4, fontWeight: 600, letterSpacing: "0.1em",
-          }}>{l}</div>
+          <div key={i} className="month-weekday">{l}</div>
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4 }}>
+      <div className="month-grid">
         {Array.from({ length: fO }).map((_, i) => <div key={"e" + i} />)}
-        {mDays.map(day => {
+        {mDays.map((day, idx) => {
           const x = days[day] || {};
           const dc = x.checks ? habits.filter(h => x.checks[h.id]).length : 0;
           const tc = x.tasks ? x.tasks.filter(t => t.done).length : 0;
@@ -58,49 +57,36 @@ export default function MonthTab({ days, habits, today, mOff, setMOff, setDayOff
           const future = day > today;
           const dn = parseInt(day.split("-")[2]);
 
+          const cls = [
+            "month-cell",
+            pf ? "perfect" : "",
+            pt && !pf ? "partial" : "",
+            isToday ? "today" : "",
+            future && !ht ? "future" : "",
+          ].filter(Boolean).join(" ");
+
           return (
             <div
               key={day}
+              className={cls}
+              style={{ animationDelay: `${idx * 0.012}s` }}
               onClick={() => { setDayOff(dayDiff(day, today)); setTab("day"); }}
-              style={{
-                aspectRatio: "1", borderRadius: 7,
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                cursor: "pointer",
-                background: pf
-                  ? "linear-gradient(135deg, #2a1020, #1e0a10)"
-                  : pt ? "#18121c" : "var(--item)",
-                border: isToday ? "2px solid var(--red)" : "1px solid var(--brd)",
-                opacity: future && !ht ? 0.35 : 1,
-                boxShadow: pf ? "0 0 10px rgba(232, 16, 42, 0.3)" : "none",
-                transition: "all 0.2s",
-              }}
             >
-              <div style={{
-                fontSize: 13, color: pf ? "var(--red)" : pt ? "var(--t2)" : "#3a3440",
-                fontWeight: isToday || pf ? 700 : 500,
-                fontFamily: "'Oswald', sans-serif",
-              }}>{dn}</div>
+              <div className="month-cell-num">{dn}</div>
               {tot > 0 && !future && (
-                <div style={{ fontSize: 8, color: pf ? "var(--red)" : "var(--t3)", marginTop: 1, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>
-                  {Math.round(p * 100)}%
-                </div>
+                <div className="month-cell-pct">{Math.round(p * 100)}%</div>
               )}
-              {future && ht && (
-                <div style={{ width: 5, height: 5, borderRadius: 3, background: "rgba(232, 16, 42, 0.7)", marginTop: 2, boxShadow: "0 0 4px var(--red)" }} />
-              )}
+              {future && ht && <div className="month-cell-future-dot" />}
             </div>
           );
         })}
       </div>
 
-      <div style={{
-        background: "var(--card)", borderRadius: 12, padding: "16px 18px", marginTop: 22,
-        borderLeft: "3px solid var(--red)", boxShadow: "0 0 12px rgba(232, 16, 42, 0.1)",
-      }}>
+      <div className="month-stats">
         <div style={{
-          fontSize: 10, color: "var(--t3)", letterSpacing: "0.3em",
+          fontSize: 10, color: "var(--t3)", letterSpacing: "0.28em",
           marginBottom: 12, fontWeight: 700, fontFamily: "'Cinzel', serif", textTransform: "uppercase",
-        }}>Stats</div>
+        }}>Stats · {MONTHS[vm.getMonth()]}</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
           {[
             [perf, "perfect", "var(--red)"],
@@ -108,8 +94,8 @@ export default function MonthTab({ days, habits, today, mOff, setMOff, setDayOff
             [past.length, "elapsed", "var(--t3)"],
           ].map(([val, label, color]) => (
             <div key={label}>
-              <div style={{ fontSize: 22, fontWeight: 700, color, fontFamily: "'Oswald', sans-serif", lineHeight: 1 }}>{val}</div>
-              <div style={{ fontSize: 9, color: "var(--t3)", letterSpacing: "0.2em", marginTop: 4, fontWeight: 600, fontFamily: "'Cinzel', serif", textTransform: "uppercase" }}>{label}</div>
+              <div className="brute-stat-v" style={{ color }}>{val}</div>
+              <div className="brute-stat-l">{label}</div>
             </div>
           ))}
         </div>

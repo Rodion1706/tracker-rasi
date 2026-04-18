@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { TAGS, TAG_COLORS, argDate } from "../config";
+import { TAGS, argDate } from "../config";
+import TabHeader from "../components/TabHeader";
 import SectionHeader from "../components/SectionHeader";
 
 const DAY_LABELS = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
-const inputStyle = { width: "100%", background: "transparent", border: "none", borderBottom: "1px solid var(--brd)", color: "var(--t1)", fontSize: 14, outline: "none", padding: "4px 0", boxSizing: "border-box", fontFamily: "inherit" };
+const inputStyle = { width: "100%", background: "transparent", border: "none", borderBottom: "1px solid var(--brd)", color: "var(--t1)", fontSize: 14, outline: "none", padding: "5px 0", boxSizing: "border-box", fontFamily: "inherit" };
 
 function tagClass(tag) {
   if (tag === "Work 1") return "work1";
@@ -78,7 +79,7 @@ function ImportTasks({ setDay, getDayData, today, bulkSetDays }) {
   }
 
   const exampleText = `# Format: DATE | TAG (optional) | TASK
-# Dates: YYYY-MM-DD, today, tomorrow, monday, tuesday...
+# Dates: YYYY-MM-DD, today, tomorrow, monday..sunday
 # Tags: Work 1, Work 2, Channel, Personal
 
 2026-04-20 | Channel | Red Team cat niche
@@ -86,38 +87,38 @@ tomorrow | Work 1 | Review Ars brief
 friday | Personal | Dentist follow-up`;
 
   return (
-    <div style={{ marginTop: 22 }}>
+    <div style={{ marginTop: 24 }}>
       <SectionHeader label="IMPORT TASKS" />
-      <div style={{ padding: 14, background: "var(--item)", borderRadius: 11, border: "1px solid var(--brd)", marginBottom: 10 }}>
-        <div style={{ fontSize: 11, color: "var(--t3)", lineHeight: 1.6, marginBottom: 10 }}>
-          Paste list: <span style={{ color: "var(--t2)" }}>DATE | TAG | TASK</span> per line. Tag optional.<br />
-          Dates: <span style={{ color: "var(--t2)" }}>YYYY-MM-DD, today, tomorrow, monday..sunday</span>.
+      <div className="brute">
+        <div style={{ fontSize: 11, color: "var(--t3)", lineHeight: 1.7, marginBottom: 12 }}>
+          Paste list: <span style={{ color: "var(--t1)", fontFamily: "'JetBrains Mono', monospace" }}>DATE | TAG | TASK</span> per line. Tag optional.<br />
+          Dates: <span style={{ color: "var(--t1)", fontFamily: "'JetBrains Mono', monospace" }}>YYYY-MM-DD, today, tomorrow, monday..sunday</span>.
         </div>
         <textarea value={text} onChange={e => { setText(e.target.value); setPreview(null); setError(""); }} rows={8} placeholder={exampleText}
-          style={{ width: "100%", background: "var(--card)", border: "1px solid var(--brd)", borderRadius: 8, color: "var(--t1)", fontSize: 12, outline: "none", padding: 10, resize: "vertical", boxSizing: "border-box", fontFamily: "'JetBrains Mono', monospace" }} />
+          style={{ width: "100%", background: "rgba(0,0,0,0.4)", border: "1px solid var(--brd)", borderRadius: 8, color: "var(--t1)", fontSize: 12, outline: "none", padding: 12, resize: "vertical", boxSizing: "border-box", fontFamily: "'JetBrains Mono', monospace", lineHeight: 1.55 }} />
         {error && (
-          <div style={{ marginTop: 10, padding: 10, background: "#2a1010", borderRadius: 7, color: "#cc3333", fontSize: 11, whiteSpace: "pre-wrap", fontFamily: "'JetBrains Mono', monospace" }}>{error}</div>
+          <div style={{ marginTop: 10, padding: 10, background: "rgba(204, 51, 51, 0.15)", border: "1px solid rgba(204, 51, 51, 0.4)", borderRadius: 8, color: "#ff6070", fontSize: 11, whiteSpace: "pre-wrap", fontFamily: "'JetBrains Mono', monospace" }}>{error}</div>
         )}
-        <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+        <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
           <div onClick={doPreview} className="add-btn">PREVIEW</div>
-          {preview && <div onClick={doImport} className="add-btn" style={{ background: "rgba(255, 77, 109, 0.15)", color: "var(--red-b)", borderColor: "rgba(255, 77, 109, 0.4)" }}>IMPORT {preview.total}</div>}
-          {(text || preview) && <div onClick={() => { setText(""); setPreview(null); setError(""); }} style={{ padding: "11px 14px", color: "var(--t3)", cursor: "pointer", fontSize: 11, fontWeight: 700 }}>CLEAR</div>}
+          {preview && <div onClick={doImport} className="add-btn" style={{ background: "rgba(255, 77, 109, 0.15)", color: "var(--red-b)", borderColor: "rgba(255, 77, 109, 0.5)" }}>IMPORT {preview.total}</div>}
+          {(text || preview) && <div onClick={() => { setText(""); setPreview(null); setError(""); }} style={{ padding: "11px 16px", color: "var(--t3)", cursor: "pointer", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", fontFamily: "'Cinzel', serif" }}>CLEAR</div>}
         </div>
       </div>
 
       {preview && (
-        <div style={{ padding: 14, background: "var(--card)", borderRadius: 11, border: "1px solid var(--brd-on)", marginBottom: 10 }}>
-          <div style={{ fontSize: 10, color: "var(--t3)", letterSpacing: "0.24em", marginBottom: 10, fontWeight: 600 }}>
-            PREVIEW — {preview.total} tasks across {Object.keys(preview.grouped).length} days
+        <div className="brute" style={{ borderColor: "var(--brd-on)", marginTop: 10 }}>
+          <div style={{ fontSize: 10, color: "var(--t3)", letterSpacing: "0.26em", marginBottom: 12, fontWeight: 700, fontFamily: "'Cinzel', serif", textTransform: "uppercase" }}>
+            Preview — {preview.total} tasks across {Object.keys(preview.grouped).length} days
           </div>
           {Object.keys(preview.grouped).sort().map(date => (
-            <div key={date} style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 11, color: "var(--red)", fontWeight: 700, marginBottom: 6, fontFamily: "'JetBrains Mono', monospace" }}>
+            <div key={date} style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 12, color: "var(--red)", fontWeight: 700, marginBottom: 7, fontFamily: "'JetBrains Mono', monospace" }}>
                 {date} ({preview.grouped[date].length})
               </div>
               {preview.grouped[date].map((p, i) => (
-                <div key={i} style={{ fontSize: 12, color: "var(--t2)", padding: "3px 0 3px 14px", borderLeft: "1px solid var(--brd)", marginLeft: 4, display: "flex", gap: 8 }}>
-                  {p.tag && <span className={`task-tag ${tagClass(p.tag)}`} style={{ fontSize: 8, padding: "1px 6px" }}>{p.tag}</span>}
+                <div key={i} style={{ fontSize: 12, color: "var(--t2)", padding: "4px 0 4px 14px", borderLeft: "1px solid rgba(232, 16, 42, 0.25)", marginLeft: 4, display: "flex", gap: 8, alignItems: "center" }}>
+                  {p.tag && <span className={`row-tag ${tagClass(p.tag)}`} style={{ fontSize: 8, padding: "2px 7px" }}>{p.tag}</span>}
                   <span>{p.text}</span>
                 </div>
               ))}
@@ -170,61 +171,78 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
 
   return (
     <div>
-      <SectionHeader label="HABITS" />
+      <TabHeader title="Settings" subtitle={`${habits.length} habits · ${recurring.length} recurring`} />
+
+      {/* Habits */}
+      <SectionHeader label="HABITS" count={habits.length} />
       {habits.map(h => {
         if (eId === h.id) return (
-          <div key={h.id} style={{ padding: 14, background: "var(--item)", borderRadius: 11, marginBottom: 5, border: "1px solid var(--brd-on)" }}>
-            <input value={eT} onChange={e => setET(e.target.value)} style={{ ...inputStyle, marginBottom: 8 }} />
-            <input value={eS} onChange={e => setES(e.target.value)} placeholder="Subtitle" style={{ ...inputStyle, fontSize: 11, color: "var(--t2)", marginBottom: 10 }} />
-            <div style={{ display: "flex", gap: 8 }}>
+          <div key={h.id} className="brute" style={{ marginBottom: 5 }}>
+            <div className="brute-field">
+              <div className="brute-field-l">Habit</div>
+              <input value={eT} onChange={e => setET(e.target.value)} style={inputStyle} autoFocus />
+            </div>
+            <div className="brute-field">
+              <div className="brute-field-l">Subtitle</div>
+              <input value={eS} onChange={e => setES(e.target.value)} placeholder="Optional" style={{ ...inputStyle, fontSize: 12 }} />
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
               <div onClick={saveE} className="add-btn">SAVE</div>
-              <div onClick={() => setEId(null)} style={{ padding: "11px 16px", color: "var(--t3)", cursor: "pointer", fontSize: 11, fontWeight: 700 }}>CANCEL</div>
+              <div onClick={() => setEId(null)} style={{ padding: "11px 16px", color: "var(--t3)", cursor: "pointer", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", fontFamily: "'Cinzel', serif" }}>CANCEL</div>
             </div>
           </div>
         );
         return (
-          <div key={h.id} style={{ display: "flex", alignItems: "center", padding: "12px 16px", background: "var(--item)", borderRadius: 11, marginBottom: 4, border: "1px solid var(--brd)", justifyContent: "space-between" }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, color: "var(--t1)", fontWeight: 500 }}>{h.text}</div>
-              {h.sub && <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 2 }}>{h.sub}</div>}
+          <div key={h.id} className="row" style={{ cursor: "default", gap: 10 }}>
+            <div className="row-body">
+              <div className="row-text">{h.text}</div>
+              {h.sub && <div className="row-sub">{h.sub}</div>}
             </div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <div onClick={() => { setEId(h.id); setET(h.text); setES(h.sub || ""); }} style={{ fontSize: 11, color: "var(--t2)", cursor: "pointer", fontFamily: "'Cinzel', serif" }}>edit</div>
-              <div onClick={() => delH(h.id)} style={{ fontSize: 16, color: "var(--t3)", cursor: "pointer", lineHeight: 1 }}>×</div>
-            </div>
+            <div onClick={() => { setEId(h.id); setET(h.text); setES(h.sub || ""); }} style={{ fontSize: 11, color: "var(--t2)", cursor: "pointer", fontFamily: "'Cinzel', serif", letterSpacing: "0.14em", padding: "4px 10px" }}>edit</div>
+            <div onClick={() => delH(h.id)} style={{ fontSize: 18, color: "var(--t3)", cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>×</div>
           </div>
         );
       })}
-      <div style={{ marginTop: 10, padding: 14, background: "var(--item)", borderRadius: 11, border: "1px solid var(--brd)" }}>
-        <input value={newH} onChange={e => setNewH(e.target.value)} placeholder="New habit" onKeyDown={e => { if (e.key === "Enter") addH(); }}
-          style={{ ...inputStyle, marginBottom: 8 }} />
-        <input value={newHS} onChange={e => setNewHS(e.target.value)} placeholder="Subtitle (optional)"
-          style={{ ...inputStyle, fontSize: 11, color: "var(--t2)", marginBottom: 10 }} />
-        <div onClick={addH} className="add-btn" style={{ display: "inline-flex" }}>ADD HABIT</div>
+      <div className="brute" style={{ marginTop: 10 }}>
+        <div className="brute-field">
+          <div className="brute-field-l">New habit</div>
+          <input value={newH} onChange={e => setNewH(e.target.value)} placeholder="e.g. Meditate 10 min" onKeyDown={e => { if (e.key === "Enter") addH(); }} style={inputStyle} />
+        </div>
+        <div className="brute-field">
+          <div className="brute-field-l">Subtitle (optional)</div>
+          <input value={newHS} onChange={e => setNewHS(e.target.value)} placeholder="e.g. Right after coffee" style={{ ...inputStyle, fontSize: 12 }} />
+        </div>
+        <div onClick={addH} className="add-btn" style={{ display: "inline-flex", marginTop: 4 }}>ADD HABIT</div>
       </div>
 
-      <div style={{ marginTop: 26 }}>
-        <SectionHeader label="RECURRING TASKS" />
+      {/* Recurring */}
+      <div style={{ marginTop: 30 }}>
+        <SectionHeader label="RECURRING TASKS" count={recurring.length} />
       </div>
       {recurring.map(r => (
-        <div key={r.id} style={{ display: "flex", justifyContent: "space-between", padding: "12px 16px", background: "var(--item)", borderRadius: 11, marginBottom: 4, border: "1px solid var(--brd)", alignItems: "center" }}>
-          <div>
-            <div style={{ fontSize: 13, color: "var(--t1)", fontWeight: 500 }}>{r.text}</div>
-            <div style={{ fontSize: 10, color: "var(--t3)", marginTop: 3, fontFamily: "'JetBrains Mono', monospace" }}>
-              {r.days.join(", ")}{r.tag ? " · " + r.tag : ""}
+        <div key={r.id} className="row" style={{ cursor: "default", gap: 10 }}>
+          <div className="row-body">
+            <div className="row-text">{r.text}</div>
+            <div className="row-sub" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+              {r.days.join(" · ")}{r.tag ? " · " + r.tag : ""}
             </div>
           </div>
-          <div onClick={() => delR(r.id)} style={{ fontSize: 16, color: "var(--t3)", cursor: "pointer", lineHeight: 1 }}>×</div>
+          <div onClick={() => delR(r.id)} style={{ fontSize: 18, color: "var(--t3)", cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>×</div>
         </div>
       ))}
-      <div style={{ marginTop: 10, padding: 14, background: "var(--item)", borderRadius: 11, border: "1px solid var(--brd)" }}>
-        <input value={newR} onChange={e => setNewR(e.target.value)} placeholder="Task text" style={{ ...inputStyle, marginBottom: 10 }} />
-        <div className="chip-row" style={{ marginBottom: 10 }}>
+      <div className="brute" style={{ marginTop: 10 }}>
+        <div className="brute-field">
+          <div className="brute-field-l">Task text</div>
+          <input value={newR} onChange={e => setNewR(e.target.value)} placeholder="e.g. Review weekly metrics" style={inputStyle} />
+        </div>
+        <div className="brute-field-l">Days</div>
+        <div className="chip-row" style={{ marginBottom: 14 }}>
           {DAY_LABELS.map(d => (
             <div key={d} className={`chip ${newRDays.includes(d) ? "active" : ""}`} onClick={() => toggleRDay(d)}>{d}</div>
           ))}
         </div>
-        <div className="chip-row" style={{ marginBottom: 10 }}>
+        <div className="brute-field-l">Tag (optional)</div>
+        <div className="chip-row" style={{ marginBottom: 14 }}>
           {TAGS.map(t => (
             <div key={t} className={`chip ${tagClass(t)} ${newRTag === t ? "active" : ""}`} onClick={() => setNewRTag(newRTag === t ? "" : t)}>{t}</div>
           ))}
@@ -232,16 +250,21 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
         <div onClick={addR} className="add-btn" style={{ display: "inline-flex" }}>ADD RECURRING</div>
       </div>
 
+      {/* Import */}
       <ImportTasks setDay={setDay} getDayData={getDayData} today={today} bulkSetDays={bulkSetDays} />
 
-      <div style={{ marginTop: 26 }}>
+      {/* Export */}
+      <div style={{ marginTop: 30 }}>
         <SectionHeader label="DATA" />
       </div>
-      <div onClick={exportData} style={{ padding: "13px 16px", background: "var(--item)", borderRadius: 11, border: "1px solid var(--brd)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", transition: "all 0.2s" }}>
-        <span style={{ fontSize: 13, color: "var(--t1)", fontWeight: 500 }}>Export backup (JSON)</span>
-        <span style={{ fontSize: 11, color: "var(--red)", fontWeight: 700, letterSpacing: "0.14em" }}>DOWNLOAD</span>
+      <div onClick={exportData} className="row" style={{ gap: 10, justifyContent: "space-between" }}>
+        <div className="row-body">
+          <div className="row-text">Export backup (JSON)</div>
+          <div className="row-sub">Snapshot of all days, habits, goals, logs</div>
+        </div>
+        <span style={{ fontSize: 11, color: "var(--red)", fontWeight: 700, letterSpacing: "0.18em", fontFamily: "'Cinzel', serif", textShadow: "0 0 6px var(--red)" }}>DOWNLOAD</span>
       </div>
-      <div style={{ marginTop: 14, padding: 14, borderLeft: "2px solid rgba(232, 16, 42, 0.3)", background: "rgba(232, 16, 42, 0.03)" }}>
+      <div style={{ marginTop: 14, padding: "14px 18px", borderLeft: "3px solid var(--red)", background: "rgba(232, 16, 42, 0.04)", borderRadius: "0 10px 10px 0" }}>
         <div style={{ fontSize: 11, color: "var(--t3)", lineHeight: 1.7 }}>
           Changes to habits apply to future days. Past data stays intact.
         </div>

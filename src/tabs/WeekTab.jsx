@@ -11,7 +11,7 @@ export default function WeekTab({ days, habits, today, dayOff, setDayOff, setTab
 
       <div style={{
         fontSize: 11, letterSpacing: "0.26em", color: "var(--red-b)",
-        marginBottom: 16, fontWeight: 700, fontFamily: "'Cinzel', serif",
+        marginBottom: 14, fontWeight: 700, fontFamily: "'Cinzel', serif",
         textTransform: "uppercase", textShadow: "0 0 8px var(--red)",
       }}>
         Week of {niceDate(weekDays[0])}
@@ -32,54 +32,48 @@ export default function WeekTab({ days, habits, today, dayOff, setDayOff, setTab
           const dayName = new Date(day + "T12:00:00").toLocaleDateString("en-US", { weekday: "short" });
           const dayNum = parseInt(day.split("-")[2]);
 
+          // Build per-habit ticks + per-task ticks
+          const habitTicks = habits.map(h => !!(x.checks && x.checks[h.id]));
+          const taskTicks = (x.tasks || []).map(t => !!t.done);
+          const allTicks = [...habitTicks.map(d => ({ done: d, kind: "h" })), ...taskTicks.map(d => ({ done: d, kind: "t" }))];
+
           return (
             <div
               key={day}
-              className="row"
+              className="wk-row"
               style={{
-                gap: 14,
-                cursor: "pointer",
-                opacity: future ? 0.55 : 1,
-                background: pf ? "linear-gradient(90deg, rgba(28, 10, 16, 0.8), var(--item))" : "var(--item)",
-                border: isToday ? "1px solid var(--red)" : "1px solid var(--brd)",
+                borderColor: isToday ? "var(--red)" : "var(--brd)",
+                background: pf ? "linear-gradient(90deg, rgba(28, 10, 16, 0.7), var(--item))" : "var(--item)",
                 boxShadow: pf ? "0 0 18px rgba(232, 16, 42, 0.18)" : "none",
+                opacity: future ? 0.5 : 1,
               }}
               onClick={() => { setDayOff(dayDiff(day, today)); setTab("day"); }}
             >
-              <div style={{ width: 44, textAlign: "center", flexShrink: 0 }}>
-                <div style={{
-                  fontSize: 10, color: isToday ? "var(--red)" : "var(--t3)",
-                  letterSpacing: "0.16em", fontWeight: 700, fontFamily: "'Cinzel', serif",
-                  textTransform: "uppercase",
-                }}>{dayName}</div>
-                <div style={{
-                  fontSize: 20, fontWeight: 700,
+              <div className="wk-row-day">
+                <div className="wk-row-name" style={{ color: isToday ? "var(--red)" : "var(--t3)" }}>{dayName}</div>
+                <div className="wk-row-num" style={{
                   color: isToday ? "var(--red)" : pf ? "var(--red)" : "var(--t1)",
-                  fontFamily: "'Oswald', sans-serif", lineHeight: 1.1,
                   textShadow: isToday || pf ? "0 0 8px var(--red)" : "none",
                 }}>{dayNum}</div>
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ height: 5, background: "#1e1a24", borderRadius: 3, overflow: "hidden" }}>
-                  <div style={{
-                    height: "100%",
-                    background: pf ? "linear-gradient(90deg, var(--red), var(--red-b))" : "linear-gradient(90deg, var(--red-d), var(--red))",
-                    boxShadow: "0 0 6px var(--red)",
-                    borderRadius: 3, width: p + "%",
-                    transition: "width 0.6s cubic-bezier(0.4, 1.2, 0.3, 1)",
-                  }} />
-                </div>
+
+              <div className="wk-row-ticks">
+                {allTicks.length === 0 ? (
+                  <div className="wk-row-empty">—</div>
+                ) : (
+                  allTicks.map((t, i) => (
+                    <div
+                      key={i}
+                      className={`wk-tick ${t.done ? "done" : ""} ${t.kind === "t" ? "task" : "habit"}`}
+                      style={{ animationDelay: `${i * 0.015}s` }}
+                    />
+                  ))
+                )}
               </div>
-              <div style={{
-                fontSize: 13, color: pf ? "var(--red)" : "var(--t2)",
-                fontWeight: 700, minWidth: 40, textAlign: "right",
-                fontFamily: "'Oswald', sans-serif",
-              }}>{p}%</div>
-              {tt > 0 && (
-                <div style={{ fontSize: 11, color: "var(--t3)", fontFamily: "'JetBrains Mono', monospace", fontWeight: 500, flexShrink: 0 }}>
-                  {tc}/{tt}
-                </div>
-              )}
+
+              <div className="wk-row-pct" style={{ color: pf ? "var(--red)" : "var(--t2)" }}>
+                {p}%
+              </div>
             </div>
           );
         })}
