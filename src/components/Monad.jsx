@@ -39,14 +39,14 @@ export default function Monad({ size = 180, color = "#e8102a" }) {
         <path d="M 68 200 A 10 14 0 0 1 66 224" strokeWidth="1.8" />
         <path d="M 112 200 A 10 14 0 0 0 114 224" strokeWidth="1.8" />
       </svg>
-      {/* Inner pulsing glow */}
+      {/* Inner pulsing glow — pure red, no pink */}
       <svg
         className="monad-core"
         viewBox="0 0 180 240"
         fill="none"
-        stroke="#ff4d6d"
+        stroke={color}
         strokeWidth="1"
-        style={{ opacity: 0.6, filter: "drop-shadow(0 0 6px #ff4d6d)" }}
+        style={{ opacity: 0.5, filter: `drop-shadow(0 0 4px ${color})` }}
       >
         <circle cx="90" cy="110" r="20" strokeDasharray="1 2" />
       </svg>

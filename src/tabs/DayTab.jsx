@@ -309,7 +309,7 @@ export default function DayTab({
       {/* Quote */}
       {isToday && (
         <div className="quote">
-          <div className="quote-text">"{quote}"</div>
+          <div className="quote-text">{quote}</div>
         </div>
       )}
 
