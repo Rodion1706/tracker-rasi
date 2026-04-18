@@ -10,7 +10,7 @@ export default function WeekTab({ days, habits, today, dayOff, setDayOff, setTab
       <WeekBigStrip weekDays={weekDays} today={today} habits={habits} days={days} />
 
       <div style={{
-        fontSize: 11, letterSpacing: "0.26em", color: "var(--red-b)",
+        fontSize: 11, letterSpacing: "0.26em", color: "var(--red)",
         marginBottom: 14, fontWeight: 700, fontFamily: "'Cinzel', serif",
         textTransform: "uppercase", textShadow: "0 0 8px var(--red)",
       }}>

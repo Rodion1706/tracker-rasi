@@ -1,5 +1,6 @@
 import { useState } from "react";
 import TabHeader from "../components/TabHeader";
+import { GoalTicks } from "../components/ProgressTicks";
 
 const QUARTERS = ["Q2", "Q3", "Q4"];
 const inputStyle = { width: "100%", background: "transparent", border: "none", borderBottom: "1px solid var(--brd)", color: "var(--t1)", fontSize: 14, outline: "none", padding: "5px 0", boxSizing: "border-box", fontFamily: "inherit" };
@@ -150,9 +151,7 @@ export default function GoalsTab({ goals, setGoals }) {
                       <div onClick={() => startFullEdit(g)} style={{ fontSize: 10, color: "var(--t3)", cursor: "pointer", fontFamily: "'Cinzel', serif", letterSpacing: "0.14em" }}>edit</div>
                     </div>
                   </div>
-                  <div className="goal-progress-bar">
-                    <div className="goal-progress-fill" style={{ "--pct": p / 100, animationDelay: `${idx * 0.1 + 0.2}s` }} />
-                  </div>
+                  <GoalTicks current={g.current} target={g.target} />
                 </div>
               );
             })}

@@ -26,7 +26,7 @@
   --tag-channel: #e8102a;
   --tag-personal: #aa88cc;
 
-  --overdue: #cc8833;
+  --overdue: #9a2030;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -249,10 +249,10 @@ body::after {
 .ys-sub {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  color: var(--red-b);
+  color: var(--red);
   letter-spacing: 0.16em;
   margin-top: 6px;
-  text-shadow: 0 0 4px var(--red);
+  text-shadow: 0 0 6px rgba(232, 16, 42, 0.6);
   font-weight: 600;
 }
 .ys-track {
@@ -354,22 +354,19 @@ body::after {
   font-family: 'Oswald', sans-serif;
   font-weight: 700;
   font-size: 30px;
-  color: var(--t1);
+  color: var(--red);
   line-height: 1;
-  background: linear-gradient(90deg, var(--red), var(--red-b));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  text-shadow: 0 0 14px rgba(232, 16, 42, 0.6);
 }
-.sc-value.plain { background: none; -webkit-text-fill-color: var(--t1); color: var(--t1); }
-.sc-value.done-all { background: linear-gradient(90deg, var(--red-b), #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.sc-value.plain { color: var(--t1); text-shadow: 0 0 10px rgba(232, 16, 42, 0.3); }
+.sc-value.done-all { color: var(--red); text-shadow: 0 0 16px var(--red), 0 0 32px rgba(232, 16, 42, 0.5); }
 .sc-value .unit {
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
   color: #9c9ca2;
   font-weight: 500;
   margin-left: 4px;
-  -webkit-text-fill-color: #9c9ca2;
+  text-shadow: none;
 }
 
 /* Small secondary stat row */
@@ -390,7 +387,7 @@ body::after {
 }
 .ss-label { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.22em; color: #a8a8ae; font-weight: 600; text-transform: uppercase; }
 .ss-value { font-family: 'Oswald', sans-serif; font-size: 14px; font-weight: 700; color: var(--t1); }
-.ss-value.r { color: var(--red-b); text-shadow: 0 0 8px var(--red); }
+.ss-value.r { color: var(--red); text-shadow: 0 0 8px rgba(232, 16, 42, 0.7); }
 
 /* Week tick-style indicator — matches YearStrip */
 .ws-ticks { display: flex; gap: 3px; }
@@ -451,11 +448,11 @@ body::after {
 .wbs-sub {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  color: var(--red-b);
+  color: var(--red);
   letter-spacing: 0.14em;
   margin-top: 5px;
   font-weight: 600;
-  text-shadow: 0 0 4px var(--red);
+  text-shadow: 0 0 6px rgba(232, 16, 42, 0.6);
 }
 .wbs-track {
   flex: 1;
@@ -620,11 +617,11 @@ body::after {
 .tab-header-sub {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  color: var(--red-b);
+  color: var(--red);
   letter-spacing: 0.2em;
   margin-top: 7px;
   font-weight: 600;
-  text-shadow: 0 0 4px var(--red);
+  text-shadow: 0 0 6px rgba(232, 16, 42, 0.6);
   text-transform: uppercase;
 }
 
@@ -827,23 +824,53 @@ body::after {
   opacity: 0.6;
 }
 
-/* ════════ PROGRESS BAR ════════ */
+/* ════════ PROGRESS BAR — tick-segment style matching YearStrip ════════ */
 .progress {
-  height: 4px;
-  background: #1e1a24;
-  border-radius: 3px;
+  display: flex;
+  gap: 3px;
+  height: 10px;
   margin-bottom: 20px;
-  overflow: hidden;
-  position: relative;
+  align-items: stretch;
 }
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--red-d), var(--red), var(--red-b));
-  box-shadow: 0 0 8px var(--red);
-  border-radius: 3px;
-  transform: scaleX(0);
-  transform-origin: left;
-  animation: fill 1.5s cubic-bezier(0.4, 1.2, 0.3, 1) 0.2s forwards;
+.progress-seg {
+  flex: 1;
+  background: rgba(232, 16, 42, 0.14);
+  border-radius: 2px;
+  transform-origin: bottom;
+  animation: tickIn 0.4s cubic-bezier(0.4, 1.4, 0.3, 1) both;
+  transition: all 0.3s;
+}
+.progress-seg.on {
+  background: linear-gradient(180deg, var(--red), var(--red-d));
+  box-shadow: 0 0 6px rgba(232, 16, 42, 0.55);
+}
+.progress-seg.done-all {
+  background: linear-gradient(180deg, var(--red), var(--red-d));
+  box-shadow: 0 0 10px var(--red), 0 0 18px rgba(232, 16, 42, 0.4);
+}
+
+/* Segment bar — for goal progress (limits to 20 segs max for any target) */
+.seg-bar {
+  display: flex;
+  gap: 3px;
+  height: 9px;
+  align-items: stretch;
+}
+.seg {
+  flex: 1;
+  background: rgba(232, 16, 42, 0.12);
+  border-radius: 2px;
+  transform-origin: bottom;
+  animation: tickIn 0.4s cubic-bezier(0.4, 1.4, 0.3, 1) both;
+  transition: all 0.25s;
+}
+.seg.on {
+  background: linear-gradient(180deg, var(--red), var(--red-d));
+  box-shadow: 0 0 6px rgba(232, 16, 42, 0.5);
+}
+.seg.complete-all {
+  background: linear-gradient(180deg, var(--red), var(--red-d));
+  box-shadow: 0 0 10px var(--red), 0 0 18px rgba(232, 16, 42, 0.45);
 }
 
 /* ════════ SECTION HEADER ════════ */
@@ -864,10 +891,10 @@ body::after {
 .section-line { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(232, 16, 42, 0.25), transparent); }
 .section-count { color: #9c9ca2; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; font-weight: 600; }
 
-/* overdue variant */
+/* overdue variant — dim red */
 .section.overdue .section-bar { background: var(--overdue); box-shadow: 0 0 6px var(--overdue); }
-.section.overdue .section-label { color: var(--overdue); text-shadow: 0 0 6px var(--overdue); }
-.section.overdue .section-line { background: linear-gradient(90deg, rgba(204, 136, 51, 0.25), transparent); }
+.section.overdue .section-label { color: #d07a88; text-shadow: 0 0 6px var(--overdue); }
+.section.overdue .section-line { background: linear-gradient(90deg, rgba(154, 32, 48, 0.35), transparent); }
 
 /* ════════ CHECKS ════════ */
 /* Radial check — for tasks */
@@ -1054,30 +1081,35 @@ body::after {
   font-family: inherit;
 }
 
-/* Overdue task row */
+/* Overdue task row — dim red variant */
 .overdue-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 16px;
-  background: rgba(204, 136, 51, 0.08);
-  border: 1px solid rgba(204, 136, 51, 0.25);
+  padding: 11px 16px;
+  background: rgba(154, 32, 48, 0.08);
+  border: 1px solid rgba(154, 32, 48, 0.35);
   border-radius: 8px;
   margin-bottom: 4px;
   cursor: pointer;
   transition: all 0.2s;
 }
-.overdue-row:hover { background: rgba(204, 136, 51, 0.14); }
-.overdue-text { font-size: 13px; color: var(--overdue); font-weight: 500; }
+.overdue-row:hover {
+  background: rgba(154, 32, 48, 0.16);
+  border-color: var(--overdue);
+  box-shadow: 0 0 10px rgba(154, 32, 48, 0.2);
+}
+.overdue-text { font-size: 13px; color: #d07a88; font-weight: 500; }
 .overdue-add {
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
-  color: rgba(204, 136, 51, 0.8);
+  color: #e08898;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  padding: 3px 8px;
-  border: 1px solid rgba(204, 136, 51, 0.3);
+  letter-spacing: 0.12em;
+  padding: 3px 9px;
+  border: 1px solid rgba(154, 32, 48, 0.45);
   border-radius: 4px;
+  background: rgba(154, 32, 48, 0.1);
 }
 
 /* ════════ ADD TASK FORM ════════ */
@@ -1315,8 +1347,8 @@ body::after {
   font-family: 'Oswald', sans-serif;
   font-weight: 700;
   font-size: 15px;
-  color: var(--red-b);
-  text-shadow: 0 0 8px var(--red);
+  color: var(--red);
+  text-shadow: 0 0 8px rgba(232, 16, 42, 0.5);
   flex-shrink: 0;
   letter-spacing: 0.02em;
 }

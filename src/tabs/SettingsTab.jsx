@@ -101,7 +101,7 @@ friday | Personal | Dentist follow-up`;
         )}
         <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
           <div onClick={doPreview} className="add-btn">PREVIEW</div>
-          {preview && <div onClick={doImport} className="add-btn" style={{ background: "rgba(255, 77, 109, 0.15)", color: "var(--red-b)", borderColor: "rgba(255, 77, 109, 0.5)" }}>IMPORT {preview.total}</div>}
+          {preview && <div onClick={doImport} className="add-btn" style={{ background: "rgba(232, 16, 42, 0.2)", color: "var(--red)", borderColor: "rgba(232, 16, 42, 0.5)" }}>IMPORT {preview.total}</div>}
           {(text || preview) && <div onClick={() => { setText(""); setPreview(null); setError(""); }} style={{ padding: "11px 16px", color: "var(--t3)", cursor: "pointer", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", fontFamily: "'Cinzel', serif" }}>CLEAR</div>}
         </div>
       </div>

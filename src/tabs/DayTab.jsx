@@ -4,6 +4,7 @@ import { DiamondCheck } from "../components/Checks";
 import SectionHeader from "../components/SectionHeader";
 import { BigStat, BestStat, WeekStat } from "../components/StatCards";
 import Monad from "../components/Monad";
+import ProgressTicks from "../components/ProgressTicks";
 
 function tagClass(tag) {
   if (tag === "Work 1") return "work1";
@@ -160,9 +161,7 @@ export default function DayTab({
             <BestStat best={bestStreak} />
             <WeekStat weekDays={weekDays} today={today} habits={habits} days={days} />
           </div>
-          <div className="progress" style={{ marginBottom: 0 }}>
-            <div className="progress-fill" style={{ "--pct": pct / 100 }} />
-          </div>
+          <ProgressTicks done={totDone} total={total} />
         </div>
       </div>
 

@@ -35,7 +35,7 @@ export default function LogTab({ logs, setLogs, today }) {
               {[
                 [log.published || 0, "published", "var(--red)"],
                 [`$${log.spent || 0}`, "spent", "var(--t2)"],
-                [`$${log.revenue || 0}`, "revenue", "var(--red-b)"],
+                [`$${log.revenue || 0}`, "revenue", "var(--red)"],
               ].map(([val, lbl, col]) => (
                 <div key={lbl}>
                   <div className="brute-stat-v" style={{ color: col }}>{val}</div>

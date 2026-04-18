@@ -52,7 +52,7 @@ export default function HabitCalendarModal({ habit, days, today, onClose }) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 20 }}>
           {[
             ["STREAK", curStreak, curStreak > 0 ? "var(--red)" : "var(--t3)"],
-            ["BEST", bestStreak, bestStreak > 0 ? "var(--red-b)" : "var(--t3)"],
+            ["BEST", bestStreak, bestStreak > 0 ? "var(--red)" : "var(--t3)"],
             ["TOTAL", totalDone, "var(--t1)"],
             ["RATE", compliance + "%", compliance >= 80 ? "var(--red)" : "var(--t2)"],
           ].map(([label, value, color]) => (
@@ -103,7 +103,7 @@ export default function HabitCalendarModal({ habit, days, today, onClose }) {
                 alignItems: "center",
                 justifyContent: "center",
                 background: done
-                  ? "linear-gradient(135deg, var(--red), var(--red-b))"
+                  ? "linear-gradient(135deg, var(--red), var(--red))"
                   : hasData && !future ? "#1a1520" : "var(--item)",
                 border: isToday ? "2px solid var(--red)" : "1px solid var(--brd)",
                 opacity: future ? 0.3 : 1,
