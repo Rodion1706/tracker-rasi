@@ -289,7 +289,6 @@ body::after {
   font-size: 34px;
   color: #fff;
   line-height: 1;
-  text-shadow: 0 0 14px var(--red);
   display: flex;
   align-items: baseline;
   gap: 4px;
@@ -297,12 +296,7 @@ body::after {
 .ys-w .n {
   color: var(--red);
   font-size: 48px;
-  text-shadow: 0 0 14px var(--red), 0 0 28px rgba(232, 16, 42, 0.55);
-  animation: weekNumGlow 3.2s ease-in-out infinite;
-}
-@keyframes weekNumGlow {
-  0%, 100% { text-shadow: 0 0 14px var(--red), 0 0 28px rgba(232, 16, 42, 0.55); }
-  50% { text-shadow: 0 0 22px var(--red-b), 0 0 40px rgba(232, 16, 42, 0.85); }
+  text-shadow: none;
 }
 .ys-w .of {
   font-family: 'JetBrains Mono', monospace;
@@ -579,6 +573,18 @@ body::after {
 @media (max-width: 620px) {
   .wbs { grid-template-columns: 1fr; gap: 12px; }
   .wbs-label { text-align: center; }
+}
+
+@media (max-width: 520px) {
+  .ys {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .ys-label { min-width: 0; text-align: center; }
+  .ys-w { justify-content: center; }
+  .ys-sub { text-align: center; }
+  .ys-track { gap: 1px; height: 36px; padding-bottom: 18px; }
+  .ys-months { font-size: 9px; letter-spacing: 0.08em; }
 }
 
 /* Week tab daily rows — tick heatmap per row */
