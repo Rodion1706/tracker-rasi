@@ -223,9 +223,13 @@ function Tracker({ uid }) {
 
 /* ══════ HELPERS (for header) ══════ */
 function getWeekNum(dateStr) {
-  const d = new Date(dateStr + "T12:00:00");
-  const jan1 = new Date(d.getFullYear(), 0, 1);
-  return Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+  // ISO 8601 week number — matches getWeekId in config.js
+  const src = new Date(dateStr + "T12:00:00");
+  const d = new Date(Date.UTC(src.getFullYear(), src.getMonth(), src.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
 }
 function getQuarter(dateStr) {
   const m = parseInt(dateStr.split("-")[1]);
