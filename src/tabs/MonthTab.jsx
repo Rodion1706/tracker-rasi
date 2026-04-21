@@ -73,9 +73,7 @@ export default function MonthTab({ days, habits, today, mOff, setMOff, setDayOff
               onClick={() => { setDayOff(dayDiff(day, today)); setTab("day"); }}
             >
               {p > 0 && !future && (
-                <div className="mc-fill" style={{ "--p": p }}>
-                  <div className="mc-fill-wave" />
-                </div>
+                <div className="mc-fill" style={{ "--p": p }} />
               )}
               <div className="month-cell-num">{dn}</div>
               {tot > 0 && !future && (
