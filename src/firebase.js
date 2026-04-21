@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "firebase/auth";
+import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged } from "firebase/auth";
 
 // ┌─────────────────────────────────────────────┐
 // │  PASTE YOUR FIREBASE CONFIG HERE            │
@@ -20,4 +20,4 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const provider = new GoogleAuthProvider();
-export { doc, getDoc, setDoc, signInWithPopup, onAuthStateChanged };
+export { doc, getDoc, setDoc, signInWithPopup, signOut, onAuthStateChanged };

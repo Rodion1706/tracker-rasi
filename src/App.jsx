@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
-import { db, auth, provider, doc, getDoc, setDoc, signInWithPopup, onAuthStateChanged } from "./firebase";
+import { db, auth, provider, doc, getDoc, setDoc, signInWithPopup, signOut, onAuthStateChanged } from "./firebase";
 import { DEF_HABITS, DEF_GOALS, argDate, niceDate } from "./config";
+
+/* ══════ ACCESS CONTROL ══════ */
+// Only these emails can sign in. Add more if needed.
+const ALLOWED_EMAILS = ["vagggin6@gmail.com"];
 
 import PillTabs from "./components/PillTabs";
 import YearStrip from "./components/YearStrip";
@@ -14,12 +18,23 @@ import LogTab from "./tabs/LogTab";
 import GoalsTab from "./tabs/GoalsTab";
 import SettingsTab from "./tabs/SettingsTab";
 
-/* ══════ FIREBASE HOOKS (unchanged logic) ══════ */
+/* ══════ FIREBASE HOOKS ══════ */
 function useAuth() {
   const [user, setUser] = useState(null);
   const [loading, setL] = useState(true);
-  useEffect(() => onAuthStateChanged(auth, u => { setUser(u); setL(false); }), []);
-  return { user, loading };
+  const [denied, setDenied] = useState(null); // holds denied email when access refused
+  useEffect(() => onAuthStateChanged(auth, async u => {
+    if (u && !ALLOWED_EMAILS.includes((u.email || "").toLowerCase())) {
+      setDenied(u.email || "unknown");
+      setUser(null);
+      try { await signOut(auth); } catch (e) { /* no-op */ }
+    } else {
+      setDenied(null);
+      setUser(u);
+    }
+    setL(false);
+  }), []);
+  return { user, loading, denied, clearDenied: () => setDenied(null) };
 }
 
 function useData(uid) {
@@ -44,7 +59,7 @@ function useData(uid) {
 
 /* ══════ APP ROOT ══════ */
 export default function App() {
-  const { user, loading: authLd } = useAuth();
+  const { user, loading: authLd, denied, clearDenied } = useAuth();
   const [busy, setBusy] = useState(false);
 
   async function login() {
@@ -62,8 +77,75 @@ export default function App() {
       </div>
     );
   }
+  if (denied) return <AccessDenied email={denied} onRetry={clearDenied} />;
   if (!user) return <Login onLogin={login} busy={busy} />;
   return <Tracker uid={user.uid} />;
+}
+
+/* ══════ ACCESS DENIED SCREEN ══════ */
+function AccessDenied({ email, onRetry }) {
+  return (
+    <div style={{
+      background: "var(--bg)",
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 20,
+      position: "relative",
+      textAlign: "center",
+    }}>
+      <div className="top-strip" />
+      <div style={{
+        fontFamily: "'Oswald', sans-serif",
+        fontSize: 38,
+        fontWeight: 700,
+        letterSpacing: "0.24em",
+        color: "var(--red)",
+        textShadow: "0 0 18px var(--red)",
+        marginBottom: 18,
+      }}>ACCESS DENIED</div>
+      <div style={{
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: 13,
+        color: "var(--t2)",
+        letterSpacing: "0.08em",
+        marginBottom: 8,
+        wordBreak: "break-all",
+        maxWidth: 420,
+      }}>{email}</div>
+      <div style={{
+        fontFamily: "'Cinzel', serif",
+        fontSize: 12,
+        color: "var(--t3)",
+        letterSpacing: "0.18em",
+        textTransform: "uppercase",
+        marginBottom: 36,
+      }}>not on the allowlist</div>
+      <div
+        onClick={onRetry}
+        style={{
+          padding: "12px 30px",
+          background: "rgba(232, 16, 42, 0.1)",
+          color: "var(--red)",
+          borderRadius: 10,
+          cursor: "pointer",
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: "0.2em",
+          border: "1px solid rgba(232, 16, 42, 0.4)",
+          fontFamily: "'Cinzel', serif",
+          textTransform: "uppercase",
+          transition: "all 0.2s",
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = "rgba(232, 16, 42, 0.2)"; e.currentTarget.style.boxShadow = "0 0 24px rgba(232, 16, 42, 0.35)"; }}
+        onMouseLeave={e => { e.currentTarget.style.background = "rgba(232, 16, 42, 0.1)"; e.currentTarget.style.boxShadow = "none"; }}
+      >
+        TRY ANOTHER ACCOUNT
+      </div>
+    </div>
+  );
 }
 
 /* ══════ TRACKER ══════ */
