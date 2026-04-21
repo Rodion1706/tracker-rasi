@@ -50,6 +50,18 @@ export default function YearStrip({ today }) {
       </div>
       <div className="ys-track">
         {ticks}
+        {[25, 50, 75].map(pct => (
+          <span key={pct} className="ys-q-divider" style={{ left: `${pct}%` }} />
+        ))}
+        <div className="ys-quarters">
+          {["Q1", "Q2", "Q3", "Q4"].map((q, i) => (
+            <span
+              key={q}
+              className={`ys-q ${quarter === q ? "active" : ""}`}
+              style={{ left: `${i * 25 + 12.5}%` }}
+            >{q}</span>
+          ))}
+        </div>
         <div className="ys-months">
           {MONTH_LABELS.map(m => <span key={m}>{m}</span>)}
         </div>

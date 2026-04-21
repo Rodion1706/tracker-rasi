@@ -1,6 +1,14 @@
 import { niceDate, dayDiff, argDate, getWeekDays } from "../config";
 import { WeekBigStrip } from "../components/StatCards";
 
+function tagClass(tag) {
+  if (tag === "Work 1") return "work1";
+  if (tag === "Work 2") return "work2";
+  if (tag === "Channel") return "channel";
+  if (tag === "Personal") return "personal";
+  return "";
+}
+
 export default function WeekTab({ days, habits, today, dayOff, setDayOff, setTab }) {
   const weekDays = getWeekDays(argDate(dayOff));
 
@@ -32,10 +40,10 @@ export default function WeekTab({ days, habits, today, dayOff, setDayOff, setTab
           const dayName = new Date(day + "T12:00:00").toLocaleDateString("en-US", { weekday: "short" });
           const dayNum = parseInt(day.split("-")[2]);
 
-          // Build per-habit ticks + per-task ticks
-          const habitTicks = habits.map(h => !!(x.checks && x.checks[h.id]));
-          const taskTicks = (x.tasks || []).map(t => !!t.done);
-          const allTicks = [...habitTicks.map(d => ({ done: d, kind: "h" })), ...taskTicks.map(d => ({ done: d, kind: "t" }))];
+          // Build per-habit ticks + per-task ticks (tagged)
+          const habitTicks = habits.map(h => ({ done: !!(x.checks && x.checks[h.id]), kind: "h", tag: "" }));
+          const taskTicks = (x.tasks || []).map(t => ({ done: !!t.done, kind: "t", tag: t.tag || "" }));
+          const allTicks = [...habitTicks, ...taskTicks];
 
           return (
             <div
@@ -61,13 +69,16 @@ export default function WeekTab({ days, habits, today, dayOff, setDayOff, setTab
                 {allTicks.length === 0 ? (
                   <div className="wk-row-empty">—</div>
                 ) : (
-                  allTicks.map((t, i) => (
-                    <div
-                      key={i}
-                      className={`wk-tick ${t.done ? "done" : ""} ${t.kind === "t" ? "task" : "habit"}`}
-                      style={{ animationDelay: `${i * 0.015}s` }}
-                    />
-                  ))
+                  allTicks.map((t, i) => {
+                    const tagCls = t.kind === "t" ? tagClass(t.tag) : "";
+                    return (
+                      <div
+                        key={i}
+                        className={`wk-tick ${t.done ? "done" : ""} ${t.kind === "t" ? "task" : "habit"} ${tagCls}`}
+                        style={{ animationDelay: `${i * 0.015}s` }}
+                      />
+                    );
+                  })
                 )}
               </div>
 

@@ -319,9 +319,10 @@ body::after {
   flex: 1;
   display: flex;
   gap: 2px;
-  height: 40px;
+  height: 52px;
   align-items: stretch;
   position: relative;
+  padding-top: 12px;
   padding-bottom: 20px;
 }
 .ys-tick {
@@ -366,6 +367,45 @@ body::after {
   font-weight: 600;
   pointer-events: none;
   text-transform: uppercase;
+}
+.ys-q-divider {
+  position: absolute;
+  top: 12px;
+  bottom: 20px;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(232, 16, 42, 0.5), rgba(232, 16, 42, 0.5), transparent);
+  box-shadow: 0 0 4px rgba(232, 16, 42, 0.45);
+  pointer-events: none;
+  z-index: 1;
+}
+.ys-quarters {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 12px;
+  pointer-events: none;
+  z-index: 2;
+}
+.ys-q {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  font-weight: 700;
+  color: var(--t3);
+  text-transform: uppercase;
+  padding: 1px 7px;
+  border-radius: 3px;
+  background: rgba(16, 8, 18, 0.85);
+  border: 1px solid rgba(232, 16, 42, 0.25);
+  white-space: nowrap;
+}
+.ys-q.active {
+  color: var(--red-b);
+  border-color: rgba(232, 16, 42, 0.65);
+  text-shadow: 0 0 6px var(--red);
+  box-shadow: 0 0 8px rgba(232, 16, 42, 0.4);
 }
 
 /* ════════ MONAD ════════ */
@@ -583,7 +623,8 @@ body::after {
   .ys-label { min-width: 0; text-align: center; }
   .ys-w { justify-content: center; }
   .ys-sub { text-align: center; }
-  .ys-track { gap: 1px; height: 36px; padding-bottom: 18px; }
+  .ys-track { gap: 1px; height: 48px; padding-top: 11px; padding-bottom: 18px; }
+  .ys-q { font-size: 8px; padding: 1px 5px; letter-spacing: 0.16em; }
   .ys-months { font-size: 9px; letter-spacing: 0.08em; }
 }
 
@@ -637,10 +678,32 @@ body::after {
   background: linear-gradient(180deg, var(--red-b), var(--red), var(--red-d));
   box-shadow: 0 0 5px rgba(232, 16, 42, 0.5);
 }
-.wk-tick.task:not(.done) { background: rgba(255, 111, 178, 0.14); }
+/* Task ticks — colored by tag. No-tag default is dim personal pink. */
+.wk-tick.task:not(.done) { background: rgba(120, 110, 130, 0.18); }
 .wk-tick.task.done {
+  background: linear-gradient(180deg, var(--t2), var(--t3));
+  box-shadow: 0 0 5px rgba(148, 142, 152, 0.45);
+}
+
+.wk-tick.task.work1:not(.done) { background: rgba(91, 127, 191, 0.15); }
+.wk-tick.task.work1.done {
+  background: linear-gradient(180deg, #8fb3e0, var(--tag-work1));
+  box-shadow: 0 0 5px rgba(91, 127, 191, 0.55);
+}
+.wk-tick.task.work2:not(.done) { background: rgba(212, 165, 74, 0.15); }
+.wk-tick.task.work2.done {
+  background: linear-gradient(180deg, #ebc880, var(--tag-work2));
+  box-shadow: 0 0 5px rgba(212, 165, 74, 0.55);
+}
+.wk-tick.task.channel:not(.done) { background: rgba(232, 16, 42, 0.14); }
+.wk-tick.task.channel.done {
+  background: linear-gradient(180deg, var(--red-b), var(--red));
+  box-shadow: 0 0 5px rgba(232, 16, 42, 0.55);
+}
+.wk-tick.task.personal:not(.done) { background: rgba(255, 111, 178, 0.15); }
+.wk-tick.task.personal.done {
   background: linear-gradient(180deg, #ffa5cf, var(--tag-personal));
-  box-shadow: 0 0 5px rgba(255, 111, 178, 0.5);
+  box-shadow: 0 0 5px rgba(255, 111, 178, 0.55);
 }
 .wk-row-empty { font-size: 11px; color: var(--t3); font-family: 'JetBrains Mono', monospace; }
 .wk-row-pct {
@@ -864,9 +927,42 @@ body::after {
   border: 1px solid var(--brd);
   background: var(--item);
   position: relative;
+  overflow: hidden;
   transition: all 0.25s cubic-bezier(0.3, 1.2, 0.4, 1);
   animation: popIn 0.35s cubic-bezier(0.3, 1.4, 0.4, 1) both;
 }
+
+/* Liquid blood fill — rises from bottom, subtle red. */
+.mc-fill {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: calc(var(--p, 0) * 100%);
+  background: linear-gradient(180deg, rgba(232, 16, 42, 0.07), rgba(232, 16, 42, 0.18));
+  pointer-events: none;
+  z-index: 0;
+  overflow: visible;
+  transition: height 0.8s cubic-bezier(0.3, 1.2, 0.4, 1);
+}
+.mc-fill-wave {
+  position: absolute;
+  left: -50%;
+  top: -3px;
+  width: 200%;
+  height: 5px;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 5' preserveAspectRatio='none'><path d='M0 2.5 Q 5 0 10 2.5 T 20 2.5 T 30 2.5 T 40 2.5 L 40 5 L 0 5 Z' fill='rgb(232,16,42)' fill-opacity='0.22'/></svg>") repeat-x;
+  background-size: 40px 5px;
+  animation: liquidWave 5s linear infinite;
+  pointer-events: none;
+}
+@keyframes liquidWave {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(40px); }
+}
+.month-cell.today .mc-fill { background: linear-gradient(180deg, rgba(232, 16, 42, 0.12), rgba(232, 16, 42, 0.26)); }
+.month-cell.perfect .mc-fill { background: linear-gradient(180deg, rgba(232, 16, 42, 0.14), rgba(232, 16, 42, 0.3)); }
+.month-cell.perfect .mc-fill-wave { opacity: 0.85; }
+.month-cell:hover .mc-fill { background: linear-gradient(180deg, rgba(232, 16, 42, 0.14), rgba(232, 16, 42, 0.3)); }
+.month-cell-num, .month-cell-pct, .month-cell-future-dot { position: relative; z-index: 1; }
 .month-cell:hover { border-color: var(--red); transform: scale(1.08) rotate(-1deg); z-index: 2; box-shadow: 0 0 18px rgba(232, 16, 42, 0.4); }
 .month-cell.partial { background: #18121c; }
 .month-cell.perfect {
@@ -1681,7 +1777,7 @@ body::after {
   .ys-w { font-size: 38px; }
   .ys-w .n { font-size: 54px; }
   .ys-sub { font-size: 12px; }
-  .ys-track { height: 44px; padding-bottom: 22px; }
+  .ys-track { height: 56px; padding-top: 14px; padding-bottom: 22px; }
 }
 
 /* Very small phones */

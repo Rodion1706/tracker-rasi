@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { TAGS, QUOTES, argDate, niceDate, getWeekDays } from "../config";
+import { TAGS, argDate, niceDate, getWeekDays, dayOfYear } from "../config";
+import { QUOTES_365 } from "../quotes";
 import { DiamondCheck } from "../components/Checks";
 import SectionHeader from "../components/SectionHeader";
 import { BigStat, BestStat, WeekStat } from "../components/StatCards";
@@ -128,7 +129,8 @@ export default function DayTab({
   const overdue = (yd.tasks || []).filter(t => !t.done);
 
   const weekDays = getWeekDays(viewDay);
-  const quote = QUOTES[new Date().getDate() % QUOTES.length];
+  // New quote per day of year — wraps automatically across leap years.
+  const quote = QUOTES_365[dayOfYear(today) % QUOTES_365.length];
 
   return (
     <div>

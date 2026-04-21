@@ -74,6 +74,12 @@ export function getWeekId(dateStr) {
   return d.getUTCFullYear()+"-W"+String(wk).padStart(2,"0");
 }
 
+export function dayOfYear(dateStr) {
+  var d = new Date(dateStr + "T12:00:00");
+  var jan1 = new Date(d.getFullYear(), 0, 1);
+  return Math.floor((d - jan1) / 86400000);
+}
+
 export function getWeekDays(dateStr) {
   var d = new Date(dateStr+"T12:00:00");
   var dow = d.getDay();

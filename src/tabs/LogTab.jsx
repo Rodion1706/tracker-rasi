@@ -6,13 +6,17 @@ import SectionHeader from "../components/SectionHeader";
 const EMPTY_LOG = { videos: 0, lesson: "", change: "", published: 0, spent: 0, revenue: 0 };
 
 export default function LogTab({ logs, setLogs, today }) {
-  const wk = getWeekId(today);
-  const log = logs[wk] || EMPTY_LOG;
+  const currentWk = getWeekId(today);
+  const [viewWk, setViewWk] = useState(currentWk);
+  const log = logs[viewWk] || EMPTY_LOG;
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(log);
+  const wk = viewWk;
+  const isCurrentWk = wk === currentWk;
 
   useEffect(() => {
     setForm(logs[wk] || EMPTY_LOG);
+    setEditing(false);
   }, [wk, logs]);
 
   function saveLog() {
@@ -26,7 +30,24 @@ export default function LogTab({ logs, setLogs, today }) {
 
   return (
     <div>
-      <TabHeader title="Weekly Log" subtitle={wk} />
+      <TabHeader
+        title={isCurrentWk ? "Weekly Log" : "Log · " + wk}
+        subtitle={isCurrentWk ? wk : "viewing past week"}
+      />
+
+      {!isCurrentWk && (
+        <div
+          onClick={() => setViewWk(currentWk)}
+          style={{
+            padding: "10px 0", textAlign: "center",
+            color: "var(--t2)", fontSize: 10, cursor: "pointer",
+            letterSpacing: "0.22em", fontWeight: 700, fontFamily: "'Cinzel', serif",
+            marginBottom: 10,
+          }}
+        >
+          ◂ BACK TO CURRENT WEEK
+        </div>
+      )}
 
       {!editing ? (
         <div>
@@ -65,7 +86,7 @@ export default function LogTab({ logs, setLogs, today }) {
               textShadow: "0 0 8px rgba(232, 16, 42, 0.4)",
             }}
           >
-            ◆ EDIT THIS WEEK ◆
+            ◆ EDIT {isCurrentWk ? "THIS WEEK" : "THIS LOG"} ◆
           </div>
         </div>
       ) : (
@@ -102,10 +123,15 @@ export default function LogTab({ logs, setLogs, today }) {
       {sortedWeeks.length > 0 && (
         <div style={{ marginTop: 24 }}>
           <SectionHeader label="HISTORY" />
-          {sortedWeeks.filter(w => w !== wk).slice(0, 8).map(w => {
+          {sortedWeeks.filter(w => w !== wk).map(w => {
             const l = logs[w];
             return (
-              <div key={w} className="row" style={{ cursor: "default" }}>
+              <div
+                key={w}
+                className="row"
+                onClick={() => setViewWk(w)}
+                title="Click to view & edit"
+              >
                 <div className="row-body" style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: 13, color: "var(--t1)", fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>{w}</span>
                   <span style={{ fontSize: 11, color: "var(--t3)", fontFamily: "'JetBrains Mono', monospace" }}>
