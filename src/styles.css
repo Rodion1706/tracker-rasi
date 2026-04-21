@@ -986,48 +986,44 @@ body::after {
 }
 
 /* Liquid blood fill — rises from bottom, subtle red. */
-/* Liquid blood fill — soft gradient from transparent top to muted red bottom.
-   No hard edge, two parallax wave layers drifting on seamless loop. */
+/* Liquid blood fill — uniform visible red proportional to day completion %.
+   Two wave strokes drift across the top edge for the liquid surface feel. */
 .mc-fill {
   position: absolute;
   left: 0; right: 0; bottom: 0;
   height: calc(var(--p, 0) * 100%);
   background: linear-gradient(
     180deg,
-    rgba(232, 16, 42, 0) 0%,
-    rgba(232, 16, 42, 0.04) 12%,
-    rgba(232, 16, 42, 0.1) 45%,
-    rgba(232, 16, 42, 0.18) 100%
+    rgba(232, 16, 42, 0.16) 0%,
+    rgba(232, 16, 42, 0.24) 55%,
+    rgba(232, 16, 42, 0.3) 100%
   );
   pointer-events: none;
   z-index: 0;
-  overflow: hidden;
-  transition: height 0.8s cubic-bezier(0.3, 1.2, 0.4, 1);
+  transition: height 0.9s cubic-bezier(0.3, 1.2, 0.4, 1);
 }
-.mc-fill-wave,
+
+/* Wave-line strokes sitting right on top of the fill edge.
+   Each wave has its own width + speed, linear loop = seamless. */
+.mc-fill-wave {
+  position: absolute;
+  top: -4px;
+  left: -50%;
+  right: -50%;
+  height: 8px;
+  pointer-events: none;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 8' preserveAspectRatio='none'><path d='M0 4 Q 30 1.5 60 4 T 120 4' stroke='rgb(232,16,42)' stroke-opacity='0.55' stroke-width='1' fill='none'/></svg>") repeat-x;
+  background-size: 120px 8px;
+  animation: liquidDrift1 22s linear infinite;
+}
 .mc-fill-wave::before {
   content: '';
   position: absolute;
-  left: -50%; right: -50%;
-  top: 0;
-  height: 18px;
+  inset: 0;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 8' preserveAspectRatio='none'><path d='M0 4 Q 20 6 40 4 T 80 4' stroke='rgb(232,16,42)' stroke-opacity='0.32' stroke-width='0.8' fill='none'/></svg>") repeat-x;
+  background-size: 80px 8px;
+  animation: liquidDrift2 32s linear infinite reverse;
   pointer-events: none;
-}
-/* Wave 1 — slower, wider, fainter */
-.mc-fill-wave {
-  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 18' preserveAspectRatio='none'><defs><linearGradient id='w' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='rgb(232,16,42)' stop-opacity='0'/><stop offset='100%25' stop-color='rgb(232,16,42)' stop-opacity='0.22'/></linearGradient></defs><path d='M0 9 Q 30 5 60 9 T 120 9 L 120 18 L 0 18 Z' fill='url(%23w)'/></svg>") repeat-x;
-  background-size: 120px 18px;
-  animation: liquidDrift1 18s linear infinite;
-  opacity: 0.85;
-}
-/* Wave 2 — faster, tighter, behind */
-.mc-fill-wave::before {
-  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 18' preserveAspectRatio='none'><defs><linearGradient id='w2' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='rgb(232,16,42)' stop-opacity='0'/><stop offset='100%25' stop-color='rgb(232,16,42)' stop-opacity='0.14'/></linearGradient></defs><path d='M0 10 Q 20 7 40 10 T 80 10 L 80 18 L 0 18 Z' fill='url(%23w2)'/></svg>") repeat-x;
-  background-size: 80px 18px;
-  animation: liquidDrift2 12s linear infinite reverse;
-  opacity: 0.75;
-  left: 0; right: 0;
-  width: 100%;
 }
 @keyframes liquidDrift1 {
   from { transform: translateX(0); }
@@ -1037,31 +1033,29 @@ body::after {
   from { transform: translateX(0); }
   to { transform: translateX(80px); }
 }
+
 .month-cell.today .mc-fill {
   background: linear-gradient(
     180deg,
-    rgba(232, 16, 42, 0) 0%,
-    rgba(232, 16, 42, 0.06) 12%,
-    rgba(232, 16, 42, 0.18) 45%,
-    rgba(232, 16, 42, 0.28) 100%
+    rgba(232, 16, 42, 0.22) 0%,
+    rgba(232, 16, 42, 0.32) 55%,
+    rgba(232, 16, 42, 0.4) 100%
   );
 }
 .month-cell.perfect .mc-fill {
   background: linear-gradient(
     180deg,
-    rgba(232, 16, 42, 0) 0%,
-    rgba(232, 16, 42, 0.08) 12%,
-    rgba(232, 16, 42, 0.22) 45%,
-    rgba(232, 16, 42, 0.32) 100%
+    rgba(232, 16, 42, 0.26) 0%,
+    rgba(232, 16, 42, 0.38) 55%,
+    rgba(232, 16, 42, 0.48) 100%
   );
 }
 .month-cell:hover .mc-fill {
   background: linear-gradient(
     180deg,
-    rgba(232, 16, 42, 0) 0%,
-    rgba(232, 16, 42, 0.08) 12%,
-    rgba(232, 16, 42, 0.2) 45%,
-    rgba(232, 16, 42, 0.3) 100%
+    rgba(232, 16, 42, 0.22) 0%,
+    rgba(232, 16, 42, 0.3) 55%,
+    rgba(232, 16, 42, 0.38) 100%
   );
 }
 .month-cell-num, .month-cell-pct, .month-cell-future-dot { position: relative; z-index: 1; }
