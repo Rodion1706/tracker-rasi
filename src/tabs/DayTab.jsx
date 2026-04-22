@@ -7,6 +7,8 @@ import { BigStat, BestStat, WeekStat } from "../components/StatCards";
 import Monad from "../components/Monad";
 import ProgressTicks from "../components/ProgressTicks";
 import Celebration from "../components/Celebration";
+import LevelBar from "../components/LevelBar";
+import { celebrationTier, canToggleHardDay, hardDaysThisMonth, HARD_DAYS_PER_MONTH } from "../gamification";
 
 function tagClass(tag) {
   if (tag === "Work 1") return "work1";
@@ -32,6 +34,7 @@ function ChartIcon() {
 export default function DayTab({
   days, habits, today, dayOff, setDayOff,
   setDay, getDayData, streak, bestStreak, recurring, openHabitModal,
+  levelInfo, badgeInfo,
 }) {
   const [nt, setNt] = useState("");
   const [tag, setTag] = useState("");
@@ -115,13 +118,11 @@ export default function DayTab({
   const pct = total > 0 ? Math.round(totDone / total * 100) : 0;
 
   // ════════ CELEBRATION TRIGGER ════════
-  // Fires every time the day transitions <100% → 100%.
-  // Re-fires if user unchecks then re-completes, or if a new task is
-  // added after a clean day and then finished. Skips future dates and
-  // empty days (no habits+tasks = nothing to close).
-  // Switching viewDay never fires — it just resyncs the ref so the
-  // next real transition on that day triggers correctly.
-  const [celebFireId, setCelebFireId] = useState(0);
+  // Fires every time the day transitions <100% → 100%. Re-fires if
+  // user unchecks then re-completes, or if a new task is added after
+  // a clean day and then finished. Tier scales with current streak:
+  // 7+ = WEEK CLEAN, 14+ = FORTNIGHT, 30+ = MONTH, 100+ = CENTURY.
+  const [celebState, setCelebState] = useState({ id: 0, streak: 0 });
   const wasCompleteRef = useRef(false);
   const prevViewDayRef = useRef(viewDay);
   useEffect(() => {
@@ -138,10 +139,21 @@ export default function DayTab({
       return;
     }
     if (isComplete && !wasCompleteRef.current) {
-      setCelebFireId(id => id + 1);
+      // On close: if today wasn't counted in streak yet, add 1 for the tier calc
+      const effectiveStreak = isToday ? streak + 1 : streak;
+      setCelebState(s => ({ id: s.id + 1, streak: effectiveStreak }));
     }
     wasCompleteRef.current = isComplete;
-  }, [totDone, total, isFuture, viewDay]);
+  }, [totDone, total, isFuture, viewDay, streak, isToday]);
+
+  // ════════ HARD DAY TOGGLE ════════
+  function toggleHardDay() {
+    const isOn = !!dd.hardDay;
+    if (!isOn && !canToggleHardDay(days, viewDay, false)) return; // budget exhausted
+    setDay(viewDay, Object.assign({}, dd, { hardDay: !isOn }));
+  }
+  const hardDayUsedThisMonth = hardDaysThisMonth(days, viewDay);
+  const hardDayBudgetLeft = HARD_DAYS_PER_MONTH - hardDayUsedThisMonth;
 
   function habitStreak(hid) {
     let s = 0;
@@ -164,7 +176,7 @@ export default function DayTab({
 
   return (
     <div>
-      <Celebration fireId={celebFireId} />
+      <Celebration fireId={celebState.id} streak={celebState.streak} />
       {/* Day nav */}
       <div className="day-nav">
         <div className="day-nav-arrow" onClick={() => setDayOff(dayOff - 1)}>‹</div>
@@ -195,8 +207,33 @@ export default function DayTab({
             <WeekStat weekDays={weekDays} today={today} habits={habits} days={days} />
           </div>
           <ProgressTicks done={totDone} total={total} />
+          <LevelBar levelInfo={levelInfo} />
         </div>
       </div>
+
+      {/* Hard Day toggle — 2/month budget, counts day as clean for streak */}
+      {!isFuture && (
+        <div className={`hard-day ${dd.hardDay ? "on" : ""}`}>
+          <div
+            className="hard-day-toggle"
+            onClick={toggleHardDay}
+            title={
+              dd.hardDay
+                ? "Hard Day active — streak protected"
+                : hardDayBudgetLeft > 0
+                  ? "Mark this as a Hard Day (free streak pass, " + hardDayBudgetLeft + " left this month)"
+                  : "No Hard Day passes left this month"
+            }
+            style={{ cursor: dd.hardDay || hardDayBudgetLeft > 0 ? "pointer" : "not-allowed" }}
+          >
+            <span className="hard-day-icon">{dd.hardDay ? "◆" : "◇"}</span>
+            <span className="hard-day-label">
+              {dd.hardDay ? "HARD DAY" : "MARK HARD DAY"}
+            </span>
+            <span className="hard-day-budget">{hardDayUsedThisMonth}/{HARD_DAYS_PER_MONTH}</span>
+          </div>
+        </div>
+      )}
 
       {/* Overdue */}
       {isToday && overdue.length > 0 && (

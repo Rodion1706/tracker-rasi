@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { db, auth, provider, doc, getDoc, setDoc, signInWithPopup, signOut, onAuthStateChanged } from "./firebase";
 import { DEF_HABITS, DEF_GOALS, argDate, niceDate } from "./config";
+import { isDayClean, computeXP, getLevel, computeBadges } from "./gamification";
 
 /* ══════ ACCESS CONTROL ══════ */
 // Only these emails can sign in. Add more if needed.
@@ -55,6 +56,46 @@ function useData(uid) {
     if (uid) setDoc(doc(db, "users", uid), nd, { merge: true }).catch(() => {});
   }
   return { data: d, loading: ld, save };
+}
+
+/* ══════ KEYBOARD SHORTCUTS (desktop) ══════ */
+// d / w / m / l / g / s → tab switch
+// t → jump to today (day tab, dayOff=0)
+// ← / → → prev/next day on Day tab
+// n → focus add-task input
+// Ignored when typing in inputs.
+function useKeyboardShortcuts(setTab, setDayOff, tab) {
+  useEffect(() => {
+    function onKey(e) {
+      const t = e.target;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      switch (e.key) {
+        case "d": setTab("day"); setDayOff(0); break;
+        case "w": setTab("week"); break;
+        case "m": setTab("month"); break;
+        case "l": setTab("log"); break;
+        case "g": setTab("goals"); break;
+        case "s": setTab("settings"); break;
+        case "t": setTab("day"); setDayOff(0); break;
+        case "ArrowLeft":
+          if (tab === "day") setDayOff(off => off - 1);
+          break;
+        case "ArrowRight":
+          if (tab === "day") setDayOff(off => off + 1);
+          break;
+        case "n":
+        case "/": {
+          const input = document.querySelector(".add-input");
+          if (input) { input.focus(); e.preventDefault(); }
+          break;
+        }
+        default: return;
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [setTab, setDayOff, tab]);
 }
 
 /* ══════ APP ROOT ══════ */
@@ -156,6 +197,8 @@ function Tracker({ uid }) {
   const [mOff, setMOff] = useState(0);
   const [habitModal, setHabitModal] = useState(null);
 
+  useKeyboardShortcuts(setTab, setDayOff, tab);
+
   const today = argDate(0);
   const habits = data.habits || DEF_HABITS;
   const goals = data.goals || DEF_GOALS;
@@ -187,31 +230,32 @@ function Tracker({ uid }) {
   }
 
   // Overall streak + best.
-  // Streak rule: count consecutive clean days ending yesterday. If today
-  // is ALREADY clean, add it in. An in-progress today (some items still
-  // unchecked) does NOT break the streak — the day isn't over yet.
-  // Clean = every habit checked; if no habits defined, streak = 0.
-  function isDayClean(key) {
-    const x = days[key];
-    return !!(x && x.checks && habits.length > 0 && habits.every(h => x.checks[h.id]));
-  }
+  // Streak: consecutive clean days ending yesterday. If today is ALREADY
+  // clean, include it. In-progress today does NOT break the streak.
+  // Clean = every habit checked OR day marked as Hard Day.
+  const isClean = key => isDayClean(days[key], habits);
   let streak = 0;
-  const todayClean = isDayClean(argDate(0));
+  const todayClean = isClean(argDate(0));
   const startOffset = todayClean ? 0 : 1;
   for (let si = startOffset; si < 365; si++) {
-    if (isDayClean(argDate(-si))) streak++;
+    if (isClean(argDate(-si))) streak++;
     else break;
   }
   // Best streak: longest clean run in the last 365 days.
   let bestStreak = 0, cur = 0;
   for (let si = 0; si < 365; si++) {
-    if (isDayClean(argDate(-si))) {
+    if (isClean(argDate(-si))) {
       cur++;
       if (cur > bestStreak) bestStreak = cur;
     } else {
       cur = 0;
     }
   }
+
+  // XP + Level + Badges (all derived from days + habits)
+  const xp = computeXP(days, habits);
+  const levelInfo = getLevel(xp);
+  const badgeInfo = computeBadges(days, habits);
 
   const tabs = [
     ["day", "DAY"],
@@ -272,6 +316,7 @@ function Tracker({ uid }) {
             streak={streak} bestStreak={bestStreak}
             recurring={recurring}
             openHabitModal={h => setHabitModal(h)}
+            levelInfo={levelInfo} badgeInfo={badgeInfo}
           />
         )}
         {tab === "week" && (
@@ -296,6 +341,7 @@ function Tracker({ uid }) {
             recurring={recurring} setRecurring={setRecurring}
             data={data} setDay={setDay} getDayData={getDayData}
             today={today} bulkSetDays={bulkSetDays}
+            badgeInfo={badgeInfo} levelInfo={levelInfo}
           />
         )}
 

@@ -2,6 +2,9 @@ import { useState } from "react";
 import { TAGS, argDate } from "../config";
 import TabHeader from "../components/TabHeader";
 import SectionHeader from "../components/SectionHeader";
+import BadgeWall from "../components/BadgeWall";
+import LevelBar from "../components/LevelBar";
+import { isSoundOn, setSoundOn, playTick } from "../sound";
 
 const DAY_LABELS = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
 const inputStyle = { width: "100%", background: "transparent", border: "none", borderBottom: "1px solid var(--brd)", color: "var(--t1)", fontSize: 14, outline: "none", padding: "5px 0", boxSizing: "border-box", fontFamily: "inherit" };
@@ -12,6 +15,27 @@ function tagClass(tag) {
   if (tag === "Channel") return "channel";
   if (tag === "Personal") return "personal";
   return "";
+}
+
+function SoundToggle() {
+  const [on, setOn] = useState(isSoundOn());
+  function flip() {
+    const next = !on;
+    setSoundOn(next);
+    setOn(next);
+    if (next) playTick(); // sample on enable
+  }
+  return (
+    <div className="sound-toggle" onClick={flip}>
+      <div className={`sound-toggle-sw ${on ? "on" : ""}`}>
+        <div className="sound-toggle-knob" />
+      </div>
+      <div>
+        <div className="sound-toggle-label">CHECK SOUND</div>
+        <div className="sound-toggle-sub">{on ? "On — tick on every check" : "Off"}</div>
+      </div>
+    </div>
+  );
 }
 
 function ImportTasks({ setDay, getDayData, today, bulkSetDays }) {
@@ -130,7 +154,7 @@ friday | Personal | Dentist follow-up`;
   );
 }
 
-export default function SettingsTab({ habits, setHabits, recurring, setRecurring, data, setDay, getDayData, today, bulkSetDays }) {
+export default function SettingsTab({ habits, setHabits, recurring, setRecurring, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo }) {
   const [newH, setNewH] = useState("");
   const [newHS, setNewHS] = useState("");
   const [eId, setEId] = useState(null);
@@ -172,6 +196,33 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
   return (
     <div>
       <TabHeader title="Settings" subtitle={`${habits.length} habits · ${recurring.length} recurring`} />
+
+      {/* Level + Badges */}
+      {levelInfo && (
+        <div style={{ marginBottom: 18 }}>
+          <LevelBar levelInfo={levelInfo} />
+        </div>
+      )}
+      {badgeInfo && <BadgeWall badgeInfo={badgeInfo} />}
+
+      {/* Sound toggle */}
+      <SoundToggle />
+
+      {/* Keyboard shortcuts hint */}
+      <div className="kbd-hint">
+        <div className="kbd-hint-label">KEYBOARD · DESKTOP</div>
+        <div className="kbd-hint-grid">
+          <span><kbd>D</kbd> Day</span>
+          <span><kbd>W</kbd> Week</span>
+          <span><kbd>M</kbd> Month</span>
+          <span><kbd>L</kbd> Log</span>
+          <span><kbd>G</kbd> Goals</span>
+          <span><kbd>S</kbd> Settings</span>
+          <span><kbd>T</kbd> Jump to today</span>
+          <span><kbd>N</kbd> / <kbd>/</kbd> Focus add-task</span>
+          <span><kbd>←</kbd> / <kbd>→</kbd> Prev/next day</span>
+        </div>
+      </div>
 
       {/* Habits */}
       <SectionHeader label="HABITS" count={habits.length} />
