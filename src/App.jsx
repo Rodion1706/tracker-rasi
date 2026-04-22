@@ -186,13 +186,26 @@ function Tracker({ uid }) {
     return dd;
   }
 
-  // Overall streak + best
-  let streak = 0, bestStreak = 0, cur = 0;
+  // Overall streak + best.
+  // Streak rule: count consecutive clean days ending yesterday. If today
+  // is ALREADY clean, add it in. An in-progress today (some items still
+  // unchecked) does NOT break the streak — the day isn't over yet.
+  // Clean = every habit checked; if no habits defined, streak = 0.
+  function isDayClean(key) {
+    const x = days[key];
+    return !!(x && x.checks && habits.length > 0 && habits.every(h => x.checks[h.id]));
+  }
+  let streak = 0;
+  const todayClean = isDayClean(argDate(0));
+  const startOffset = todayClean ? 0 : 1;
+  for (let si = startOffset; si < 365; si++) {
+    if (isDayClean(argDate(-si))) streak++;
+    else break;
+  }
+  // Best streak: longest clean run in the last 365 days.
+  let bestStreak = 0, cur = 0;
   for (let si = 0; si < 365; si++) {
-    const sk = argDate(-si);
-    const sx = days[sk];
-    if (sx && sx.checks && habits.every(h => sx.checks[h.id])) {
-      if (si === streak) streak++;
+    if (isDayClean(argDate(-si))) {
       cur++;
       if (cur > bestStreak) bestStreak = cur;
     } else {
