@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { TAGS, argDate, niceDate, getWeekDays, dayOfYear } from "../config";
 import { QUOTES_365 } from "../quotes";
 import { DiamondCheck } from "../components/Checks";
@@ -6,6 +6,7 @@ import SectionHeader from "../components/SectionHeader";
 import { BigStat, BestStat, WeekStat } from "../components/StatCards";
 import Monad from "../components/Monad";
 import ProgressTicks from "../components/ProgressTicks";
+import Celebration from "../components/Celebration";
 
 function tagClass(tag) {
   if (tag === "Work 1") return "work1";
@@ -113,6 +114,35 @@ export default function DayTab({
   const totDone = checksDone + tasksDone;
   const pct = total > 0 ? Math.round(totDone / total * 100) : 0;
 
+  // ════════ CELEBRATION TRIGGER ════════
+  // Fires every time the day transitions <100% → 100%.
+  // Re-fires if user unchecks then re-completes, or if a new task is
+  // added after a clean day and then finished. Skips future dates and
+  // empty days (no habits+tasks = nothing to close).
+  // Switching viewDay never fires — it just resyncs the ref so the
+  // next real transition on that day triggers correctly.
+  const [celebFireId, setCelebFireId] = useState(0);
+  const wasCompleteRef = useRef(false);
+  const prevViewDayRef = useRef(viewDay);
+  useEffect(() => {
+    if (isFuture || total === 0) {
+      wasCompleteRef.current = false;
+      prevViewDayRef.current = viewDay;
+      return;
+    }
+    const isComplete = totDone === total;
+    // Day switch: resync silently, no celebration fires for navigation.
+    if (prevViewDayRef.current !== viewDay) {
+      wasCompleteRef.current = isComplete;
+      prevViewDayRef.current = viewDay;
+      return;
+    }
+    if (isComplete && !wasCompleteRef.current) {
+      setCelebFireId(id => id + 1);
+    }
+    wasCompleteRef.current = isComplete;
+  }, [totDone, total, isFuture, viewDay]);
+
   function habitStreak(hid) {
     let s = 0;
     for (let i = 0; i < 365; i++) {
@@ -134,6 +164,7 @@ export default function DayTab({
 
   return (
     <div>
+      <Celebration fireId={celebFireId} />
       {/* Day nav */}
       <div className="day-nav">
         <div className="day-nav-arrow" onClick={() => setDayOff(dayOff - 1)}>‹</div>
