@@ -44,7 +44,7 @@ function Flame({ tier }) {
   );
 }
 
-export function BigStat({ label, value, unit, accent, odometer }) {
+export function BigStat({ label, value, unit, accent, odometer, subText }) {
   const flameTier = label === "Streak" ? streakFlameTier(Number(value) || 0) : null;
   return (
     <div className="stat-card">
@@ -54,6 +54,7 @@ export function BigStat({ label, value, unit, accent, odometer }) {
         {unit && <span className="unit">{unit}</span>}
         {flameTier && <Flame tier={flameTier} />}
       </div>
+      {subText && <div className="sc-subtext">{subText}</div>}
     </div>
   );
 }

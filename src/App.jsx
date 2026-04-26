@@ -266,6 +266,18 @@ function Tracker({ uid }) {
     }
   }
 
+  // How many of the current streak are Hard Days (not actually 100%
+  // checked, just protected). Lets the UI show "5d (incl 2 hard)".
+  let hardInStreak = 0;
+  for (let si = todayClean ? 0 : 1, count = 0; count < streak; si++) {
+    const k = argDate(-si);
+    const dd = days[k];
+    if (dd && dd.hardDay && !(dd.checks && habits.length > 0 && habits.every(h => dd.checks[h.id]))) {
+      hardInStreak++;
+    }
+    count++;
+  }
+
   // XP + Level + Badges — PERSISTED on data (never lost once earned).
   // Effect below banks any newly clean days + newly earned badges into
   // data.lifetimeXP and data.unlockedBadges.
@@ -369,7 +381,7 @@ function Tracker({ uid }) {
             days={days} habits={habits} today={today}
             dayOff={dayOff} setDayOff={setDayOff}
             setDay={setDay} getDayData={getDayData}
-            streak={streak} bestStreak={bestStreak}
+            streak={streak} bestStreak={bestStreak} hardInStreak={hardInStreak}
             recurring={recurring}
             openHabitModal={h => setHabitModal(h)}
             levelInfo={levelInfo} badgeInfo={badgeInfo}

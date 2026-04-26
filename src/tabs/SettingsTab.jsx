@@ -506,6 +506,29 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
         </div>
         <span style={{ fontSize: 11, color: "var(--red)", fontWeight: 700, letterSpacing: "0.18em", fontFamily: "'Cinzel', serif", textShadow: "0 0 6px var(--red)" }}>DOWNLOAD</span>
       </div>
+
+      <div
+        onClick={() => {
+          if (!confirm("Clear ALL Hard Day marks across history? Past streaks will recompute as if no hard days were used.")) return;
+          if (!data || !data.days) return;
+          const cleared = {};
+          for (const k of Object.keys(data.days)) {
+            const d = data.days[k];
+            if (d && d.hardDay) {
+              cleared[k] = Object.assign({}, d, { hardDay: false });
+            }
+          }
+          if (Object.keys(cleared).length > 0) bulkSetDays(cleared);
+        }}
+        className="row"
+        style={{ gap: 10, justifyContent: "space-between", marginTop: 6 }}
+      >
+        <div className="row-body">
+          <div className="row-text">Reset Hard Day marks</div>
+          <div className="row-sub">Clear every past Hard Day toggle. Streaks recompute honestly.</div>
+        </div>
+        <span style={{ fontSize: 11, color: "var(--red)", fontWeight: 700, letterSpacing: "0.18em", fontFamily: "'Cinzel', serif", textShadow: "0 0 6px var(--red)" }}>RESET</span>
+      </div>
       <div onClick={exportCSV} className="row" style={{ gap: 10, justifyContent: "space-between", marginTop: 6 }}>
         <div className="row-body">
           <div className="row-text">Export CSV (spreadsheet)</div>

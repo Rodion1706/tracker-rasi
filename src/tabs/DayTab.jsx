@@ -34,7 +34,7 @@ function ChartIcon() {
 
 export default function DayTab({
   days, habits, today, dayOff, setDayOff,
-  setDay, getDayData, streak, bestStreak, recurring, openHabitModal,
+  setDay, getDayData, streak, bestStreak, hardInStreak, recurring, openHabitModal,
   levelInfo, badgeInfo,
   celebratedThresholds, markThresholdCelebrated,
   bannerPhrases,
@@ -105,13 +105,7 @@ export default function DayTab({
     setNt("");
     setSpk(false);
   }
-  function copyOverdue(t) {
-    const td2 = getDayData(today);
-    if (td2.tasks.some(x => x.text === t.text)) return;
-    setDay(today, Object.assign({}, td2, {
-      tasks: td2.tasks.concat([{ id: Date.now() + "", text: t.text, done: false, tag: t.tag || "" }]),
-    }));
-  }
+  // copyOverdue removed — auto-rollover handles unfinished tasks now.
 
   // Only the habits that were active on this specific date count toward
   // completion. Adding/archiving a habit today never reshapes past days.
@@ -189,10 +183,6 @@ export default function DayTab({
     return s;
   }
 
-  const yest = argDate(-1);
-  const yd = getDayData(yest);
-  const overdue = (yd.tasks || []).filter(t => !t.done);
-
   const weekDays = getWeekDays(viewDay);
   // New quote per day of year — wraps automatically across leap years.
   const quote = QUOTES_365[dayOfYear(today) % QUOTES_365.length];
@@ -222,7 +212,13 @@ export default function DayTab({
         <Monad size={150} />
         <div className="day-hero-stats">
           <div className="stats-grid">
-            <BigStat label="Streak" value={streak} unit="d" odometer />
+            <BigStat
+              label="Streak"
+              value={streak}
+              unit="d"
+              odometer
+              subText={hardInStreak > 0 ? `incl ${hardInStreak} hard day${hardInStreak > 1 ? "s" : ""}` : null}
+            />
             <BigStat label="Done" value={totDone} unit={"/" + total}
               accent={totDone === total && total > 0 ? "done-all" : "plain"} />
           </div>
@@ -259,18 +255,8 @@ export default function DayTab({
         </div>
       )}
 
-      {/* Overdue */}
-      {isToday && overdue.length > 0 && (
-        <div style={{ marginBottom: 18 }}>
-          <SectionHeader label="OVERDUE" variant="overdue" />
-          {overdue.map(t => (
-            <div key={t.id} className="overdue-row" onClick={() => copyOverdue(t)}>
-              <span className="overdue-text">{t.text}</span>
-              <span className="overdue-add">+ADD</span>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* OVERDUE panel removed — auto-rollover already brings yesterday's
+          undone tasks onto today with the procrastination badge. */}
 
       {/* Daily checklist — using .row style (same as tasks) */}
       {!isFuture && (

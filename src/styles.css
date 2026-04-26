@@ -470,6 +470,17 @@ body::after {
 }
 .stat-card:hover .sc-value { transform: scale(1.06); text-shadow: 0 0 20px var(--red), 0 0 32px rgba(232, 16, 42, 0.55); }
 
+/* Tiny sub-line under a BigStat value (e.g. "incl 2 hard days") */
+.sc-subtext {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--t3);
+  margin-top: 8px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
 /* ════════ LEVEL BAR ════════ */
 .level-bar {
   padding: 12px 16px;
@@ -3154,7 +3165,9 @@ body::after {
     justify-items: initial;
   }
 
-  .stats-grid { grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
+  /* Boss had only 2 BigStat cards (Streak / Done), so 4-col left
+     50% empty on desktop. 2-col looks balanced. */
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
   .stat-card { padding: 18px 20px; }
   .sc-value { font-size: 32px; }
 
