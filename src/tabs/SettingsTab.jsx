@@ -4,7 +4,8 @@ import TabHeader from "../components/TabHeader";
 import SectionHeader from "../components/SectionHeader";
 import BadgeWall from "../components/BadgeWall";
 import LevelBar from "../components/LevelBar";
-import { isSoundOn, setSoundOn, playTick } from "../sound";
+import { isSoundOn, setSoundOn, playTick, SOUND_PACKS, getSoundPack, setSoundPack } from "../sound";
+import { DEFAULT_BANNER_LINES } from "../components/Celebration";
 
 const DAY_LABELS = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
 const inputStyle = { width: "100%", background: "transparent", border: "none", borderBottom: "1px solid var(--brd)", color: "var(--t1)", fontSize: 14, outline: "none", padding: "5px 0", boxSizing: "border-box", fontFamily: "inherit" };
@@ -19,20 +20,104 @@ function tagClass(tag) {
 
 function SoundToggle() {
   const [on, setOn] = useState(isSoundOn());
+  const [pack, setPack] = useState(getSoundPack());
   function flip() {
     const next = !on;
     setSoundOn(next);
     setOn(next);
-    if (next) playTick(); // sample on enable
+    if (next) playTick();
+  }
+  function pickPack(id) {
+    setSoundPack(id);
+    setPack(id);
+    playTick(id); // preview
   }
   return (
-    <div className="sound-toggle" onClick={flip}>
-      <div className={`sound-toggle-sw ${on ? "on" : ""}`}>
-        <div className="sound-toggle-knob" />
+    <div className="sound-block">
+      <div className="sound-toggle" onClick={flip}>
+        <div className={`sound-toggle-sw ${on ? "on" : ""}`}>
+          <div className="sound-toggle-knob" />
+        </div>
+        <div>
+          <div className="sound-toggle-label">CHECK SOUND</div>
+          <div className="sound-toggle-sub">{on ? "On — tap a pack to preview" : "Off"}</div>
+        </div>
       </div>
-      <div>
-        <div className="sound-toggle-label">CHECK SOUND</div>
-        <div className="sound-toggle-sub">{on ? "On — tick on every check" : "Off"}</div>
+      {on && (
+        <div className="sound-packs">
+          {SOUND_PACKS.map(p => (
+            <div
+              key={p.id}
+              className={`sound-pack ${pack === p.id ? "on" : ""}`}
+              onClick={() => pickPack(p.id)}
+            >
+              <div className="sound-pack-name">{p.name}</div>
+              <div className="sound-pack-desc">{p.desc}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BannerEditor({ phrases, setPhrases }) {
+  const list = (phrases && phrases.length > 0) ? phrases : DEFAULT_BANNER_LINES;
+  const [draft, setDraft] = useState("");
+
+  function update(idx, val) {
+    const next = list.slice();
+    next[idx] = val;
+    setPhrases(next);
+  }
+  function remove(idx) {
+    if (list.length <= 1) return; // keep at least one
+    setPhrases(list.filter((_, i) => i !== idx));
+  }
+  function add() {
+    const v = draft.trim();
+    if (!v) return;
+    setPhrases(list.concat([v.toUpperCase()]));
+    setDraft("");
+  }
+  function reset() {
+    setPhrases(DEFAULT_BANNER_LINES.slice());
+  }
+
+  return (
+    <div className="banner-editor">
+      <div className="banner-editor-head">
+        <div>
+          <div className="banner-editor-label">CUSTOM BANNERS</div>
+          <div className="banner-editor-sub">Phrases that pop on day close — rotates per close. Default tier 1 only; week/month tiers stay locked.</div>
+        </div>
+        <div className="banner-editor-reset" onClick={reset}>RESET</div>
+      </div>
+      <div className="banner-editor-list">
+        {list.map((p, i) => (
+          <div key={i} className="banner-editor-row">
+            <input
+              type="text"
+              className="banner-editor-input"
+              value={p}
+              onChange={e => update(i, e.target.value.toUpperCase())}
+              maxLength={28}
+            />
+            <div className="banner-editor-del" onClick={() => remove(i)} title="Remove">×</div>
+          </div>
+        ))}
+      </div>
+      <div className="banner-editor-add">
+        <input
+          type="text"
+          className="banner-editor-input"
+          placeholder="ADD A NEW PHRASE…"
+          value={draft}
+          onChange={e => setDraft(e.target.value.toUpperCase())}
+          onKeyDown={e => { if (e.key === "Enter") add(); }}
+          maxLength={28}
+        />
+        <div className="banner-editor-addbtn" onClick={add}>+ ADD</div>
       </div>
     </div>
   );
@@ -154,7 +239,7 @@ friday | Personal | Dentist follow-up`;
   );
 }
 
-export default function SettingsTab({ habits, setHabits, recurring, setRecurring, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo }) {
+export default function SettingsTab({ habits, setHabits, recurring, setRecurring, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, bannerPhrases, setBannerPhrases }) {
   const [newH, setNewH] = useState("");
   const [newHS, setNewHS] = useState("");
   const [eId, setEId] = useState(null);
@@ -205,8 +290,13 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
       )}
       {badgeInfo && <BadgeWall badgeInfo={badgeInfo} />}
 
-      {/* Sound toggle */}
+      {/* Sound toggle + pack picker */}
       <SoundToggle />
+
+      {/* Custom banner phrases */}
+      {setBannerPhrases && (
+        <BannerEditor phrases={bannerPhrases} setPhrases={setBannerPhrases} />
+      )}
 
       {/* Keyboard shortcuts hint */}
       <div className="kbd-hint">
@@ -215,6 +305,7 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
           <span><kbd>D</kbd> Day</span>
           <span><kbd>W</kbd> Week</span>
           <span><kbd>M</kbd> Month</span>
+          <span><kbd>X</kbd> Stats</span>
           <span><kbd>L</kbd> Log</span>
           <span><kbd>G</kbd> Goals</span>
           <span><kbd>S</kbd> Settings</span>

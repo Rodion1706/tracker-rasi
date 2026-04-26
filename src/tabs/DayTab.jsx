@@ -7,6 +7,7 @@ import { BigStat, BestStat, WeekStat } from "../components/StatCards";
 import Monad from "../components/Monad";
 import ProgressTicks from "../components/ProgressTicks";
 import Celebration from "../components/Celebration";
+import TierUp, { TIER_UP_THRESHOLDS } from "../components/TierUp";
 import LevelBar from "../components/LevelBar";
 import { celebrationTier, canToggleHardDay, hardDaysThisMonth, HARD_DAYS_PER_MONTH } from "../gamification";
 
@@ -35,6 +36,8 @@ export default function DayTab({
   days, habits, today, dayOff, setDayOff,
   setDay, getDayData, streak, bestStreak, recurring, openHabitModal,
   levelInfo, badgeInfo,
+  celebratedThresholds, markThresholdCelebrated,
+  bannerPhrases,
 }) {
   const [nt, setNt] = useState("");
   const [tag, setTag] = useState("");
@@ -120,9 +123,12 @@ export default function DayTab({
   // ════════ CELEBRATION TRIGGER ════════
   // Fires every time the day transitions <100% → 100%. Re-fires if
   // user unchecks then re-completes, or if a new task is added after
-  // a clean day and then finished. Tier scales with current streak:
-  // 7+ = WEEK CLEAN, 14+ = FORTNIGHT, 30+ = MONTH, 100+ = CENTURY.
+  // a clean day and then finished. Tier scales with current streak.
+  // If this close crosses a TIER_UP_THRESHOLDS for the FIRST time
+  // (per data.celebratedThresholds), fire the cinematic instead of
+  // the regular celebration.
   const [celebState, setCelebState] = useState({ id: 0, streak: 0 });
+  const [tierUpState, setTierUpState] = useState({ id: 0, threshold: null });
   const wasCompleteRef = useRef(false);
   const prevViewDayRef = useRef(viewDay);
   useEffect(() => {
@@ -132,16 +138,23 @@ export default function DayTab({
       return;
     }
     const isComplete = totDone === total;
-    // Day switch: resync silently, no celebration fires for navigation.
     if (prevViewDayRef.current !== viewDay) {
       wasCompleteRef.current = isComplete;
       prevViewDayRef.current = viewDay;
       return;
     }
     if (isComplete && !wasCompleteRef.current) {
-      // On close: if today wasn't counted in streak yet, add 1 for the tier calc
       const effectiveStreak = isToday ? streak + 1 : streak;
-      setCelebState(s => ({ id: s.id + 1, streak: effectiveStreak }));
+      // Threshold crossing? Pick the highest unseen threshold <= effectiveStreak.
+      const seen = new Set((celebratedThresholds || []).map(Number));
+      const unseen = TIER_UP_THRESHOLDS.filter(t => effectiveStreak >= t && !seen.has(t));
+      if (unseen.length > 0) {
+        const threshold = unseen[unseen.length - 1]; // highest unseen
+        setTierUpState(s => ({ id: s.id + 1, threshold }));
+        if (markThresholdCelebrated) markThresholdCelebrated(threshold);
+      } else {
+        setCelebState(s => ({ id: s.id + 1, streak: effectiveStreak }));
+      }
     }
     wasCompleteRef.current = isComplete;
   }, [totDone, total, isFuture, viewDay, streak, isToday]);
@@ -176,7 +189,8 @@ export default function DayTab({
 
   return (
     <div>
-      <Celebration fireId={celebState.id} streak={celebState.streak} />
+      <Celebration fireId={celebState.id} streak={celebState.streak} bannerPhrases={bannerPhrases} />
+      <TierUp fireId={tierUpState.id} threshold={tierUpState.threshold} />
       {/* Day nav */}
       <div className="day-nav">
         <div className="day-nav-arrow" onClick={() => setDayOff(dayOff - 1)}>‹</div>
@@ -198,7 +212,7 @@ export default function DayTab({
         <Monad size={150} />
         <div className="day-hero-stats">
           <div className="stats-grid">
-            <BigStat label="Streak" value={streak} unit="d" />
+            <BigStat label="Streak" value={streak} unit="d" odometer />
             <BigStat label="Done" value={totDone} unit={"/" + total}
               accent={totDone === total && total > 0 ? "done-all" : "plain"} />
           </div>

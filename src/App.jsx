@@ -19,6 +19,7 @@ import MonthTab from "./tabs/MonthTab";
 import LogTab from "./tabs/LogTab";
 import GoalsTab from "./tabs/GoalsTab";
 import SettingsTab from "./tabs/SettingsTab";
+import StatsTab from "./tabs/StatsTab";
 
 /* ══════ FIREBASE HOOKS ══════ */
 function useAuth() {
@@ -75,6 +76,7 @@ function useKeyboardShortcuts(setTab, setDayOff, tab) {
         case "d": setTab("day"); setDayOff(0); break;
         case "w": setTab("week"); break;
         case "m": setTab("month"); break;
+        case "x": setTab("stats"); break;
         case "l": setTab("log"); break;
         case "g": setTab("goals"); break;
         case "s": setTab("settings"); break;
@@ -286,6 +288,7 @@ function Tracker({ uid }) {
     ["day", "DAY"],
     ["week", "WEEK"],
     ["month", "MONTH"],
+    ["stats", "STATS"],
     ["log", "LOG"],
     ["goals", "GOALS"],
     ["settings", "SET"],
@@ -342,6 +345,11 @@ function Tracker({ uid }) {
             recurring={recurring}
             openHabitModal={h => setHabitModal(h)}
             levelInfo={levelInfo} badgeInfo={badgeInfo}
+            celebratedThresholds={data.celebratedThresholds || []}
+            markThresholdCelebrated={n => save(Object.assign({}, data, {
+              celebratedThresholds: (data.celebratedThresholds || []).concat([n])
+            }))}
+            bannerPhrases={data.bannerPhrases || []}
           />
         )}
         {tab === "week" && (
@@ -358,6 +366,13 @@ function Tracker({ uid }) {
             setDayOff={setDayOff} setTab={setTab}
           />
         )}
+        {tab === "stats" && (
+          <StatsTab
+            days={days} habits={habits} today={today}
+            levelInfo={levelInfo} badgeInfo={badgeInfo}
+            streak={streak}
+          />
+        )}
         {tab === "log" && <LogTab logs={logs} setLogs={setLogs} today={today} />}
         {tab === "goals" && <GoalsTab goals={goals} setGoals={setGoals} />}
         {tab === "settings" && (
@@ -367,6 +382,8 @@ function Tracker({ uid }) {
             data={data} setDay={setDay} getDayData={getDayData}
             today={today} bulkSetDays={bulkSetDays}
             badgeInfo={badgeInfo} levelInfo={levelInfo}
+            bannerPhrases={data.bannerPhrases || []}
+            setBannerPhrases={p => save(Object.assign({}, data, { bannerPhrases: p }))}
           />
         )}
 

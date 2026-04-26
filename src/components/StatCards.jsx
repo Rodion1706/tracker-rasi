@@ -2,6 +2,8 @@
 // - Streak / Done — big gradient cards
 // - Best / Week — smaller summary strip (tick-style to match YearStrip)
 
+import Odometer from "./Odometer";
+
 // Streak tier → flame appearance. Returns null for < 3 days (no flame).
 function streakFlameTier(n) {
   if (n < 3) return null;
@@ -41,13 +43,13 @@ function Flame({ tier }) {
   );
 }
 
-export function BigStat({ label, value, unit, accent, streak }) {
+export function BigStat({ label, value, unit, accent, odometer }) {
   const flameTier = label === "Streak" ? streakFlameTier(Number(value) || 0) : null;
   return (
     <div className="stat-card">
       <div className="sc-label">{label}</div>
       <div className={`sc-value ${accent === "plain" ? "plain" : ""} ${accent === "done-all" ? "done-all" : ""}`}>
-        {value}
+        {odometer ? <Odometer value={Number(value) || 0} /> : value}
         {unit && <span className="unit">{unit}</span>}
         {flameTier && <Flame tier={flameTier} />}
       </div>

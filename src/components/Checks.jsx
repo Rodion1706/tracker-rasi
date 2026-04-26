@@ -2,8 +2,15 @@
 // RadialCheck — for tasks and overdue (round, radial gradient fill when done).
 // DiamondCheck — for habits / checklist (♦ diamond clip, solid red when done).
 // Both play a tick sound on transition to done (opt-in via localStorage).
+//
+// LOTTERY: every check has a small chance to fire a "lucky burst" — bigger
+// brighter sparks burst in 12 directions instead of the usual 6 small dots.
+// Variable-ratio reward = strongest dopamine schedule.
 
-import { playTick } from "../sound";
+import { useState } from "react";
+import { playTick, playLuckyBurst } from "../sound";
+
+const LUCKY_CHANCE = 0.13;
 
 function CheckIcon() {
   return (
@@ -13,20 +20,29 @@ function CheckIcon() {
   );
 }
 
-function Sparks() {
-  // 6 tiny dots bursting out on complete (CSS handles the motion)
+function Sparks({ lucky }) {
+  // Normal: 6 red dots in 60deg increments. Lucky: 12 multi-colored
+  // bigger particles fanning further with a longer animation.
+  const count = lucky ? 12 : 6;
   return (
-    <div className="check-sparks" aria-hidden>
-      {[0, 1, 2, 3, 4, 5].map(i => (
-        <span key={i} style={{ "--i": i }} />
+    <div className={`check-sparks ${lucky ? "lucky" : ""}`} aria-hidden>
+      {Array.from({ length: count }).map((_, i) => (
+        <span key={i} style={{ "--i": i, "--n": count }} />
       ))}
     </div>
   );
 }
 
 export function RadialCheck({ done, onClick, className = "" }) {
+  const [lucky, setLucky] = useState(false);
   function handleClick(e) {
-    if (!done) playTick();
+    if (!done) {
+      const isLucky = Math.random() < LUCKY_CHANCE;
+      setLucky(isLucky);
+      if (isLucky) playLuckyBurst(); else playTick();
+    } else {
+      setLucky(false);
+    }
     onClick && onClick(e);
   }
   return (
@@ -37,14 +53,21 @@ export function RadialCheck({ done, onClick, className = "" }) {
       tabIndex={0}
     >
       <CheckIcon />
-      {done && <Sparks />}
+      {done && <Sparks lucky={lucky} />}
     </div>
   );
 }
 
 export function DiamondCheck({ done, onClick, className = "" }) {
+  const [lucky, setLucky] = useState(false);
   function handleClick(e) {
-    if (!done) playTick();
+    if (!done) {
+      const isLucky = Math.random() < LUCKY_CHANCE;
+      setLucky(isLucky);
+      if (isLucky) playLuckyBurst(); else playTick();
+    } else {
+      setLucky(false);
+    }
     onClick && onClick(e);
   }
   return (
@@ -55,7 +78,7 @@ export function DiamondCheck({ done, onClick, className = "" }) {
       tabIndex={0}
     >
       <CheckIcon />
-      {done && <Sparks />}
+      {done && <Sparks lucky={lucky} />}
     </div>
   );
 }

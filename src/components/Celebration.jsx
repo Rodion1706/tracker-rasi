@@ -14,7 +14,7 @@ import { celebrationTier } from "../gamification";
 
 const COLORS_BASE = ["#e8102a", "#ff4d6d", "#ff6fb2", "#ffffff"];
 const COLORS_GOLD = ["#e8102a", "#ff4d6d", "#ffd700", "#ff6fb2", "#ffffff"];
-const BANNER_LINES_TIER1 = [
+export const DEFAULT_BANNER_LINES = [
   "DAY CLEAN",
   "LOCKED IN",
   "FULL CLEAR",
@@ -47,16 +47,17 @@ function tierConfig(tier) {
   };
 }
 
-function pickTier1Banner(fireId) {
-  return BANNER_LINES_TIER1[fireId % BANNER_LINES_TIER1.length];
+function pickTier1Banner(fireId, customLines) {
+  const list = (customLines && customLines.length > 0) ? customLines : DEFAULT_BANNER_LINES;
+  return list[fireId % list.length];
 }
 
-export default function Celebration({ fireId, streak }) {
+export default function Celebration({ fireId, streak, bannerPhrases }) {
   if (!fireId) return null;
 
   const { tier } = celebrationTier(streak || 0);
   const cfg = tierConfig(tier);
-  const bannerText = cfg.banner || pickTier1Banner(fireId);
+  const bannerText = cfg.banner || pickTier1Banner(fireId, bannerPhrases);
 
   const particles = [];
   for (let i = 0; i < cfg.particleCount; i++) {
