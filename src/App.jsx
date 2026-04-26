@@ -246,8 +246,10 @@ function Tracker({ uid }) {
   // Overall streak + best.
   // Streak: consecutive clean days ending yesterday. If today is ALREADY
   // clean, include it. In-progress today does NOT break the streak.
-  // Clean = every habit checked OR day marked as Hard Day.
-  const isClean = key => isDayClean(days[key], habits, key);
+  // Clean = every habit checked OR day marked as Hard Day. With Strict
+  // Streak on (data.strictStreak), also requires every task done.
+  const strictStreak = !!data.strictStreak;
+  const isClean = key => isDayClean(days[key], habits, key, strictStreak);
   let streak = 0;
   const todayClean = isClean(argDate(0));
   const startOffset = todayClean ? 0 : 1;
@@ -426,6 +428,8 @@ function Tracker({ uid }) {
             setBannerPhrases={p => save(Object.assign({}, data, { bannerPhrases: p }))}
             hardModeOn={!!data.hardModeOn}
             setHardModeOn={v => save(Object.assign({}, data, { hardModeOn: v }))}
+            strictStreak={!!data.strictStreak}
+            setStrictStreak={v => save(Object.assign({}, data, { strictStreak: v }))}
             jumpToDay={dateKey => {
               const offset = Math.round(
                 (new Date(dateKey + "T12:00:00") - new Date(today + "T12:00:00")) / 86400000

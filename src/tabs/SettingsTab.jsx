@@ -39,6 +39,25 @@ function HardModeToggle({ on, setOn }) {
   );
 }
 
+function StrictStreakToggle({ on, setOn }) {
+  if (!setOn) return null;
+  return (
+    <div className="sound-toggle" onClick={() => setOn(!on)}>
+      <div className={`sound-toggle-sw ${on ? "on" : ""}`}>
+        <div className="sound-toggle-knob" />
+      </div>
+      <div>
+        <div className="sound-toggle-label">STRICT STREAK</div>
+        <div className="sound-toggle-sub">
+          {on
+            ? "Clean = every habit AND every task done. No half-credit."
+            : "Off — clean = every habit done (tasks don't matter)."}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SoundToggle() {
   const [on, setOn] = useState(isSoundOn());
   const [pack, setPack] = useState(getSoundPack());
@@ -260,7 +279,7 @@ friday | Personal | Dentist follow-up`;
   );
 }
 
-export default function SettingsTab({ habits, setHabits, recurring, setRecurring, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, bannerPhrases, setBannerPhrases, hardModeOn, setHardModeOn, jumpToDay }) {
+export default function SettingsTab({ habits, setHabits, recurring, setRecurring, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, bannerPhrases, setBannerPhrases, hardModeOn, setHardModeOn, strictStreak, setStrictStreak, jumpToDay }) {
   const [newH, setNewH] = useState("");
   const [newHS, setNewHS] = useState("");
   const [eId, setEId] = useState(null);
@@ -468,6 +487,8 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
           <LevelBar levelInfo={levelInfo} />
         </div>
       )}
+
+      <StrictStreakToggle on={!!strictStreak} setOn={setStrictStreak} />
 
       <HardModeToggle on={!!hardModeOn} setOn={setHardModeOn} />
 

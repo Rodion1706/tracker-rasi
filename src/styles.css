@@ -3149,7 +3149,10 @@ body::after {
 }
 .modal-close:hover { color: var(--red); }
 
-/* ════════ DESKTOP ════════ */
+/* ════════════════════════════════════════════════════
+   DESKTOP (≥900px) — opposite of the mobile compact pass.
+   Bigger monad, more breathing room, multi-column layouts.
+   ════════════════════════════════════════════════════ */
 @media (min-width: 900px) {
   .app { padding: 34px 32px 60px; }
   .top-header { padding-bottom: 24px; margin-bottom: 22px; }
@@ -3163,6 +3166,21 @@ body::after {
     gap: 40px;
     padding: 18px 0 26px;
     justify-items: initial;
+  }
+
+  /* Day-hero monad — bigger and more present on a wide screen. */
+  .day-hero { gap: 36px; padding-bottom: 28px; margin-bottom: 28px; }
+  .day-hero .monad {
+    width: 220px !important;
+    height: 293px !important;
+  }
+  /* Tab-header monad (Month/Stats/Goals/Set) bumps up too. */
+  .tab-header { padding: 22px 26px; gap: 20px; }
+  .tab-header-title { font-size: 30px; letter-spacing: 0.2em; }
+  .tab-header-sub { font-size: 12px; margin-top: 8px; }
+  .tab-header .monad {
+    width: 100px !important;
+    height: 133px !important;
   }
 
   /* Boss had only 2 BigStat cards (Streak / Done), so 4-col left

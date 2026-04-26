@@ -25,14 +25,20 @@ export function activeHabitsOn(habits, dateStr) {
 // ══════ CORE: day cleanness ══════
 // A day counts as "clean" when every habit ACTIVE ON THAT DAY is
 // checked, OR the user explicitly marked it a Hard Day.
-// Adding/removing habits today never changes the cleanness of past days.
-export function isDayClean(dayData, habits, dateStr) {
+// In STRICT mode, also requires every task on that day to be done.
+// Adding/removing habits today never changes past-day cleanness.
+export function isDayClean(dayData, habits, dateStr, strict = false) {
   if (!dayData) return false;
   if (dayData.hardDay) return true;
   const active = dateStr ? activeHabitsOn(habits, dateStr) : (habits || []);
   if (!active || active.length === 0) return false;
   if (!dayData.checks) return false;
-  return active.every(h => dayData.checks[h.id]);
+  if (!active.every(h => dayData.checks[h.id])) return false;
+  if (strict) {
+    const tasks = dayData.tasks || [];
+    if (tasks.length > 0 && !tasks.every(t => t.done)) return false;
+  }
+  return true;
 }
 
 // ══════ XP CONSTANTS ══════
@@ -126,7 +132,7 @@ export const BADGES = [
 // ══════ COMPUTE: full state derivation ══════
 // Returns the SET of badges currently earnable based on full days history,
 // plus useful aggregates. Called on init + every meaningful change.
-export function computeBadgesEarnable(days, habits) {
+export function computeBadgesEarnable(days, habits, strict = false) {
   let totalClean = 0, bestStreak = 0, curStreak = 0, totalTasksDone = 0;
   let curStreakUsedHardDay = false;
   let pastStreakBrokeAtSeven = false; // true if there was ever a >=7 streak that ended
@@ -136,7 +142,7 @@ export function computeBadgesEarnable(days, habits) {
   const keys = Object.keys(days).sort();
   for (const k of keys) {
     const d = days[k];
-    if (isDayClean(d, habits, k)) {
+    if (isDayClean(d, habits, k, strict)) {
       totalClean++;
       curStreak++;
       if (d && d.hardDay) curStreakUsedHardDay = true;
@@ -248,13 +254,14 @@ export function applyGamificationUpdates(data, habits, todayStr) {
   const stored = data.unlockedBadges || [];
   const credited = new Set(data.creditedDays || []);
   const lifetimeXP = data.lifetimeXP || 0;
+  const strict = !!data.strictStreak;
 
   // 0. Migrate habits without createdAt — affects subsequent calcs too.
   const migratedHabits = migrateHabitsCreatedAt(habits, days, todayStr);
   const habitsChanged = migratedHabits !== habits;
 
   // 1. New badges
-  const { earnable } = computeBadgesEarnable(days, migratedHabits);
+  const { earnable } = computeBadgesEarnable(days, migratedHabits, strict);
   const newBadges = [];
   for (const id of earnable) {
     if (!stored.includes(id)) newBadges.push(id);
@@ -265,7 +272,7 @@ export function applyGamificationUpdates(data, habits, todayStr) {
   let xpGain = 0;
   for (const k of Object.keys(days)) {
     if (credited.has(k)) continue;
-    if (isDayClean(days[k], migratedHabits, k)) {
+    if (isDayClean(days[k], migratedHabits, k, strict)) {
       newCredits.push(k);
       xpGain += XP_PER_CLEAN_DAY;
     }
