@@ -1,32 +1,47 @@
+// Weekly log — focused on reflection only.
+// Boss: "убрать опубликованные видео, затраты на монтажера и т.д.
+// Просто ключевые уроки и что изменю на следующей неделе".
+// Old metrics fields (videos/published/spent/revenue) are no longer
+// editable. Existing data on past weeks stays in storage but isn't
+// shown — non-destructive.
+
 import { useState, useEffect } from "react";
 import { getWeekId } from "../config";
 import TabHeader from "../components/TabHeader";
 import SectionHeader from "../components/SectionHeader";
 
-const EMPTY_LOG = { videos: 0, lesson: "", change: "", published: 0, spent: 0, revenue: 0 };
+const EMPTY_LOG = { lesson: "", change: "" };
 
 export default function LogTab({ logs, setLogs, today }) {
   const currentWk = getWeekId(today);
   const [viewWk, setViewWk] = useState(currentWk);
-  const log = logs[viewWk] || EMPTY_LOG;
+  const stored = logs[viewWk] || {};
+  const log = { lesson: stored.lesson || "", change: stored.change || "" };
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(log);
   const wk = viewWk;
   const isCurrentWk = wk === currentWk;
 
   useEffect(() => {
-    setForm(logs[wk] || EMPTY_LOG);
+    const cur = logs[wk] || {};
+    setForm({ lesson: cur.lesson || "", change: cur.change || "" });
     setEditing(false);
   }, [wk, logs]);
 
   function saveLog() {
     const nl = Object.assign({}, logs);
-    nl[wk] = form;
+    // Preserve any legacy fields on the saved entry, just update the
+    // two reflection fields. Doesn't break old data.
+    nl[wk] = Object.assign({}, logs[wk] || {}, {
+      lesson: form.lesson,
+      change: form.change,
+    });
     setLogs(nl);
     setEditing(false);
   }
 
   const sortedWeeks = Object.keys(logs).sort().reverse();
+  const hasContent = !!(log.lesson || log.change);
 
   return (
     <div>
@@ -52,28 +67,24 @@ export default function LogTab({ logs, setLogs, today }) {
       {!editing ? (
         <div>
           <div className="brute">
-            <div className="brute-stats">
-              {[
-                [log.published || 0, "published", "var(--red)"],
-                [`$${log.spent || 0}`, "spent", "var(--t2)"],
-                [`$${log.revenue || 0}`, "revenue", "var(--red)"],
-              ].map(([val, lbl, col]) => (
-                <div key={lbl}>
-                  <div className="brute-stat-v" style={{ color: col }}>{val}</div>
-                  <div className="brute-stat-l">{lbl}</div>
-                </div>
-              ))}
-            </div>
-            {log.lesson && (
-              <div className="brute-field">
-                <div className="brute-field-l">Key lesson</div>
-                <div className="brute-field-v">{log.lesson}</div>
-              </div>
-            )}
-            {log.change && (
-              <div className="brute-field">
-                <div className="brute-field-l">Change next week</div>
-                <div className="brute-field-v">{log.change}</div>
+            {hasContent ? (
+              <>
+                {log.lesson && (
+                  <div className="brute-field">
+                    <div className="brute-field-l">Key lesson</div>
+                    <div className="brute-field-v">{log.lesson}</div>
+                  </div>
+                )}
+                {log.change && (
+                  <div className="brute-field">
+                    <div className="brute-field-l">Change next week</div>
+                    <div className="brute-field-v">{log.change}</div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div style={{ fontSize: 12, color: "var(--t3)", fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", lineHeight: 1.6 }}>
+                Nothing logged for this week yet. Two prompts: what was the key lesson, and one thing you'll change next week.
               </div>
             )}
           </div>
@@ -86,29 +97,21 @@ export default function LogTab({ logs, setLogs, today }) {
               textShadow: "0 0 8px rgba(232, 16, 42, 0.4)",
             }}
           >
-            ◆ EDIT {isCurrentWk ? "THIS WEEK" : "THIS LOG"} ◆
+            ◆ {hasContent ? "EDIT" : "WRITE"} {isCurrentWk ? "THIS WEEK" : "THIS LOG"} ◆
           </div>
         </div>
       ) : (
         <div className="brute" style={{ borderColor: "var(--brd-on)" }}>
-          {[["published", "Videos published", "number"], ["spent", "$ spent on editors", "number"], ["revenue", "$ revenue", "number"]].map(f => (
-            <div key={f[0]} className="brute-field">
-              <div className="brute-field-l">{f[1]}</div>
-              <input
-                type={f[2]}
-                value={form[f[0]] || ""}
-                onChange={e => setForm(Object.assign({}, form, { [f[0]]: f[2] === "number" ? Number(e.target.value) : e.target.value }))}
-                style={{ width: "100%", background: "transparent", border: "none", borderBottom: "1px solid var(--brd)", color: "var(--t1)", fontSize: 16, outline: "none", padding: "6px 0", boxSizing: "border-box", fontFamily: "'Oswald', sans-serif", fontWeight: 700 }}
-              />
-            </div>
-          ))}
-          {[["lesson", "Key lesson this week"], ["change", "One change for next week"]].map(f => (
+          {[
+            ["lesson", "Key lesson this week"],
+            ["change", "One change for next week"],
+          ].map(f => (
             <div key={f[0]} className="brute-field">
               <div className="brute-field-l">{f[1]}</div>
               <textarea
                 value={form[f[0]] || ""}
                 onChange={e => setForm(Object.assign({}, form, { [f[0]]: e.target.value }))}
-                rows={3}
+                rows={4}
                 style={{ width: "100%", background: "rgba(0,0,0,0.3)", border: "1px solid var(--brd)", borderRadius: 8, color: "var(--t1)", fontSize: 13, outline: "none", padding: 12, resize: "none", boxSizing: "border-box", fontFamily: "inherit", lineHeight: 1.5 }}
               />
             </div>
@@ -124,7 +127,8 @@ export default function LogTab({ logs, setLogs, today }) {
         <div style={{ marginTop: 24 }}>
           <SectionHeader label="HISTORY" />
           {sortedWeeks.filter(w => w !== wk).map(w => {
-            const l = logs[w];
+            const l = logs[w] || {};
+            const preview = (l.lesson || l.change || "").trim().slice(0, 60);
             return (
               <div
                 key={w}
@@ -132,11 +136,13 @@ export default function LogTab({ logs, setLogs, today }) {
                 onClick={() => setViewWk(w)}
                 title="Click to view & edit"
               >
-                <div className="row-body" style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: 13, color: "var(--t1)", fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>{w}</span>
-                  <span style={{ fontSize: 11, color: "var(--t3)", fontFamily: "'JetBrains Mono', monospace" }}>
-                    {l.published || 0} vids · ${l.revenue || 0}
-                  </span>
+                <div className="row-body">
+                  <div style={{ fontSize: 13, color: "var(--t1)", fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>{w}</div>
+                  {preview && (
+                    <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 3, lineHeight: 1.4 }}>
+                      {preview}{preview.length === 60 ? "…" : ""}
+                    </div>
+                  )}
                 </div>
               </div>
             );

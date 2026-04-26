@@ -39,6 +39,15 @@ export default function YearStrip({ today }) {
     );
   }
 
+  // Each quarter spans exactly 13 weeks → 25% of the strip width.
+  // Quarter starts: Q1 = W1 (Jan), Q2 = W14 (Apr), Q3 = W27 (Jul), Q4 = W40 (Oct).
+  const QUARTERS = [
+    { id: "Q1", startWeek: 1,  range: "JAN-MAR" },
+    { id: "Q2", startWeek: 14, range: "APR-JUN" },
+    { id: "Q3", startWeek: 27, range: "JUL-SEP" },
+    { id: "Q4", startWeek: 40, range: "OCT-DEC" },
+  ];
+
   return (
     <div className="ys">
       <div className="ys-label">
@@ -49,19 +58,30 @@ export default function YearStrip({ today }) {
         <div className="ys-sub">{pctOfYear}% · {quarter}</div>
       </div>
       <div className="ys-track">
-        {ticks}
-        {[25, 50, 75].map(pct => (
-          <span key={pct} className="ys-q-divider" style={{ left: `${pct}%` }} />
-        ))}
+        {/* Quarter row above the ticks — clear cells with vertical
+            dividers between each quarter so the boundaries read at a
+            glance. Active quarter highlighted in red. */}
         <div className="ys-quarters">
-          {["Q1", "Q2", "Q3", "Q4"].map((q, i) => (
-            <span
-              key={q}
-              className={`ys-q ${quarter === q ? "active" : ""}`}
-              style={{ left: `${i * 25 + 12.5}%` }}
-            >{q}</span>
+          {QUARTERS.map(q => (
+            <div
+              key={q.id}
+              className={`ys-q-cell ${quarter === q.id ? "active" : ""}`}
+            >
+              <span className="ys-q-name">{q.id}</span>
+              <span className="ys-q-range">{q.range}</span>
+            </div>
           ))}
         </div>
+
+        {/* Ticks bar */}
+        <div className="ys-ticks">
+          {ticks}
+          {[25, 50, 75].map(pct => (
+            <span key={pct} className="ys-q-divider" style={{ left: `${pct}%` }} />
+          ))}
+        </div>
+
+        {/* Months label row */}
         <div className="ys-months">
           {MONTH_LABELS.map(m => <span key={m}>{m}</span>)}
         </div>

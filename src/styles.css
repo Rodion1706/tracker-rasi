@@ -321,12 +321,16 @@ body::after {
 .ys-track {
   flex: 1;
   display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+.ys-ticks {
+  display: flex;
   gap: 2px;
-  height: 52px;
+  height: 28px;
   align-items: stretch;
   position: relative;
-  padding-top: 12px;
-  padding-bottom: 20px;
 }
 .ys-tick {
   flex: 1;
@@ -359,56 +363,86 @@ body::after {
 }
 .ys-tick:hover { background: var(--red-b); transform: scaleY(1.2); }
 .ys-months {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
   display: flex;
   justify-content: space-between;
   font-family: 'Oswald', sans-serif;
-  font-size: 11px;
+  font-size: 10px;
   color: #a8a8ae;
   letter-spacing: 0.14em;
   font-weight: 600;
   pointer-events: none;
   text-transform: uppercase;
 }
+/* Vertical divider between adjacent quarters, sits inside .ys-ticks so
+   it spans the height of the bar only (not the labels). */
 .ys-q-divider {
   position: absolute;
-  top: 12px;
-  bottom: 20px;
-  width: 1px;
-  background: linear-gradient(180deg, transparent, rgba(232, 16, 42, 0.5), rgba(232, 16, 42, 0.5), transparent);
-  box-shadow: 0 0 4px rgba(232, 16, 42, 0.45);
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--red), var(--red-d));
+  box-shadow: 0 0 6px var(--red);
   pointer-events: none;
   z-index: 1;
-}
-.ys-quarters {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 12px;
-  pointer-events: none;
-  z-index: 2;
-}
-.ys-q {
-  position: absolute;
-  top: 0;
   transform: translateX(-50%);
+  border-radius: 1px;
+}
+/* Quarter row — 4 equal cells, dividers between them, label + month
+   range inside each. Active quarter glows red. */
+.ys-quarters {
+  display: flex;
+  gap: 0;
+  height: 22px;
+}
+.ys-q-cell {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   font-family: 'Cinzel', serif;
-  font-size: 9px;
-  letter-spacing: 0.22em;
+  font-size: 10px;
+  letter-spacing: 0.18em;
   font-weight: 700;
   color: var(--t3);
   text-transform: uppercase;
-  padding: 1px 7px;
-  border-radius: 3px;
-  background: rgba(16, 8, 18, 0.85);
-  border: 1px solid rgba(232, 16, 42, 0.25);
-  white-space: nowrap;
+  border-bottom: 1px dashed rgba(232, 16, 42, 0.18);
+  padding: 0 6px;
+  position: relative;
+  transition: color 0.3s, border-color 0.3s;
 }
-.ys-q.active {
+.ys-q-cell:not(:last-child) {
+  border-right: 1px solid rgba(232, 16, 42, 0.25);
+}
+.ys-q-cell.active {
   color: var(--red-b);
-  border-color: rgba(232, 16, 42, 0.65);
+  border-bottom-color: var(--red);
   text-shadow: 0 0 6px var(--red);
-  box-shadow: 0 0 8px rgba(232, 16, 42, 0.4);
+}
+.ys-q-cell.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0; right: 0;
+  height: 1px;
+  background: var(--red);
+  box-shadow: 0 0 6px var(--red);
+}
+.ys-q-name {
+  font-size: 11px;
+  letter-spacing: 0.24em;
+}
+.ys-q-range {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  opacity: 0.65;
+}
+.ys-q-cell.active .ys-q-range { opacity: 1; }
+@media (max-width: 460px) {
+  .ys-q-range { display: none; }
+  .ys-q-cell { gap: 0; }
 }
 
 /* ════════ MONAD ════════ */
@@ -1979,8 +2013,10 @@ body::after {
   .ys-label { min-width: 0; text-align: center; }
   .ys-w { justify-content: center; }
   .ys-sub { text-align: center; }
-  .ys-track { gap: 1px; height: 48px; padding-top: 11px; padding-bottom: 18px; }
-  .ys-q { font-size: 8px; padding: 1px 5px; letter-spacing: 0.16em; }
+  .ys-ticks { gap: 1px; height: 22px; }
+  .ys-quarters { height: 18px; }
+  .ys-q-cell { font-size: 9px; letter-spacing: 0.14em; }
+  .ys-q-name { font-size: 9px; letter-spacing: 0.18em; }
   .ys-months { font-size: 9px; letter-spacing: 0.08em; }
 }
 
@@ -3169,18 +3205,18 @@ body::after {
   }
 
   /* Day-hero monad — bigger and more present on a wide screen. */
-  .day-hero { gap: 36px; padding-bottom: 28px; margin-bottom: 28px; }
+  .day-hero { gap: 44px; padding-bottom: 32px; margin-bottom: 32px; }
   .day-hero .monad {
-    width: 220px !important;
-    height: 293px !important;
+    width: 280px !important;
+    height: 373px !important;
   }
   /* Tab-header monad (Month/Stats/Goals/Set) bumps up too. */
-  .tab-header { padding: 22px 26px; gap: 20px; }
-  .tab-header-title { font-size: 30px; letter-spacing: 0.2em; }
+  .tab-header { padding: 24px 28px; gap: 24px; }
+  .tab-header-title { font-size: 32px; letter-spacing: 0.2em; }
   .tab-header-sub { font-size: 12px; margin-top: 8px; }
   .tab-header .monad {
-    width: 100px !important;
-    height: 133px !important;
+    width: 120px !important;
+    height: 160px !important;
   }
 
   /* Boss had only 2 BigStat cards (Streak / Done), so 4-col left
@@ -3202,7 +3238,10 @@ body::after {
   .ys-w { font-size: 38px; }
   .ys-w .n { font-size: 54px; }
   .ys-sub { font-size: 12px; }
-  .ys-track { height: 56px; padding-top: 14px; padding-bottom: 22px; }
+  .ys-ticks { height: 36px; }
+  .ys-quarters { height: 26px; }
+  .ys-q-name { font-size: 12px; }
+  .ys-q-range { font-size: 9px; }
 }
 
 /* Very small phones */
@@ -3250,7 +3289,10 @@ body::after {
   .ys-w .n { font-size: 32px; }
   .ys-w .of { font-size: 11px; margin-left: 4px; }
   .ys-sub { font-size: 10px; margin-top: 3px; }
-  .ys-track { height: 28px; padding-bottom: 14px; }
+  .ys-ticks { height: 18px; }
+  .ys-quarters { height: 16px; }
+  .ys-q-cell { font-size: 8px; }
+  .ys-q-name { font-size: 9px; letter-spacing: 0.18em; }
   .ys-months { font-size: 8px; letter-spacing: 0.06em; }
 
   /* Compact day-hero — monad shrinks via real width/height (scale()
@@ -3317,35 +3359,35 @@ body::after {
   .kbd-hint { padding: 12px 14px; }
 }
 
-/* ════════ FLOATING ADD BUTTON (mobile only) ════════ */
+/* ════════ FLOATING ADD BUTTON (all devices) ════════ */
 .fab {
-  display: none;
+  display: flex;
+  position: fixed;
+  bottom: 22px;
+  right: 18px;
+  z-index: 60;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--red-b), var(--red), var(--red-d));
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(232, 16, 42, 0.55), 0 0 32px rgba(232, 16, 42, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: transform 0.15s ease-out, box-shadow 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  animation: fabPulse 4s ease-in-out infinite;
 }
-@media (max-width: 620px) {
-  .fab {
-    display: flex;
-    position: fixed;
-    bottom: 22px;
-    right: 18px;
-    z-index: 60;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--red-b), var(--red), var(--red-d));
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    cursor: pointer;
-    box-shadow: 0 8px 24px rgba(232, 16, 42, 0.55), 0 0 32px rgba(232, 16, 42, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    transition: transform 0.15s ease-out, box-shadow 0.2s;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-    animation: fabPulse 4s ease-in-out infinite;
-  }
-  .fab:active { transform: scale(0.92); box-shadow: 0 4px 14px rgba(232, 16, 42, 0.45); }
-  @keyframes fabPulse {
-    0%, 100% { box-shadow: 0 8px 24px rgba(232, 16, 42, 0.55), 0 0 32px rgba(232, 16, 42, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25); }
-    50% { box-shadow: 0 8px 28px rgba(232, 16, 42, 0.65), 0 0 44px rgba(232, 16, 42, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
-  }
+.fab:hover { transform: scale(1.06); box-shadow: 0 10px 30px rgba(232, 16, 42, 0.7), 0 0 40px rgba(232, 16, 42, 0.45); }
+.fab:active { transform: scale(0.92); box-shadow: 0 4px 14px rgba(232, 16, 42, 0.45); }
+@keyframes fabPulse {
+  0%, 100% { box-shadow: 0 8px 24px rgba(232, 16, 42, 0.55), 0 0 32px rgba(232, 16, 42, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25); }
+  50% { box-shadow: 0 8px 28px rgba(232, 16, 42, 0.65), 0 0 44px rgba(232, 16, 42, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
+}
+@media (min-width: 900px) {
+  /* On desktop the FAB sits a touch further from the corner. */
+  .fab { bottom: 32px; right: 32px; width: 60px; height: 60px; }
 }

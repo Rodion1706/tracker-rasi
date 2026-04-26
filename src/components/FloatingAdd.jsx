@@ -1,14 +1,18 @@
-// Floating + button — mobile-only quick task add. Visible on Day tab
-// only. On tap: scrolls the page down to the .add-input field and
-// focuses it (so the existing add-form gets used, no separate modal).
+// Floating + button — quick task add. Visible on Day tab on every
+// device. Tap focuses the .add-input synchronously (so iOS Safari
+// pops up the keyboard) then scrolls it into view.
 
 export default function FloatingAdd() {
   function handleClick() {
     const input = document.querySelector(".add-input");
-    if (input) {
-      input.scrollIntoView({ behavior: "smooth", block: "center" });
-      setTimeout(() => input.focus(), 350);
-    }
+    if (!input) return;
+    // Focus FIRST, synchronously, inside the user-gesture event handler.
+    // iOS Safari only opens the keyboard when focus() runs in the same
+    // tick as the tap event. Any setTimeout/await before focus would
+    // make the keyboard refuse to appear.
+    try { input.focus({ preventScroll: true }); } catch { input.focus(); }
+    // Then bring the input into view smoothly.
+    input.scrollIntoView({ behavior: "smooth", block: "center" });
   }
   return (
     <div className="fab" onClick={handleClick} title="Add task" aria-label="Add task">
