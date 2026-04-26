@@ -268,9 +268,10 @@ function Tracker({ uid }) {
   };
   const justUnlocked = data._justUnlocked || [];
   // Run the gamification update pass when days/habits/data change.
+  // Also migrates habits without createdAt on first run.
   useEffect(() => {
     if (loading) return;
-    const next = applyGamificationUpdates(data, habits);
+    const next = applyGamificationUpdates(data, habits, today);
     if (next) save(next);
   }, [days, habits, loading]);
   // Clear the _justUnlocked flag once the toast has had a chance to render.

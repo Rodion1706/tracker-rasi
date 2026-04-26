@@ -36,20 +36,37 @@ export function isDayClean(dayData, habits, dateStr) {
 }
 
 // ══════ XP CONSTANTS ══════
+// Each clean day banks 100 XP. The level ladder is built so that the
+// number of clean days needed for the NEXT level always doubles the
+// number needed for the CURRENT level. Starts at 7 (one week) so the
+// first level-up arrives reliably for someone keeping a routine.
+//
+// Days to next level by level:
+//   L1→L2:  7  (1 week)
+//   L2→L3:  14 (2 weeks)
+//   L3→L4:  28 (1 month)
+//   L4→L5:  56 (~8 weeks)
+//   L5→L6:  112 (~16 weeks)
+//   L6→L7:  224 (~7 months)
+//   L7→L8:  448 (~14 months)
+//   L8→L9:  896 (~2.5 years)
+//   L9→L10: 1792 (~5 years, the unreachable goalpost)
+//
+// Cumulative days = 0, 7, 21, 49, 105, 217, 441, 889, 1785, 3577.
+// Multiplied by XP_PER_CLEAN_DAY for thresholds.
 export const XP_PER_CLEAN_DAY = 100;
 
-// ══════ LEVELS ══════
 export const LEVELS = [
-  { id: 1, name: "INITIATE",     threshold: 0 },
-  { id: 2, name: "DISCIPLINED",  threshold: 500 },
-  { id: 3, name: "SHARPENED",    threshold: 1500 },
-  { id: 4, name: "FORGED",       threshold: 3500 },
-  { id: 5, name: "OBSESSED",     threshold: 7000 },
-  { id: 6, name: "MONK",         threshold: 12000 },
-  { id: 7, name: "RELENTLESS",   threshold: 20000 },
-  { id: 8, name: "UNTOUCHABLE",  threshold: 32000 },
-  { id: 9, name: "LEGENDARY",    threshold: 50000 },
-  { id: 10, name: "ASCENDED",    threshold: 80000 },
+  { id: 1,  name: "INITIATE",    threshold:      0 }, //  0 clean days
+  { id: 2,  name: "DISCIPLINED", threshold:    700 }, //  7 days  (1 week)
+  { id: 3,  name: "SHARPENED",   threshold:   2100 }, // 21 days  (3 weeks)
+  { id: 4,  name: "FORGED",      threshold:   4900 }, // 49 days  (~7 weeks)
+  { id: 5,  name: "OBSESSED",    threshold:  10500 }, // 105 days (~3.5 months)
+  { id: 6,  name: "MONK",        threshold:  21700 }, // 217 days (~7 months)
+  { id: 7,  name: "RELENTLESS",  threshold:  44100 }, // 441 days (~14 months)
+  { id: 8,  name: "UNTOUCHABLE", threshold:  88900 }, // 889 days (~2.4 years)
+  { id: 9,  name: "LEGENDARY",   threshold: 178500 }, // 1785 days (~4.9 years)
+  { id: 10, name: "ASCENDED",    threshold: 357700 }, // 3577 days (~9.8 years)
 ];
 
 export function getLevel(xp) {
@@ -198,18 +215,46 @@ function checkPerfectMonth(days, habits) {
   return false;
 }
 
+// ══════ HABIT MIGRATION ══════
+// One-time per habit: stamp createdAt on any habit that doesn't have it.
+// Heuristic: a habit's createdAt is the EARLIEST day where its check key
+// appears in the days map. If it never appears, it's brand new — stamp
+// today. This means: a habit with weeks of history keeps its history;
+// a habit Boss just added before this code shipped gets locked to today
+// and stops appearing on past days.
+export function migrateHabitsCreatedAt(habits, days, todayStr) {
+  if (!habits || habits.length === 0) return habits;
+  let changed = false;
+  const keys = Object.keys(days || {}).sort();
+  const next = habits.map(h => {
+    if (h.createdAt) return h;
+    let earliest = null;
+    for (const k of keys) {
+      const d = days[k];
+      if (d && d.checks && (h.id in d.checks)) { earliest = k; break; }
+    }
+    changed = true;
+    return Object.assign({}, h, { createdAt: earliest || todayStr });
+  });
+  return changed ? next : habits;
+}
+
 // ══════ PERSISTENCE-AWARE UPDATER ══════
-// Given existing data, returns a NEW data object with newly-earned badges
-// appended and new clean days credited to lifetimeXP. Returns null if no
-// change is needed (so caller can skip a save).
-export function applyGamificationUpdates(data, habits) {
+// Given existing data, returns a NEW data object with: habit createdAt
+// migration applied, newly-earned badges appended, and new clean days
+// credited to lifetimeXP. Returns null when nothing changes.
+export function applyGamificationUpdates(data, habits, todayStr) {
   const days = data.days || {};
   const stored = data.unlockedBadges || [];
   const credited = new Set(data.creditedDays || []);
   const lifetimeXP = data.lifetimeXP || 0;
 
+  // 0. Migrate habits without createdAt — affects subsequent calcs too.
+  const migratedHabits = migrateHabitsCreatedAt(habits, days, todayStr);
+  const habitsChanged = migratedHabits !== habits;
+
   // 1. New badges
-  const { earnable } = computeBadgesEarnable(days, habits);
+  const { earnable } = computeBadgesEarnable(days, migratedHabits);
   const newBadges = [];
   for (const id of earnable) {
     if (!stored.includes(id)) newBadges.push(id);
@@ -220,20 +265,22 @@ export function applyGamificationUpdates(data, habits) {
   let xpGain = 0;
   for (const k of Object.keys(days)) {
     if (credited.has(k)) continue;
-    if (isDayClean(days[k], habits, k)) {
+    if (isDayClean(days[k], migratedHabits, k)) {
       newCredits.push(k);
       xpGain += XP_PER_CLEAN_DAY;
     }
   }
 
-  if (newBadges.length === 0 && newCredits.length === 0) return null;
+  if (!habitsChanged && newBadges.length === 0 && newCredits.length === 0) return null;
 
-  return Object.assign({}, data, {
+  const out = Object.assign({}, data, {
     unlockedBadges: stored.concat(newBadges),
     creditedDays: Array.from(credited).concat(newCredits),
     lifetimeXP: lifetimeXP + xpGain,
     _justUnlocked: newBadges, // ephemeral, for UI toast
   });
+  if (habitsChanged) out.habits = migratedHabits;
+  return out;
 }
 
 // ══════ HARD DAY BUDGET ══════

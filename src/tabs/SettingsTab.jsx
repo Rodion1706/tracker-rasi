@@ -296,38 +296,6 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
       {/* Bulk task import — front and center for batch loading */}
       <ImportTasks setDay={setDay} getDayData={getDayData} today={today} bulkSetDays={bulkSetDays} />
 
-      {/* Level */}
-      {levelInfo && (
-        <div style={{ marginBottom: 18 }}>
-          <LevelBar levelInfo={levelInfo} />
-        </div>
-      )}
-
-      {/* Sound toggle + pack picker */}
-      <SoundToggle />
-
-      {/* Custom banner phrases */}
-      {setBannerPhrases && (
-        <BannerEditor phrases={bannerPhrases} setPhrases={setBannerPhrases} />
-      )}
-
-      {/* Keyboard shortcuts hint */}
-      <div className="kbd-hint">
-        <div className="kbd-hint-label">KEYBOARD · DESKTOP</div>
-        <div className="kbd-hint-grid">
-          <span><kbd>D</kbd> Day</span>
-          <span><kbd>W</kbd> Week</span>
-          <span><kbd>M</kbd> Month</span>
-          <span><kbd>X</kbd> Stats</span>
-          <span><kbd>L</kbd> Log</span>
-          <span><kbd>G</kbd> Goals</span>
-          <span><kbd>S</kbd> Settings</span>
-          <span><kbd>T</kbd> Jump to today</span>
-          <span><kbd>N</kbd> / <kbd>/</kbd> Focus add-task</span>
-          <span><kbd>←</kbd> / <kbd>→</kbd> Prev/next day</span>
-        </div>
-      </div>
-
       {/* Habits — only show currently active ones (archived stay in the
           list invisibly so past days keep their snapshot semantics). */}
       <SectionHeader label="HABITS" count={habits.filter(h => !h.archivedAt).length} />
@@ -404,6 +372,39 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
           ))}
         </div>
         <div onClick={addR} className="add-btn" style={{ display: "inline-flex" }}>ADD RECURRING</div>
+      </div>
+
+      {/* Personalization — moved to bottom per Boss preference */}
+      <div style={{ marginTop: 30 }}>
+        <SectionHeader label="PERSONALIZATION" />
+      </div>
+
+      {levelInfo && (
+        <div style={{ marginBottom: 14 }}>
+          <LevelBar levelInfo={levelInfo} />
+        </div>
+      )}
+
+      <SoundToggle />
+
+      {setBannerPhrases && (
+        <BannerEditor phrases={bannerPhrases} setPhrases={setBannerPhrases} />
+      )}
+
+      <div className="kbd-hint">
+        <div className="kbd-hint-label">KEYBOARD · DESKTOP</div>
+        <div className="kbd-hint-grid">
+          <span><kbd>D</kbd> Day</span>
+          <span><kbd>W</kbd> Week</span>
+          <span><kbd>M</kbd> Month</span>
+          <span><kbd>X</kbd> Stats</span>
+          <span><kbd>L</kbd> Log</span>
+          <span><kbd>G</kbd> Goals</span>
+          <span><kbd>S</kbd> Settings</span>
+          <span><kbd>T</kbd> Jump to today</span>
+          <span><kbd>N</kbd> / <kbd>/</kbd> Focus add-task</span>
+          <span><kbd>←</kbd> / <kbd>→</kbd> Prev/next day</span>
+        </div>
       </div>
 
       {/* Export */}
