@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { db, auth, provider, doc, getDoc, setDoc, signInWithPopup, signOut, onAuthStateChanged } from "./firebase";
 import { DEF_HABITS, DEF_GOALS, argDate, niceDate } from "./config";
-import { isDayClean, getLevel, applyGamificationUpdates, BADGES } from "./gamification";
+import { isDayClean, getLevel, getDisplayLevel, applyGamificationUpdates, BADGES } from "./gamification";
 import { applyRollover } from "./rollover";
 import { scheduleReminders } from "./notifications";
 
@@ -15,6 +15,8 @@ import HabitCalendarModal from "./components/HabitCalendarModal";
 import BadgeToast from "./components/BadgeToast";
 import RolloverToast from "./components/RolloverToast";
 import FloatingAdd from "./components/FloatingAdd";
+import LevelClaim from "./components/LevelClaim";
+import { LEVELS } from "./gamification";
 
 import Login from "./tabs/Login";
 import DayTab from "./tabs/DayTab";
@@ -284,7 +286,10 @@ function Tracker({ uid }) {
   // Effect below banks any newly clean days + newly earned badges into
   // data.lifetimeXP and data.unlockedBadges.
   const lifetimeXP = data.lifetimeXP || 0;
-  const levelInfo = getLevel(lifetimeXP);
+  const claimedLevel = data.claimedLevel || 1;
+  // Display-level honors claimedLevel — Boss has to TAP to advance.
+  // Bar parks at 100% with "TAP TO CLAIM" until he claims.
+  const levelInfo = getDisplayLevel(lifetimeXP, claimedLevel);
   const unlockedBadges = data.unlockedBadges || [];
   const badgeInfo = {
     unlocked: new Set(unlockedBadges),
@@ -292,6 +297,16 @@ function Tracker({ uid }) {
     totalAvailable: BADGES.length,
   };
   const justUnlocked = data._justUnlocked || [];
+
+  // Level-claim cinematic — fired when Boss taps the bar.
+  const [levelClaimState, setLevelClaimState] = useState({ id: 0, level: null });
+  function claimNextLevel() {
+    if (!levelInfo.available) return;
+    const newClaimed = claimedLevel + 1;
+    const nextLevel = LEVELS.find(l => l.id === newClaimed);
+    save(Object.assign({}, data, { claimedLevel: newClaimed }));
+    setLevelClaimState(s => ({ id: s.id + 1, level: nextLevel || null }));
+  }
   // Run the gamification update pass when days/habits/data change.
   // Also migrates habits without createdAt on first run.
   useEffect(() => {
@@ -387,6 +402,7 @@ function Tracker({ uid }) {
             recurring={recurring}
             openHabitModal={h => setHabitModal(h)}
             levelInfo={levelInfo} badgeInfo={badgeInfo}
+            claimNextLevel={claimNextLevel}
             celebratedThresholds={data.celebratedThresholds || []}
             markThresholdCelebrated={n => save(Object.assign({}, data, {
               celebratedThresholds: (data.celebratedThresholds || []).concat([n])
@@ -413,6 +429,7 @@ function Tracker({ uid }) {
             days={days} habits={habits} today={today}
             levelInfo={levelInfo} badgeInfo={badgeInfo}
             streak={streak}
+            claimNextLevel={claimNextLevel}
           />
         )}
         {tab === "log" && <LogTab logs={logs} setLogs={setLogs} today={today} />}
@@ -424,6 +441,7 @@ function Tracker({ uid }) {
             data={data} setDay={setDay} getDayData={getDayData}
             today={today} bulkSetDays={bulkSetDays}
             badgeInfo={badgeInfo} levelInfo={levelInfo}
+            claimNextLevel={claimNextLevel}
             bannerPhrases={data.bannerPhrases || []}
             setBannerPhrases={p => save(Object.assign({}, data, { bannerPhrases: p }))}
             hardModeOn={!!data.hardModeOn}
@@ -462,6 +480,9 @@ function Tracker({ uid }) {
 
       {/* Floating + (mobile only via CSS) — quick scroll-to-input on Day tab */}
       {tab === "day" && <FloatingAdd />}
+
+      {/* Level claim cinematic — fires on tap-to-claim */}
+      <LevelClaim fireId={levelClaimState.id} level={levelClaimState.level} />
     </div>
   );
 }

@@ -406,27 +406,16 @@ body::after {
   font-weight: 700;
   color: var(--t3);
   text-transform: uppercase;
-  border-bottom: 1px dashed rgba(232, 16, 42, 0.18);
   padding: 0 6px;
   position: relative;
-  transition: color 0.3s, border-color 0.3s;
+  transition: color 0.3s;
 }
 .ys-q-cell:not(:last-child) {
   border-right: 1px solid rgba(232, 16, 42, 0.25);
 }
 .ys-q-cell.active {
   color: var(--red-b);
-  border-bottom-color: var(--red);
   text-shadow: 0 0 6px var(--red);
-}
-.ys-q-cell.active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0; right: 0;
-  height: 1px;
-  background: var(--red);
-  box-shadow: 0 0 6px var(--red);
 }
 .ys-q-name {
   font-size: 11px;
@@ -594,6 +583,96 @@ body::after {
   text-transform: uppercase;
 }
 .level-bar-next span { color: var(--red-b); font-weight: 600; }
+
+/* CLAIMABLE state — bar parks at 100%, pulses, "TAP TO CLAIM" CTA. */
+.level-bar.claimable {
+  cursor: pointer;
+  border-color: var(--red);
+  box-shadow: 0 0 16px rgba(232, 16, 42, 0.4), 0 0 28px rgba(232, 16, 42, 0.2);
+  animation: levelBarPulse 1.6s ease-in-out infinite;
+}
+.level-bar.claimable:hover {
+  background: rgba(232, 16, 42, 0.08);
+  transform: translateY(-1px);
+}
+.level-bar.claimable:active { transform: scale(0.99); }
+@keyframes levelBarPulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(232, 16, 42, 0.4), 0 0 28px rgba(232, 16, 42, 0.2); }
+  50% { box-shadow: 0 0 22px rgba(232, 16, 42, 0.7), 0 0 44px rgba(232, 16, 42, 0.4); }
+}
+.level-bar.claimable .level-bar-fill {
+  background: linear-gradient(90deg, var(--red-d), var(--red), var(--red-b), #ffd700);
+  box-shadow: 0 0 12px var(--red), 0 0 24px rgba(255, 215, 0, 0.5);
+}
+.level-bar-fill-shine {
+  position: absolute;
+  top: 0; left: -50%;
+  width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  animation: levelBarShine 1.2s linear infinite;
+  pointer-events: none;
+  border-radius: 4px;
+}
+@keyframes levelBarShine {
+  0% { left: -50%; }
+  100% { left: 100%; }
+}
+.level-bar-claim {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px var(--red), 0 0 18px rgba(255, 215, 0, 0.6);
+  margin-top: 10px;
+  animation: levelClaimPulse 1.4s ease-in-out infinite;
+}
+@keyframes levelClaimPulse {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+
+/* Level Claim cinematic — extends .tierup styles. */
+.tierup-levelup .tierup-flash {
+  background: radial-gradient(ellipse at 50% 45%, rgba(255, 215, 0, 0.5), rgba(232, 16, 42, 0.4) 30%, rgba(232, 16, 42, 0.12) 60%, transparent 78%);
+}
+.levelup-banner { padding: 0 24px; max-width: 680px; }
+.levelup-num {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  font-size: clamp(22px, 5vw, 38px);
+  letter-spacing: 0.34em;
+  color: var(--red-b);
+  text-shadow: 0 0 14px var(--red);
+  margin-top: 8px;
+}
+.levelup-name {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: clamp(48px, 10vw, 96px);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #fff, #ffd700, var(--red));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 40px rgba(232, 16, 42, 0.6);
+  margin: 14px 0;
+  animation: tierupBig 1.4s cubic-bezier(0.2, 1.6, 0.4, 1) both 0.4s;
+}
+.levelup-quote {
+  font-family: 'Cinzel', serif;
+  font-style: italic;
+  font-size: clamp(13px, 2vw, 17px);
+  letter-spacing: 0.04em;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 0 10px rgba(232, 16, 42, 0.3);
+  margin-top: 18px;
+  animation: tierupLabel 1s cubic-bezier(0.3, 1.4, 0.4, 1) both 1.0s;
+}
 
 /* ════════ HARD DAY TOGGLE ════════ */
 .hard-day {
@@ -1144,6 +1223,15 @@ body::after {
   color: var(--t3);
   font-weight: 500;
   margin-left: 4px;
+}
+.flex-stat-hint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--t3);
+  letter-spacing: 0.04em;
+  margin-top: 6px;
+  line-height: 1.4;
+  opacity: 0.85;
 }
 
 .stats-rate {
@@ -2765,6 +2853,14 @@ body::after {
   border-radius: 14px;
   position: relative;
   overflow: hidden;
+  /* When the FAB scrolls the form into view via scrollIntoView, leave
+     space below the sticky tab bar so the input header isn't clipped. */
+  scroll-margin-top: 80px;
+}
+/* Mobile: when the input is focused, give the page enough bottom
+   padding that the entire add-form sits above the soft keyboard. */
+@media (max-width: 620px) {
+  body:has(.add-input:focus) { padding-bottom: 50vh; }
 }
 .add-form::before {
   content: '';

@@ -75,6 +75,9 @@ export const LEVELS = [
   { id: 10, name: "ASCENDED",    threshold: 357700 }, // 3577 days (~9.8 years)
 ];
 
+// Auto-progression — current level is whatever XP earns. Used internally
+// for badge/streak math but NOT for the visible LevelBar (that one
+// honors the user's claimedLevel so they tap to advance).
 export function getLevel(xp) {
   let current = LEVELS[0];
   for (const lv of LEVELS) {
@@ -87,6 +90,39 @@ export function getLevel(xp) {
     ? (xp - current.threshold) / (next.threshold - current.threshold)
     : 1;
   return { level: current, next, progress: Math.max(0, Math.min(1, progress)), xp };
+}
+
+// Display-level — pinned to the user's claimedLevel. The bar progresses
+// toward the NEXT level after claimed. When XP crosses next.threshold
+// the bar parks at 100% and `available` becomes true → user must tap
+// to claim, video-game style. Returns same shape as getLevel plus
+// {available, available_count}.
+export function getDisplayLevel(xp, claimedLevel) {
+  const cid = claimedLevel || 1;
+  const current = LEVELS.find(l => l.id === cid) || LEVELS[0];
+  const nextIdx = LEVELS.findIndex(l => l.id === current.id) + 1;
+  const next = LEVELS[nextIdx] || null;
+  if (!next) {
+    return { level: current, next: null, progress: 1, xp, available: false, availableCount: 0 };
+  }
+  const range = next.threshold - current.threshold;
+  const inRange = xp - current.threshold;
+  const rawProgress = range > 0 ? inRange / range : 1;
+  const available = xp >= next.threshold;
+  // How many levels are unclaimed in total (Boss might fall behind by N)
+  let availableCount = 0;
+  for (let i = nextIdx; i < LEVELS.length; i++) {
+    if (xp >= LEVELS[i].threshold) availableCount++;
+    else break;
+  }
+  return {
+    level: current,
+    next,
+    progress: available ? 1 : Math.max(0, Math.min(1, rawProgress)),
+    xp,
+    available,
+    availableCount,
+  };
 }
 
 // ══════ COMBO TIER (celebration escalation) ══════

@@ -279,7 +279,7 @@ friday | Personal | Dentist follow-up`;
   );
 }
 
-export default function SettingsTab({ habits, setHabits, recurring, setRecurring, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, bannerPhrases, setBannerPhrases, hardModeOn, setHardModeOn, strictStreak, setStrictStreak, jumpToDay }) {
+export default function SettingsTab({ habits, setHabits, recurring, setRecurring, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, claimNextLevel, bannerPhrases, setBannerPhrases, hardModeOn, setHardModeOn, strictStreak, setStrictStreak, jumpToDay }) {
   const [newH, setNewH] = useState("");
   const [newHS, setNewHS] = useState("");
   const [eId, setEId] = useState(null);
@@ -484,7 +484,7 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
 
       {levelInfo && (
         <div style={{ marginBottom: 14 }}>
-          <LevelBar levelInfo={levelInfo} />
+          <LevelBar levelInfo={levelInfo} onClaim={claimNextLevel} />
         </div>
       )}
 

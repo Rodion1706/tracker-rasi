@@ -35,7 +35,7 @@ function ChartIcon() {
 export default function DayTab({
   days, habits, today, dayOff, setDayOff,
   setDay, getDayData, streak, bestStreak, hardInStreak, recurring, openHabitModal,
-  levelInfo, badgeInfo,
+  levelInfo, badgeInfo, claimNextLevel,
   celebratedThresholds, markThresholdCelebrated,
   bannerPhrases,
 }) {
@@ -227,7 +227,7 @@ export default function DayTab({
             <WeekStat weekDays={weekDays} today={today} habits={habits} days={days} />
           </div>
           <ProgressTicks done={totDone} total={total} />
-          <LevelBar levelInfo={levelInfo} />
+          <LevelBar levelInfo={levelInfo} onClaim={claimNextLevel} />
         </div>
       </div>
 

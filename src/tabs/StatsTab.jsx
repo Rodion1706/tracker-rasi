@@ -9,7 +9,9 @@ import BadgeWall from "../components/BadgeWall";
 import { isDayClean, BADGES } from "../gamification";
 
 function computeStats(days, habits) {
-  let totalClean = 0, bestStreak = 0, curStreak = 0, totalTasksDone = 0, totalTasks = 0, totalChecks = 0;
+  let totalClean = 0, totalFullClean = 0;
+  let bestStreak = 0, curStreak = 0;
+  let totalTasksDone = 0, totalTasks = 0, totalChecks = 0;
   let firstActiveDate = null;
   let hardDaysUsed = 0;
 
@@ -22,13 +24,19 @@ function computeStats(days, habits) {
     );
     if (hasActivity && !firstActiveDate) firstActiveDate = k;
 
-    if (isDayClean(d, habits, k)) {
+    // Two cleanness criteria computed in parallel:
+    //   - habits-only (current default streak rule)
+    //   - full (habits + tasks all done)
+    const habitsClean = isDayClean(d, habits, k, false);
+    const fullClean = isDayClean(d, habits, k, true);
+    if (habitsClean) {
       totalClean++;
       curStreak++;
       if (curStreak > bestStreak) bestStreak = curStreak;
     } else {
       curStreak = 0;
     }
+    if (fullClean) totalFullClean++;
     if (d) {
       if (d.tasks) {
         totalTasks += d.tasks.length;
@@ -52,6 +60,7 @@ function computeStats(days, habits) {
 
   return {
     totalClean,
+    totalFullClean,
     bestStreak,
     totalTasksDone,
     totalTasks,
@@ -61,7 +70,7 @@ function computeStats(days, habits) {
   };
 }
 
-export default function StatsTab({ days, habits, today, levelInfo, badgeInfo, streak }) {
+export default function StatsTab({ days, habits, today, levelInfo, badgeInfo, streak, claimNextLevel }) {
   const stats = computeStats(days, habits);
   const lifetimeXP = levelInfo ? levelInfo.xp : 0;
   const badgesUnlocked = badgeInfo ? badgeInfo.totalUnlocked : 0;
@@ -80,14 +89,17 @@ export default function StatsTab({ days, habits, today, levelInfo, badgeInfo, st
 
       {levelInfo && (
         <div style={{ marginBottom: 18 }}>
-          <LevelBar levelInfo={levelInfo} />
+          <LevelBar levelInfo={levelInfo} onClaim={claimNextLevel} />
         </div>
       )}
 
       <div className="stats-flex-grid">
         <FlexStat label="CURRENT STREAK" value={streak} unit="d" tone="red" />
         <FlexStat label="BEST STREAK" value={stats.bestStreak} unit="d" tone="red" />
-        <FlexStat label="CLEAN DAYS" value={stats.totalClean} tone="red" />
+        <FlexStat label="HABITS CLEAN" value={stats.totalClean} tone="red"
+          hint="Days every habit was checked" />
+        <FlexStat label="FULL CLEAN" value={stats.totalFullClean} tone="red"
+          hint="Habits + every task done" />
         <FlexStat label="DAYS TRACKED" value={stats.daysTracked} tone="plain" />
         <FlexStat label="TASKS SHIPPED" value={stats.totalTasksDone} tone="red" />
         <FlexStat label="TASKS TOTAL" value={stats.totalTasks} tone="plain" />
@@ -111,14 +123,15 @@ export default function StatsTab({ days, habits, today, levelInfo, badgeInfo, st
   );
 }
 
-function FlexStat({ label, value, unit, tone }) {
+function FlexStat({ label, value, unit, tone, hint }) {
   return (
-    <div className="flex-stat">
+    <div className="flex-stat" title={hint || ""}>
       <div className="flex-stat-label">{label}</div>
       <div className={`flex-stat-value ${tone === "red" ? "red" : "plain"}`}>
         <CountUp value={value} />
         {unit && <span className="flex-stat-unit">{unit}</span>}
       </div>
+      {hint && <div className="flex-stat-hint">{hint}</div>}
     </div>
   );
 }

@@ -1,18 +1,25 @@
 // Floating + button — quick task add. Visible on Day tab on every
 // device. Tap focuses the .add-input synchronously (so iOS Safari
-// pops up the keyboard) then scrolls it into view.
+// pops up the keyboard), then scrolls the WHOLE add-form into view
+// so the day picker + tag chips below the input stay visible above
+// the on-screen keyboard.
 
 export default function FloatingAdd() {
   function handleClick() {
     const input = document.querySelector(".add-input");
     if (!input) return;
-    // Focus FIRST, synchronously, inside the user-gesture event handler.
-    // iOS Safari only opens the keyboard when focus() runs in the same
-    // tick as the tap event. Any setTimeout/await before focus would
-    // make the keyboard refuse to appear.
+    // Focus FIRST, synchronously inside the user-gesture handler.
+    // iOS Safari only opens the keyboard when focus runs in the same
+    // tick as the tap event.
     try { input.focus({ preventScroll: true }); } catch { input.focus(); }
-    // Then bring the input into view smoothly.
-    input.scrollIntoView({ behavior: "smooth", block: "center" });
+    // Bring the entire add-form into view so the chips/date picker
+    // below the input aren't covered by the keyboard.
+    const form = input.closest(".add-form") || input;
+    // Slight delay lets the browser open the keyboard first; then we
+    // scroll into the new (smaller) viewport that excludes the keyboard.
+    setTimeout(() => {
+      form.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
   }
   return (
     <div className="fab" onClick={handleClick} title="Add task" aria-label="Add task">
