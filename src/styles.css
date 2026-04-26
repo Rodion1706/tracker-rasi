@@ -632,6 +632,19 @@ body::after {
   letter-spacing: 0.1em;
   font-weight: 500;
 }
+.badge-category { margin-top: 14px; }
+.badge-category:first-of-type { margin-top: 0; }
+.badge-category-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--t3);
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed rgba(232, 16, 42, 0.15);
+}
 .badge-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -796,6 +809,84 @@ body::after {
   margin-right: 4px;
   min-width: 14px;
   text-align: center;
+}
+
+/* ════════ BADGE UNLOCK TOAST ════════ */
+.badge-toast-stack {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9998;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  max-width: calc(100vw - 48px);
+}
+.badge-toast {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px 14px 14px;
+  background: linear-gradient(135deg, rgba(28, 10, 16, 0.96), rgba(20, 14, 22, 0.96));
+  border: 1px solid var(--red);
+  border-radius: 12px;
+  min-width: 280px;
+  max-width: 360px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.5), 0 0 24px rgba(232, 16, 42, 0.4), inset 0 1px 0 rgba(232, 16, 42, 0.3);
+  animation: badgeToastIn 0.5s cubic-bezier(0.3, 1.4, 0.4, 1) both,
+             badgeToastOut 0.5s ease-in 4.5s both;
+  pointer-events: auto;
+}
+@keyframes badgeToastIn {
+  from { opacity: 0; transform: translateX(120%) scale(0.9); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes badgeToastOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(60%); }
+}
+.badge-toast-seal {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  color: var(--red);
+  filter: drop-shadow(0 0 10px var(--red));
+  animation: badgeSeal 4s ease-in-out infinite;
+}
+.badge-toast-seal svg { width: 100%; height: 100%; display: block; }
+.badge-toast-body { min-width: 0; flex: 1; }
+.badge-toast-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: var(--red-b);
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  text-shadow: 0 0 6px var(--red);
+}
+.badge-toast-name {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  letter-spacing: 0.22em;
+  color: #fff;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px var(--red);
+  margin-bottom: 3px;
+}
+.badge-toast-desc {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--t2);
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+}
+
+@media (max-width: 520px) {
+  .badge-toast-stack { top: 16px; right: 12px; left: 12px; }
+  .badge-toast { min-width: 0; max-width: 100%; }
 }
 
 /* ════════ CELEBRATION (day closed, 100%) ════════ */

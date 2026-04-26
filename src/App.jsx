@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { db, auth, provider, doc, getDoc, setDoc, signInWithPopup, signOut, onAuthStateChanged } from "./firebase";
 import { DEF_HABITS, DEF_GOALS, argDate, niceDate } from "./config";
-import { isDayClean, computeXP, getLevel, computeBadges } from "./gamification";
+import { isDayClean, getLevel, applyGamificationUpdates, BADGES } from "./gamification";
 
 /* ══════ ACCESS CONTROL ══════ */
 // Only these emails can sign in. Add more if needed.
@@ -10,6 +10,7 @@ const ALLOWED_EMAILS = ["radzivonlavyshwork@gmail.com"];
 import PillTabs from "./components/PillTabs";
 import YearStrip from "./components/YearStrip";
 import HabitCalendarModal from "./components/HabitCalendarModal";
+import BadgeToast from "./components/BadgeToast";
 
 import Login from "./tabs/Login";
 import DayTab from "./tabs/DayTab";
@@ -252,10 +253,34 @@ function Tracker({ uid }) {
     }
   }
 
-  // XP + Level + Badges (all derived from days + habits)
-  const xp = computeXP(days, habits);
-  const levelInfo = getLevel(xp);
-  const badgeInfo = computeBadges(days, habits);
+  // XP + Level + Badges — PERSISTED on data (never lost once earned).
+  // Effect below banks any newly clean days + newly earned badges into
+  // data.lifetimeXP and data.unlockedBadges.
+  const lifetimeXP = data.lifetimeXP || 0;
+  const levelInfo = getLevel(lifetimeXP);
+  const unlockedBadges = data.unlockedBadges || [];
+  const badgeInfo = {
+    unlocked: new Set(unlockedBadges),
+    totalUnlocked: unlockedBadges.length,
+    totalAvailable: BADGES.length,
+  };
+  const justUnlocked = data._justUnlocked || [];
+  // Run the gamification update pass when days/habits/data change.
+  useEffect(() => {
+    if (loading) return;
+    const next = applyGamificationUpdates(data, habits);
+    if (next) save(next);
+  }, [days, habits, loading]);
+  // Clear the _justUnlocked flag once the toast has had a chance to render.
+  useEffect(() => {
+    if (justUnlocked.length === 0) return;
+    const t = setTimeout(() => {
+      const cleared = Object.assign({}, data);
+      delete cleared._justUnlocked;
+      save(cleared);
+    }, 5000);
+    return () => clearTimeout(t);
+  }, [justUnlocked.length]);
 
   const tabs = [
     ["day", "DAY"],
@@ -358,6 +383,9 @@ function Tracker({ uid }) {
           onClose={() => setHabitModal(null)}
         />
       )}
+
+      {/* Badge unlock toast */}
+      <BadgeToast badgeIds={justUnlocked} />
     </div>
   );
 }
