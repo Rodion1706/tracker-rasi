@@ -251,10 +251,21 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
 
   function addH() {
     if (!newH.trim()) return;
-    setHabits(habits.concat([{ id: "h" + Date.now(), text: newH.trim(), sub: newHS.trim() }]));
+    // createdAt locks the habit to days >= today, so adding doesn't
+    // retroactively change past completion.
+    setHabits(habits.concat([{
+      id: "h" + Date.now(),
+      text: newH.trim(),
+      sub: newHS.trim(),
+      createdAt: today,
+    }]));
     setNewH(""); setNewHS("");
   }
-  function delH(id) { setHabits(habits.filter(h => h.id !== id)); }
+  // Soft-archive: keep the habit in the list but stamp archivedAt so it
+  // stops applying to days >= today. Past clean days remain clean.
+  function delH(id) {
+    setHabits(habits.map(h => h.id === id ? Object.assign({}, h, { archivedAt: today }) : h));
+  }
   function saveE() {
     if (!eT.trim()) return;
     setHabits(habits.map(h => h.id === eId ? { ...h, text: eT.trim(), sub: eS.trim() } : h));
@@ -280,15 +291,17 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
 
   return (
     <div>
-      <TabHeader title="Settings" subtitle={`${habits.length} habits · ${recurring.length} recurring`} />
+      <TabHeader title="Settings" subtitle={`${habits.filter(h => !h.archivedAt).length} habits · ${recurring.length} recurring`} />
 
-      {/* Level + Badges */}
+      {/* Bulk task import — front and center for batch loading */}
+      <ImportTasks setDay={setDay} getDayData={getDayData} today={today} bulkSetDays={bulkSetDays} />
+
+      {/* Level */}
       {levelInfo && (
         <div style={{ marginBottom: 18 }}>
           <LevelBar levelInfo={levelInfo} />
         </div>
       )}
-      {badgeInfo && <BadgeWall badgeInfo={badgeInfo} />}
 
       {/* Sound toggle + pack picker */}
       <SoundToggle />
@@ -315,9 +328,10 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
         </div>
       </div>
 
-      {/* Habits */}
-      <SectionHeader label="HABITS" count={habits.length} />
-      {habits.map(h => {
+      {/* Habits — only show currently active ones (archived stay in the
+          list invisibly so past days keep their snapshot semantics). */}
+      <SectionHeader label="HABITS" count={habits.filter(h => !h.archivedAt).length} />
+      {habits.filter(h => !h.archivedAt).map(h => {
         if (eId === h.id) return (
           <div key={h.id} className="brute" style={{ marginBottom: 5 }}>
             <div className="brute-field">
@@ -391,9 +405,6 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
         </div>
         <div onClick={addR} className="add-btn" style={{ display: "inline-flex" }}>ADD RECURRING</div>
       </div>
-
-      {/* Import */}
-      <ImportTasks setDay={setDay} getDayData={getDayData} today={today} bulkSetDays={bulkSetDays} />
 
       {/* Export */}
       <div style={{ marginTop: 30 }}>

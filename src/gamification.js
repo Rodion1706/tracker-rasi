@@ -5,14 +5,34 @@
 
 import { argDate } from "./config";
 
-// ══════ CORE: day cleanness (shared with streak logic) ══════
-// A day counts as "clean" when every habit is checked OR the user
-// explicitly marked it a Hard Day.
-export function isDayClean(dayData, habits) {
-  if (!dayData || !habits || habits.length === 0) return false;
+// ══════ CORE: which habits were active on a given date ══════
+// Habits carry createdAt (date string YYYY-MM-DD) when added, and
+// archivedAt when "deleted". A habit is active on day K iff
+// createdAt <= K AND (archivedAt is undefined OR archivedAt > K).
+// Habits without createdAt are treated as having always existed
+// (back-compat for the pre-migration state).
+export function activeHabitsOn(habits, dateStr) {
+  if (!habits || !dateStr) return habits || [];
+  return habits.filter(h => {
+    const c = h.createdAt;
+    const a = h.archivedAt;
+    if (c && c > dateStr) return false;       // not yet created
+    if (a && a <= dateStr) return false;      // already archived
+    return true;
+  });
+}
+
+// ══════ CORE: day cleanness ══════
+// A day counts as "clean" when every habit ACTIVE ON THAT DAY is
+// checked, OR the user explicitly marked it a Hard Day.
+// Adding/removing habits today never changes the cleanness of past days.
+export function isDayClean(dayData, habits, dateStr) {
+  if (!dayData) return false;
   if (dayData.hardDay) return true;
+  const active = dateStr ? activeHabitsOn(habits, dateStr) : (habits || []);
+  if (!active || active.length === 0) return false;
   if (!dayData.checks) return false;
-  return habits.every(h => dayData.checks[h.id]);
+  return active.every(h => dayData.checks[h.id]);
 }
 
 // ══════ XP CONSTANTS ══════
@@ -99,7 +119,7 @@ export function computeBadgesEarnable(days, habits) {
   const keys = Object.keys(days).sort();
   for (const k of keys) {
     const d = days[k];
-    if (isDayClean(d, habits)) {
+    if (isDayClean(d, habits, k)) {
       totalClean++;
       curStreak++;
       if (d && d.hardDay) curStreakUsedHardDay = true;
@@ -169,7 +189,7 @@ function checkPerfectMonth(days, habits) {
     for (let dd = 1; dd <= daysInMonth; dd++) {
       const k = ym + "-" + String(dd).padStart(2, "0");
       const d = days[k];
-      if (!isDayClean(d, habits)) { allClean = false; break; }
+      if (!isDayClean(d, habits, k)) { allClean = false; break; }
       cleanCount++;
       if (d && d.hardDay) hardUsed = true;
     }
@@ -200,7 +220,7 @@ export function applyGamificationUpdates(data, habits) {
   let xpGain = 0;
   for (const k of Object.keys(days)) {
     if (credited.has(k)) continue;
-    if (isDayClean(days[k], habits)) {
+    if (isDayClean(days[k], habits, k)) {
       newCredits.push(k);
       xpGain += XP_PER_CLEAN_DAY;
     }

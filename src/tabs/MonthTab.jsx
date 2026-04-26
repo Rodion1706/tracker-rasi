@@ -1,5 +1,6 @@
 import { MONTHS, WDAYS, monthDays, monStart, dayDiff } from "../config";
 import TabHeader from "../components/TabHeader";
+import { activeHabitsOn, isDayClean } from "../gamification";
 
 export default function MonthTab({ days, habits, today, mOff, setMOff, setDayOff, setTab }) {
   const now = new Date();
@@ -8,15 +9,11 @@ export default function MonthTab({ days, habits, today, mOff, setMOff, setDayOff
   const fO = monStart(vm.getFullYear(), vm.getMonth());
 
   const past = mDays.filter(d => d <= today);
-  const perf = past.filter(d => {
-    const x = days[d];
-    if (!x || !x.checks) return false;
-    return habits.every(h => x.checks[h.id]);
-  }).length;
+  const perf = past.filter(d => isDayClean(days[d], habits, d)).length;
   const actv = past.filter(d => {
     const x = days[d];
     if (!x) return false;
-    return habits.some(h => x.checks && x.checks[h.id]);
+    return activeHabitsOn(habits, d).some(h => x.checks && x.checks[h.id]);
   }).length;
 
   return (
@@ -44,11 +41,12 @@ export default function MonthTab({ days, habits, today, mOff, setMOff, setDayOff
         {Array.from({ length: fO }).map((_, i) => <div key={"e" + i} />)}
         {mDays.map((day, idx) => {
           const x = days[day] || {};
-          const dc = x.checks ? habits.filter(h => x.checks[h.id]).length : 0;
+          const dayHabits = activeHabitsOn(habits, day);
+          const dc = x.checks ? dayHabits.filter(h => x.checks[h.id]).length : 0;
           const tc = x.tasks ? x.tasks.filter(t => t.done).length : 0;
           const tt = x.tasks ? x.tasks.length : 0;
           const tot = dc + tc;
-          const mx = habits.length + tt;
+          const mx = dayHabits.length + tt;
           const p = mx > 0 ? tot / mx : 0;
           const pf = p === 1 && mx > 0;
           const pt = p > 0 && !pf;

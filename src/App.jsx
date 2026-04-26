@@ -236,7 +236,7 @@ function Tracker({ uid }) {
   // Streak: consecutive clean days ending yesterday. If today is ALREADY
   // clean, include it. In-progress today does NOT break the streak.
   // Clean = every habit checked OR day marked as Hard Day.
-  const isClean = key => isDayClean(days[key], habits);
+  const isClean = key => isDayClean(days[key], habits, key);
   let streak = 0;
   const todayClean = isClean(argDate(0));
   const startOffset = todayClean ? 0 : 1;

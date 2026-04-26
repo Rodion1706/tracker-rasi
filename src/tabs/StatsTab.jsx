@@ -5,6 +5,7 @@
 import TabHeader from "../components/TabHeader";
 import LevelBar from "../components/LevelBar";
 import CountUp from "../components/CountUp";
+import BadgeWall from "../components/BadgeWall";
 import { isDayClean, BADGES } from "../gamification";
 
 function computeStats(days, habits) {
@@ -21,7 +22,7 @@ function computeStats(days, habits) {
     );
     if (hasActivity && !firstActiveDate) firstActiveDate = k;
 
-    if (isDayClean(d, habits)) {
+    if (isDayClean(d, habits, k)) {
       totalClean++;
       curStreak++;
       if (curStreak > bestStreak) bestStreak = curStreak;
@@ -103,6 +104,9 @@ export default function StatsTab({ days, habits, today, levelInfo, badgeInfo, st
         </div>
         <div className="stats-rate-pct"><CountUp value={cleanRate} duration={1600} format={false} />%</div>
       </div>
+
+      {/* Achievements wall */}
+      {badgeInfo && <BadgeWall badgeInfo={badgeInfo} />}
     </div>
   );
 }

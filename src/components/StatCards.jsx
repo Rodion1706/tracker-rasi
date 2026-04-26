@@ -3,6 +3,7 @@
 // - Best / Week — smaller summary strip (tick-style to match YearStrip)
 
 import Odometer from "./Odometer";
+import { activeHabitsOn } from "../gamification";
 
 // Streak tier → flame appearance. Returns null for < 3 days (no flame).
 function streakFlameTier(n) {
@@ -74,7 +75,8 @@ export function WeekStat({ weekDays, today, habits, days }) {
       <div className="ws-ticks">
         {weekDays.map((wd, i) => {
           const x = days[wd];
-          const done = x && x.checks && habits.every(h => x.checks[h.id]);
+          const dayHabits = activeHabitsOn(habits, wd);
+          const done = x && x.checks && dayHabits.length > 0 && dayHabits.every(h => x.checks[h.id]);
           const hasData = x && x.checks && Object.keys(x.checks).length > 0;
           const isToday = wd === today;
           const future = wd > today;
@@ -103,11 +105,12 @@ export function WeekBigStrip({ weekDays, today, habits, days }) {
       <div className="wbs-track">
         {weekDays.map((wd, i) => {
           const x = days[wd];
-          const dc = habits.filter(h => x && x.checks && x.checks[h.id]).length;
+          const dayHabits = activeHabitsOn(habits, wd);
+          const dc = dayHabits.filter(h => x && x.checks && x.checks[h.id]).length;
           const tc = x && x.tasks ? x.tasks.filter(t => t.done).length : 0;
           const tt = x && x.tasks ? x.tasks.length : 0;
           const tot = dc + tc;
-          const mx = habits.length + tt;
+          const mx = dayHabits.length + tt;
           const p = mx > 0 ? tot / mx : 0;
           const done = p === 1 && mx > 0;
           const partial = p > 0 && !done;
@@ -137,6 +140,7 @@ export function WeekBigStrip({ weekDays, today, habits, days }) {
 function countDone(weekDays, habits, days) {
   return weekDays.filter(d => {
     const x = days[d];
-    return x && x.checks && habits.every(h => x.checks[h.id]);
+    const dayHabits = activeHabitsOn(habits, d);
+    return x && x.checks && dayHabits.length > 0 && dayHabits.every(h => x.checks[h.id]);
   }).length;
 }

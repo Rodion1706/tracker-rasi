@@ -1,5 +1,6 @@
 import { niceDate, dayDiff, argDate, getWeekDays } from "../config";
 import { WeekBigStrip } from "../components/StatCards";
+import { activeHabitsOn } from "../gamification";
 
 function tagClass(tag) {
   if (tag === "Work 1") return "work1";
@@ -28,11 +29,12 @@ export default function WeekTab({ days, habits, today, dayOff, setDayOff, setTab
       <div style={{ display: "flex", flexDirection: "column" }}>
         {weekDays.map(day => {
           const x = days[day] || { checks: {}, tasks: [] };
-          const dc = habits.filter(h => x.checks && x.checks[h.id]).length;
+          const dayHabits = activeHabitsOn(habits, day);
+          const dc = dayHabits.filter(h => x.checks && x.checks[h.id]).length;
           const tc = (x.tasks || []).filter(t => t.done).length;
           const tt = (x.tasks || []).length;
           const tot = dc + tc;
-          const mx = habits.length + tt;
+          const mx = dayHabits.length + tt;
           const p = mx > 0 ? Math.round(tot / mx * 100) : 0;
           const pf = p === 100 && mx > 0;
           const isToday = day === today;
@@ -41,7 +43,7 @@ export default function WeekTab({ days, habits, today, dayOff, setDayOff, setTab
           const dayNum = parseInt(day.split("-")[2]);
 
           // Build per-habit ticks + per-task ticks (tagged)
-          const habitTicks = habits.map(h => ({ done: !!(x.checks && x.checks[h.id]), kind: "h", tag: "" }));
+          const habitTicks = dayHabits.map(h => ({ done: !!(x.checks && x.checks[h.id]), kind: "h", tag: "" }));
           const taskTicks = (x.tasks || []).map(t => ({ done: !!t.done, kind: "t", tag: t.tag || "" }));
           const allTicks = [...habitTicks, ...taskTicks];
 

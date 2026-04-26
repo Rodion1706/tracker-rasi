@@ -9,7 +9,7 @@ import ProgressTicks from "../components/ProgressTicks";
 import Celebration from "../components/Celebration";
 import TierUp, { TIER_UP_THRESHOLDS } from "../components/TierUp";
 import LevelBar from "../components/LevelBar";
-import { celebrationTier, canToggleHardDay, hardDaysThisMonth, HARD_DAYS_PER_MONTH } from "../gamification";
+import { celebrationTier, canToggleHardDay, hardDaysThisMonth, HARD_DAYS_PER_MONTH, activeHabitsOn } from "../gamification";
 
 function tagClass(tag) {
   if (tag === "Work 1") return "work1";
@@ -113,10 +113,13 @@ export default function DayTab({
     }));
   }
 
-  const checksDone = habits.filter(h => ch[h.id]).length;
+  // Only the habits that were active on this specific date count toward
+  // completion. Adding/archiving a habit today never reshapes past days.
+  const dayHabits = activeHabitsOn(habits, viewDay);
+  const checksDone = dayHabits.filter(h => ch[h.id]).length;
   const filteredTasks = tagFilter ? tasks.filter(t => t.tag === tagFilter) : tasks;
   const tasksDone = tasks.filter(t => t.done).length;
-  const total = habits.length + tasks.length;
+  const total = dayHabits.length + tasks.length;
   const totDone = checksDone + tasksDone;
   const pct = total > 0 ? Math.round(totDone / total * 100) : 0;
 
@@ -265,9 +268,9 @@ export default function DayTab({
       {/* Daily checklist — using .row style (same as tasks) */}
       {!isFuture && (
         <div style={{ marginBottom: 20 }}>
-          <SectionHeader label="DAILY CHECKLIST" count={checksDone} total={habits.length} />
+          <SectionHeader label="DAILY CHECKLIST" count={checksDone} total={dayHabits.length} />
           <div style={{ display: "flex", flexDirection: "column" }}>
-            {habits.map(h => {
+            {dayHabits.map(h => {
               const on = !!ch[h.id];
               const hs = habitStreak(h.id);
               return (
