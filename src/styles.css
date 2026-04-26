@@ -3301,18 +3301,18 @@ body::after {
   }
 
   /* Day-hero monad — bigger and more present on a wide screen. */
-  .day-hero { gap: 44px; padding-bottom: 32px; margin-bottom: 32px; }
+  .day-hero { gap: 38px; padding-bottom: 30px; margin-bottom: 30px; }
   .day-hero .monad {
-    width: 280px !important;
-    height: 373px !important;
+    width: 230px !important;
+    height: 307px !important;
   }
   /* Tab-header monad (Month/Stats/Goals/Set) bumps up too. */
-  .tab-header { padding: 24px 28px; gap: 24px; }
-  .tab-header-title { font-size: 32px; letter-spacing: 0.2em; }
+  .tab-header { padding: 22px 26px; gap: 22px; }
+  .tab-header-title { font-size: 30px; letter-spacing: 0.2em; }
   .tab-header-sub { font-size: 12px; margin-top: 8px; }
   .tab-header .monad {
-    width: 120px !important;
-    height: 160px !important;
+    width: 95px !important;
+    height: 127px !important;
   }
 
   /* Boss had only 2 BigStat cards (Streak / Done), so 4-col left
@@ -3396,14 +3396,14 @@ body::after {
      scale with the parent box automatically. */
   .day-hero {
     grid-template-columns: 1fr !important;
-    gap: 10px !important;
-    margin-bottom: 12px !important;
-    padding-bottom: 12px !important;
+    gap: 12px !important;
+    margin-bottom: 14px !important;
+    padding-bottom: 14px !important;
     justify-items: center !important;
   }
   .day-hero .monad {
-    width: 90px !important;
-    height: 120px !important;
+    width: 115px !important;
+    height: 153px !important;
   }
   .day-hero-stats { gap: 8px; width: 100%; }
   .stats-grid { gap: 8px; margin-bottom: 8px; }
@@ -3426,17 +3426,17 @@ body::after {
   /* Tab header (Month/Stats/Goals) — slim row with small monad on left.
      Real width/height on .monad, not transform: scale. */
   .tab-header {
-    padding: 12px 14px;
-    gap: 12px;
+    padding: 14px 16px;
+    gap: 14px;
     margin-bottom: 14px;
     grid-template-columns: auto 1fr;
     align-items: center;
   }
-  .tab-header-title { font-size: 20px; letter-spacing: 0.14em; }
+  .tab-header-title { font-size: 21px; letter-spacing: 0.14em; }
   .tab-header-sub { font-size: 10px; margin-top: 4px; letter-spacing: 0.14em; }
   .tab-header .monad {
-    width: 48px !important;
-    height: 64px !important;
+    width: 62px !important;
+    height: 83px !important;
   }
 
   /* Section header tighter */
