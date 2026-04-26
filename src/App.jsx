@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { db, auth, provider, doc, getDoc, setDoc, signInWithPopup, signOut, onAuthStateChanged } from "./firebase";
 import { DEF_HABITS, DEF_GOALS, argDate, niceDate } from "./config";
 import { isDayClean, getLevel, applyGamificationUpdates, BADGES } from "./gamification";
+import { applyRollover } from "./rollover";
 
 /* ══════ ACCESS CONTROL ══════ */
 // Only these emails can sign in. Add more if needed.
@@ -11,6 +12,7 @@ import PillTabs from "./components/PillTabs";
 import YearStrip from "./components/YearStrip";
 import HabitCalendarModal from "./components/HabitCalendarModal";
 import BadgeToast from "./components/BadgeToast";
+import RolloverToast from "./components/RolloverToast";
 
 import Login from "./tabs/Login";
 import DayTab from "./tabs/DayTab";
@@ -274,6 +276,22 @@ function Tracker({ uid }) {
     const next = applyGamificationUpdates(data, habits, today);
     if (next) save(next);
   }, [days, habits, loading]);
+
+  // Auto-rollover unchecked tasks from yesterday → today (one-shot per
+  // calendar day). Tracked via data._lastRolloverDay so it never repeats.
+  const [rolloverInfo, setRolloverInfo] = useState(null);
+  useEffect(() => {
+    if (loading) return;
+    if (data._lastRolloverDay === today) return;
+    const result = applyRollover(data);
+    const stamped = Object.assign({}, result ? result.nextData : data, { _lastRolloverDay: today });
+    save(stamped);
+    if (result && (result.rolled > 0 || result.dropped.length > 0)) {
+      setRolloverInfo({ rolled: result.rolled, dropped: result.dropped });
+      const t = setTimeout(() => setRolloverInfo(null), 7000);
+      return () => clearTimeout(t);
+    }
+  }, [loading, today]);
   // Clear the _justUnlocked flag once the toast has had a chance to render.
   useEffect(() => {
     if (justUnlocked.length === 0) return;
@@ -385,6 +403,15 @@ function Tracker({ uid }) {
             badgeInfo={badgeInfo} levelInfo={levelInfo}
             bannerPhrases={data.bannerPhrases || []}
             setBannerPhrases={p => save(Object.assign({}, data, { bannerPhrases: p }))}
+            hardModeOn={!!data.hardModeOn}
+            setHardModeOn={v => save(Object.assign({}, data, { hardModeOn: v }))}
+            jumpToDay={dateKey => {
+              const offset = Math.round(
+                (new Date(dateKey + "T12:00:00") - new Date(today + "T12:00:00")) / 86400000
+              );
+              setDayOff(offset);
+              setTab("day");
+            }}
           />
         )}
 
@@ -404,6 +431,9 @@ function Tracker({ uid }) {
 
       {/* Badge unlock toast */}
       <BadgeToast badgeIds={justUnlocked} />
+
+      {/* Yesterday's rollover toast */}
+      <RolloverToast info={rolloverInfo} />
     </div>
   );
 }

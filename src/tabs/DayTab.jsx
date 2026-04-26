@@ -117,7 +117,14 @@ export default function DayTab({
   // completion. Adding/archiving a habit today never reshapes past days.
   const dayHabits = activeHabitsOn(habits, viewDay);
   const checksDone = dayHabits.filter(h => ch[h.id]).length;
-  const filteredTasks = tagFilter ? tasks.filter(t => t.tag === tagFilter) : tasks;
+  // Smart sort: undone tasks float to top (with the heaviest procrastinators
+  // ranked first), done tasks sink to the bottom.
+  const sortedTasks = [...tasks].sort((a, b) => {
+    if (!!a.done !== !!b.done) return a.done ? 1 : -1;
+    if (!a.done) return (b.rollCount || 0) - (a.rollCount || 0);
+    return 0;
+  });
+  const filteredTasks = tagFilter ? sortedTasks.filter(t => t.tag === tagFilter) : sortedTasks;
   const tasksDone = tasks.filter(t => t.done).length;
   const total = dayHabits.length + tasks.length;
   const totDone = checksDone + tasksDone;
@@ -323,31 +330,47 @@ export default function DayTab({
       )}
 
       <div style={{ display: "flex", flexDirection: "column" }}>
-        {filteredTasks.map(t => (
-          <div key={t.id} className={`row ${t.done ? "done" : ""}`}
-            onClick={() => toggleTask(t.id)}>
-            <DiamondCheck done={t.done} onClick={(e) => { if (e) e.stopPropagation(); toggleTask(t.id); }} />
-            <div className="row-body">
-              {eid === t.id ? (
-                <input
-                  className="task-edit-input"
-                  value={ev}
-                  onChange={e => setEv(e.target.value)}
-                  onBlur={() => saveEdit(t.id)}
-                  onClick={e => e.stopPropagation()}
-                  onKeyDown={e => { if (e.key === "Enter") saveEdit(t.id); if (e.key === "Escape") setEid(null); }}
-                  autoFocus
-                />
-              ) : (
-                <div className="row-text" onClick={(e) => { e.stopPropagation(); setEid(t.id); setEv(t.text); }}>
-                  {t.text}
+        {filteredTasks.map(t => {
+          const rc = t.rollCount || 0;
+          const rcTier = rc === 0 ? 0 : Math.min(rc, 5);
+          return (
+            <div key={t.id} className={`row ${t.done ? "done" : ""} ${rcTier > 0 ? `row-roll-${rcTier}` : ""}`}
+              onClick={() => toggleTask(t.id)}>
+              <DiamondCheck done={t.done} onClick={(e) => { if (e) e.stopPropagation(); toggleTask(t.id); }} />
+              <div className="row-body">
+                {eid === t.id ? (
+                  <input
+                    className="task-edit-input"
+                    value={ev}
+                    onChange={e => setEv(e.target.value)}
+                    onBlur={() => saveEdit(t.id)}
+                    onClick={e => e.stopPropagation()}
+                    onKeyDown={e => { if (e.key === "Enter") saveEdit(t.id); if (e.key === "Escape") setEid(null); }}
+                    autoFocus
+                  />
+                ) : (
+                  <div className="row-text" onClick={(e) => { e.stopPropagation(); setEid(t.id); setEv(t.text); }}>
+                    {t.text}
+                  </div>
+                )}
+                {rc > 0 && !t.done && (
+                  <div className="row-sub row-roll-sub">
+                    {rc === 1 ? "rolled from yesterday" :
+                      rc < 5 ? `procrastinating · ${rc} rolls` :
+                      `PROCRASTINATING · ${rc} rolls`}
+                  </div>
+                )}
+              </div>
+              {rcTier > 0 && !t.done && (
+                <div className={`task-roll-badge tier-${rcTier}`} title={`Rolled over ${rc} time${rc > 1 ? "s" : ""}`}>
+                  ↻{rc}
                 </div>
               )}
+              {t.tag && <div className={`row-tag ${tagClass(t.tag)}`}>{t.tag}</div>}
+              <div className="row-delete" onClick={(e) => { e.stopPropagation(); delTask(t.id); }}>×</div>
             </div>
-            {t.tag && <div className={`row-tag ${tagClass(t.tag)}`}>{t.tag}</div>}
-            <div className="row-delete" onClick={(e) => { e.stopPropagation(); delTask(t.id); }}>×</div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Add task form */}

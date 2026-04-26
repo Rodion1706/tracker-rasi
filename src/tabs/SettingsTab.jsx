@@ -4,6 +4,7 @@ import TabHeader from "../components/TabHeader";
 import SectionHeader from "../components/SectionHeader";
 import BadgeWall from "../components/BadgeWall";
 import LevelBar from "../components/LevelBar";
+import SearchBox from "../components/SearchBox";
 import { isSoundOn, setSoundOn, playTick, SOUND_PACKS, getSoundPack, setSoundPack } from "../sound";
 import { DEFAULT_BANNER_LINES } from "../components/Celebration";
 
@@ -16,6 +17,25 @@ function tagClass(tag) {
   if (tag === "Channel") return "channel";
   if (tag === "Personal") return "personal";
   return "";
+}
+
+function HardModeToggle({ on, setOn }) {
+  if (!setOn) return null;
+  return (
+    <div className="sound-toggle" onClick={() => setOn(!on)}>
+      <div className={`sound-toggle-sw ${on ? "on" : ""}`}>
+        <div className="sound-toggle-knob" />
+      </div>
+      <div>
+        <div className="sound-toggle-label">HARD MODE</div>
+        <div className="sound-toggle-sub">
+          {on
+            ? "Tasks rolled 5+ times get auto-dropped. No mercy."
+            : "Off — tasks roll forever, just look angrier."}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function SoundToggle() {
@@ -239,7 +259,7 @@ friday | Personal | Dentist follow-up`;
   );
 }
 
-export default function SettingsTab({ habits, setHabits, recurring, setRecurring, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, bannerPhrases, setBannerPhrases }) {
+export default function SettingsTab({ habits, setHabits, recurring, setRecurring, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, bannerPhrases, setBannerPhrases, hardModeOn, setHardModeOn, jumpToDay }) {
   const [newH, setNewH] = useState("");
   const [newHS, setNewHS] = useState("");
   const [eId, setEId] = useState(null);
@@ -289,12 +309,75 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
     URL.revokeObjectURL(url);
   }
 
+  // CSV: one row per item (habit or task) per day. Easy to pivot in Sheets.
+  function exportCSV() {
+    const rows = [
+      ["date", "type", "id", "text", "tag", "done", "rollCount", "originalDate", "hardDay"],
+    ];
+    function esc(v) {
+      if (v === undefined || v === null) return "";
+      const s = String(v);
+      if (s.includes(",") || s.includes("\"") || s.includes("\n")) {
+        return "\"" + s.replace(/"/g, "\"\"") + "\"";
+      }
+      return s;
+    }
+    const days = data.days || {};
+    const habitMap = new Map((habits || []).map(h => [h.id, h]));
+    for (const dateKey of Object.keys(days).sort()) {
+      const d = days[dateKey];
+      if (!d) continue;
+      const hardDay = d.hardDay ? "1" : "";
+      // Habits: emit one row per active-on-that-day habit, with done state
+      if (d.checks) {
+        for (const hid of Object.keys(d.checks)) {
+          const h = habitMap.get(hid);
+          rows.push([
+            dateKey, "habit", hid,
+            h ? h.text : "(deleted)",
+            "",
+            d.checks[hid] ? "1" : "0",
+            "", "", hardDay,
+          ]);
+        }
+      }
+      // Tasks
+      if (d.tasks) {
+        for (const t of d.tasks) {
+          rows.push([
+            dateKey, "task", t.id || "",
+            t.text || "",
+            t.tag || "",
+            t.done ? "1" : "0",
+            String(t.rollCount || 0),
+            t.originalDate || "",
+            hardDay,
+          ]);
+        }
+      }
+    }
+    const csv = rows.map(r => r.map(esc).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "command-center-" + argDate(0) + ".csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div>
       <TabHeader title="Settings" subtitle={`${habits.filter(h => !h.archivedAt).length} habits · ${recurring.length} recurring`} />
 
       {/* Bulk task import — front and center for batch loading */}
       <ImportTasks setDay={setDay} getDayData={getDayData} today={today} bulkSetDays={bulkSetDays} />
+
+      {/* Search across history */}
+      <div style={{ marginTop: 22 }}>
+        <SectionHeader label="SEARCH" />
+      </div>
+      <SearchBox days={data.days || {}} logs={data.logs || {}} onJump={jumpToDay} />
 
       {/* Habits — only show currently active ones (archived stay in the
           list invisibly so past days keep their snapshot semantics). */}
@@ -385,6 +468,8 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
         </div>
       )}
 
+      <HardModeToggle on={!!hardModeOn} setOn={setHardModeOn} />
+
       <SoundToggle />
 
       {setBannerPhrases && (
@@ -414,7 +499,14 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
       <div onClick={exportData} className="row" style={{ gap: 10, justifyContent: "space-between" }}>
         <div className="row-body">
           <div className="row-text">Export backup (JSON)</div>
-          <div className="row-sub">Snapshot of all days, habits, goals, logs</div>
+          <div className="row-sub">Full snapshot — restore everything</div>
+        </div>
+        <span style={{ fontSize: 11, color: "var(--red)", fontWeight: 700, letterSpacing: "0.18em", fontFamily: "'Cinzel', serif", textShadow: "0 0 6px var(--red)" }}>DOWNLOAD</span>
+      </div>
+      <div onClick={exportCSV} className="row" style={{ gap: 10, justifyContent: "space-between", marginTop: 6 }}>
+        <div className="row-body">
+          <div className="row-text">Export CSV (spreadsheet)</div>
+          <div className="row-sub">One row per task / habit per day. For analysis with Claude or Sheets.</div>
         </div>
         <span style={{ fontSize: 11, color: "var(--red)", fontWeight: 700, letterSpacing: "0.18em", fontFamily: "'Cinzel', serif", textShadow: "0 0 6px var(--red)" }}>DOWNLOAD</span>
       </div>
