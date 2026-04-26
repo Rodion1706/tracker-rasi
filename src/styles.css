@@ -3099,3 +3099,120 @@ body::after {
   .stat-card { padding: 12px 14px; }
   .sc-value { font-size: 24px; }
 }
+
+/* ════════════════════════════════════════════════════
+   MOBILE UX OVERHAUL (≤620px)
+   Sticky tabs, compact hero, smaller monad, FAB.
+   All CSS-only so revert = remove this block.
+   ════════════════════════════════════════════════════ */
+@media (max-width: 620px) {
+  /* Tighter top header */
+  .top-header { padding-bottom: 12px; margin-bottom: 12px; gap: 10px; }
+  .brand-katakana { font-size: 26px; letter-spacing: 0.08em; }
+  .brand-sub { font-size: 10px; letter-spacing: 0.22em; margin-top: 4px; }
+  .date-main { font-size: 13px; letter-spacing: 0.14em; }
+  .date-sub { font-size: 10px; margin-top: 3px; }
+
+  /* Sticky pill tabs at top — visible regardless of scroll */
+  .tabs {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    margin-bottom: 14px;
+    background: rgba(12, 11, 16, 0.92);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  }
+  .tab { padding: 9px 14px; font-size: 11px; }
+
+  /* Compact YearStrip — fewer pixels of cosmetic */
+  .ys { padding: 10px 14px; margin-bottom: 14px; gap: 16px; }
+  .ys-label { min-width: 0; }
+  .ys-w { font-size: 24px; }
+  .ys-w .n { font-size: 32px; }
+  .ys-w .of { font-size: 11px; margin-left: 4px; }
+  .ys-sub { font-size: 10px; margin-top: 3px; }
+  .ys-track { height: 28px; padding-bottom: 14px; }
+  .ys-months { font-size: 8px; letter-spacing: 0.06em; }
+
+  /* Compact day-hero — smaller monad, tighter stack */
+  .day-hero {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    margin-bottom: 14px !important;
+    padding-bottom: 14px !important;
+  }
+  .day-hero .monad { transform: scale(0.6); margin: -20px 0; }
+  .day-hero-stats { gap: 8px; }
+  .stats-grid { gap: 8px; margin-bottom: 8px; }
+  .stat-card { padding: 12px 14px; min-height: 60px; }
+  .sc-label { font-size: 10px; letter-spacing: 0.18em; margin-bottom: 5px; }
+  .sc-value { font-size: 26px; }
+  .stats-row { gap: 8px; margin-bottom: 8px; }
+  .stat-small { padding: 7px 12px; }
+
+  /* Hard Day → compact icon-style row, less footprint */
+  .hard-day { margin-bottom: 12px; }
+  .hard-day-toggle { padding: 7px 12px; font-size: 9px; gap: 8px; }
+  .hard-day-icon { font-size: 12px; }
+
+  /* Tighter rows */
+  .row { padding: 12px 14px; gap: 10px; }
+  .row:hover { padding-left: 18px; }
+  .row-text { font-size: 13px; }
+
+  /* Tab header (Month/Stats/Goals) — smaller monad + tighter padding */
+  .tab-header { padding: 14px 16px; gap: 12px; margin-bottom: 14px; }
+  .tab-header-title { font-size: 22px; }
+  .tab-header-sub { font-size: 10px; margin-top: 4px; }
+  .tab-header .monad { transform: scale(0.55); margin: -18px 0; }
+
+  /* Section header tighter */
+  .section { margin-bottom: 8px; font-size: 10px; }
+
+  /* Stats Flex grid 2-up on mobile */
+  .stats-flex-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .flex-stat { padding: 12px 14px; }
+  .flex-stat-value { font-size: 26px; }
+
+  /* Settings personalization rows tighter */
+  .level-bar { padding: 10px 14px; }
+  .level-bar-name { font-size: 12px; letter-spacing: 0.2em; }
+  .sound-toggle { padding: 12px 14px; }
+  .banner-editor { padding: 14px 14px; }
+  .kbd-hint { padding: 12px 14px; }
+}
+
+/* ════════ FLOATING ADD BUTTON (mobile only) ════════ */
+.fab {
+  display: none;
+}
+@media (max-width: 620px) {
+  .fab {
+    display: flex;
+    position: fixed;
+    bottom: 22px;
+    right: 18px;
+    z-index: 60;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--red-b), var(--red), var(--red-d));
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(232, 16, 42, 0.55), 0 0 32px rgba(232, 16, 42, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    transition: transform 0.15s ease-out, box-shadow 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    animation: fabPulse 4s ease-in-out infinite;
+  }
+  .fab:active { transform: scale(0.92); box-shadow: 0 4px 14px rgba(232, 16, 42, 0.45); }
+  @keyframes fabPulse {
+    0%, 100% { box-shadow: 0 8px 24px rgba(232, 16, 42, 0.55), 0 0 32px rgba(232, 16, 42, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25); }
+    50% { box-shadow: 0 8px 28px rgba(232, 16, 42, 0.65), 0 0 44px rgba(232, 16, 42, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
+  }
+}

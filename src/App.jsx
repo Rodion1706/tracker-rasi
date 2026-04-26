@@ -13,6 +13,7 @@ import YearStrip from "./components/YearStrip";
 import HabitCalendarModal from "./components/HabitCalendarModal";
 import BadgeToast from "./components/BadgeToast";
 import RolloverToast from "./components/RolloverToast";
+import FloatingAdd from "./components/FloatingAdd";
 
 import Login from "./tabs/Login";
 import DayTab from "./tabs/DayTab";
@@ -434,6 +435,9 @@ function Tracker({ uid }) {
 
       {/* Yesterday's rollover toast */}
       <RolloverToast info={rolloverInfo} />
+
+      {/* Floating + (mobile only via CSS) — quick scroll-to-input on Day tab */}
+      {tab === "day" && <FloatingAdd />}
     </div>
   );
 }
