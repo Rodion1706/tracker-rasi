@@ -45,7 +45,10 @@ html, body {
   font-family: 'Inter', system-ui, sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  /* "clip" prevents horizontal scroll WITHOUT establishing a scroll
+     container — that's required for position: sticky on descendants
+     (.tabs uses sticky on mobile). overflow-x: hidden would break it. */
+  overflow-x: clip;
 }
 
 /* Ambient background — vertical red stripes */
@@ -3219,15 +3222,21 @@ body::after {
   .ys-track { height: 28px; padding-bottom: 14px; }
   .ys-months { font-size: 8px; letter-spacing: 0.06em; }
 
-  /* Compact day-hero — smaller monad, tighter stack */
+  /* Compact day-hero — monad shrinks via real width/height (scale()
+     wouldn't reduce layout space). SVGs inside use viewBox so they
+     scale with the parent box automatically. */
   .day-hero {
     grid-template-columns: 1fr !important;
-    gap: 12px !important;
-    margin-bottom: 14px !important;
-    padding-bottom: 14px !important;
+    gap: 10px !important;
+    margin-bottom: 12px !important;
+    padding-bottom: 12px !important;
+    justify-items: center !important;
   }
-  .day-hero .monad { transform: scale(0.6); margin: -20px 0; }
-  .day-hero-stats { gap: 8px; }
+  .day-hero .monad {
+    width: 90px !important;
+    height: 120px !important;
+  }
+  .day-hero-stats { gap: 8px; width: 100%; }
   .stats-grid { gap: 8px; margin-bottom: 8px; }
   .stat-card { padding: 12px 14px; min-height: 60px; }
   .sc-label { font-size: 10px; letter-spacing: 0.18em; margin-bottom: 5px; }
@@ -3245,11 +3254,21 @@ body::after {
   .row:hover { padding-left: 18px; }
   .row-text { font-size: 13px; }
 
-  /* Tab header (Month/Stats/Goals) — smaller monad + tighter padding */
-  .tab-header { padding: 14px 16px; gap: 12px; margin-bottom: 14px; }
-  .tab-header-title { font-size: 22px; }
-  .tab-header-sub { font-size: 10px; margin-top: 4px; }
-  .tab-header .monad { transform: scale(0.55); margin: -18px 0; }
+  /* Tab header (Month/Stats/Goals) — slim row with small monad on left.
+     Real width/height on .monad, not transform: scale. */
+  .tab-header {
+    padding: 12px 14px;
+    gap: 12px;
+    margin-bottom: 14px;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+  }
+  .tab-header-title { font-size: 20px; letter-spacing: 0.14em; }
+  .tab-header-sub { font-size: 10px; margin-top: 4px; letter-spacing: 0.14em; }
+  .tab-header .monad {
+    width: 48px !important;
+    height: 64px !important;
+  }
 
   /* Section header tighter */
   .section { margin-bottom: 8px; font-size: 10px; }
