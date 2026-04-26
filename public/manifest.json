@@ -1,1 +1,19 @@
-{"name":"Command Center","short_name":"CMD","start_url":"/","display":"standalone","background_color":"#111114","theme_color":"#111114"}
+{
+  "name": "Command Center",
+  "short_name": "CMD",
+  "description": "Personal discipline tracker",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c0b10",
+  "theme_color": "#0c0b10",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

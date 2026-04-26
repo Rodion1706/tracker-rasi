@@ -768,6 +768,89 @@ body::after {
   margin-top: 3px;
 }
 
+/* ════════ NOTIFICATIONS BLOCK ════════ */
+.notify-block { margin-bottom: 14px; }
+.notify-times {
+  margin-top: 8px;
+  padding: 14px 16px;
+  background: rgba(14, 8, 16, 0.5);
+  border: 1px solid var(--brd);
+  border-radius: 10px;
+}
+.notify-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.notify-time-label {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--red-b);
+  font-weight: 700;
+  text-transform: uppercase;
+  text-shadow: 0 0 6px rgba(232, 16, 42, 0.4);
+}
+.notify-time-input {
+  background: var(--item);
+  border: 1px solid var(--brd);
+  border-radius: 6px;
+  color: var(--t1);
+  font-family: 'Oswald', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 8px 12px;
+  outline: none;
+  color-scheme: dark;
+  transition: border-color 0.2s;
+}
+.notify-time-input:focus { border-color: var(--red); }
+.notify-test {
+  margin-top: 6px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, var(--red-d), var(--red));
+  color: #fff;
+  border-radius: 6px;
+  text-align: center;
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+.notify-test:hover { box-shadow: 0 0 14px rgba(232, 16, 42, 0.55); transform: translateY(-1px); }
+.notify-test:active { transform: scale(0.98); }
+.notify-disclaimer {
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: rgba(232, 16, 42, 0.04);
+  border-left: 3px solid var(--red);
+  border-radius: 0 8px 8px 0;
+}
+.notify-disclaimer-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: var(--red-b);
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  text-shadow: 0 0 6px rgba(232, 16, 42, 0.4);
+}
+.notify-disclaimer-body {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--t2);
+  letter-spacing: 0.04em;
+  line-height: 1.55;
+}
+.notify-disclaimer-em { color: var(--t1); }
+
 /* ════════ KEYBOARD HINT ════════ */
 .kbd-hint {
   padding: 14px 18px;

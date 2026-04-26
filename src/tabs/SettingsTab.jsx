@@ -5,6 +5,7 @@ import SectionHeader from "../components/SectionHeader";
 import BadgeWall from "../components/BadgeWall";
 import LevelBar from "../components/LevelBar";
 import SearchBox from "../components/SearchBox";
+import NotificationSettings from "../components/NotificationSettings";
 import { isSoundOn, setSoundOn, playTick, SOUND_PACKS, getSoundPack, setSoundPack } from "../sound";
 import { DEFAULT_BANNER_LINES } from "../components/Celebration";
 
@@ -469,6 +470,8 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
       )}
 
       <HardModeToggle on={!!hardModeOn} setOn={setHardModeOn} />
+
+      <NotificationSettings />
 
       <SoundToggle />
 

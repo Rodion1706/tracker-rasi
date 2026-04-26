@@ -3,6 +3,7 @@ import { db, auth, provider, doc, getDoc, setDoc, signInWithPopup, signOut, onAu
 import { DEF_HABITS, DEF_GOALS, argDate, niceDate } from "./config";
 import { isDayClean, getLevel, applyGamificationUpdates, BADGES } from "./gamification";
 import { applyRollover } from "./rollover";
+import { scheduleReminders } from "./notifications";
 
 /* ══════ ACCESS CONTROL ══════ */
 // Only these emails can sign in. Add more if needed.
@@ -204,6 +205,13 @@ function Tracker({ uid }) {
   const [habitModal, setHabitModal] = useState(null);
 
   useKeyboardShortcuts(setTab, setDayOff, tab);
+
+  // Re-push the notification schedule to the SW on every app load.
+  // Internal helper bails out when notifications are disabled or
+  // permission isn't granted.
+  useEffect(() => {
+    scheduleReminders().catch(() => {});
+  }, []);
 
   const today = argDate(0);
   const habits = data.habits || DEF_HABITS;

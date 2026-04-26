@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0c0b10"/>
+  <g fill="none" stroke="#e8102a" stroke-linecap="round" filter="drop-shadow(0 0 12px #e8102a)">
+    <!-- Crescent (horns up) -->
+    <path d="M 156 130 A 100 100 0 0 0 356 130" stroke-width="6"/>
+    <path d="M 181 140 A 75 75 0 0 0 331 140" stroke-width="4" opacity="0.7"/>
+    <!-- Sun -->
+    <circle cx="256" cy="260" r="75" stroke-width="5"/>
+    <circle cx="256" cy="260" r="8" fill="#e8102a" stroke="none"/>
+    <!-- Cross -->
+    <line x1="256" y1="335" x2="256" y2="450" stroke-width="5"/>
+    <line x1="211" y1="410" x2="301" y2="410" stroke-width="5"/>
+  </g>
+</svg>
