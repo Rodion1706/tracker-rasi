@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { TAGS, argDate, niceDate, getWeekDays, dayOfYear } from "../config";
+import { argDate, niceDate, getWeekDays, dayOfYear, findTag, tagPillStyle, tagChipActiveStyle } from "../config";
 import { QUOTES_365 } from "../quotes";
 import { DiamondCheck } from "../components/Checks";
 import SectionHeader from "../components/SectionHeader";
@@ -10,14 +10,6 @@ import Celebration from "../components/Celebration";
 import TierUp, { TIER_UP_THRESHOLDS } from "../components/TierUp";
 import LevelBar from "../components/LevelBar";
 import { celebrationTier, canToggleHardDay, hardDaysThisMonth, HARD_DAYS_PER_MONTH, activeHabitsOn } from "../gamification";
-
-function tagClass(tag) {
-  if (tag === "Work 1") return "work1";
-  if (tag === "Work 2") return "work2";
-  if (tag === "Channel") return "channel";
-  if (tag === "Personal") return "personal";
-  return "";
-}
 
 // Chart/graph SVG icon (replaces 📊 emoji)
 function ChartIcon() {
@@ -37,7 +29,7 @@ export default function DayTab({
   setDay, getDayData, streak, bestStreak, hardInStreak, recurring, openHabitModal,
   levelInfo, badgeInfo, claimNextLevel,
   celebratedThresholds, markThresholdCelebrated,
-  bannerPhrases,
+  bannerPhrases, tags,
 }) {
   const [nt, setNt] = useState("");
   const [tag, setTag] = useState("");
@@ -297,15 +289,19 @@ export default function DayTab({
           >
             All
           </div>
-          {TAGS.map(tg => (
-            <div
-              key={tg}
-              className={`chip ${tagClass(tg)} ${tagFilter === tg ? "active" : ""}`}
-              onClick={() => setTagFilter(tagFilter === tg ? "" : tg)}
-            >
-              {tg}
-            </div>
-          ))}
+          {tags.map(t => {
+            const active = tagFilter === t.name;
+            return (
+              <div
+                key={t.id}
+                className={`chip ${active ? "active" : ""}`}
+                style={tagChipActiveStyle(t.color, active)}
+                onClick={() => setTagFilter(active ? "" : t.name)}
+              >
+                {t.name}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -352,7 +348,11 @@ export default function DayTab({
                   ↻{rc}
                 </div>
               )}
-              {t.tag && <div className={`row-tag ${tagClass(t.tag)}`}>{t.tag}</div>}
+              {t.tag && (() => {
+                const tagObj = findTag(t.tag, tags);
+                const c = tagObj ? tagObj.color : null;
+                return <div className={`row-tag ${c ? "" : "orphan"}`} style={tagPillStyle(c)}>{t.tag}</div>;
+              })()}
               <div className="row-delete" onClick={(e) => { e.stopPropagation(); delTask(t.id); }}>×</div>
             </div>
           );
@@ -372,15 +372,19 @@ export default function DayTab({
           <div className="add-btn" onClick={addTask}>ADD</div>
         </div>
         <div className="chip-row">
-          {TAGS.map(tg => (
-            <div
-              key={tg}
-              className={`chip ${tagClass(tg)} ${tag === tg ? "active" : ""}`}
-              onClick={() => setTag(tag === tg ? "" : tg)}
-            >
-              {tg}
-            </div>
-          ))}
+          {tags.map(t => {
+            const active = tag === t.name;
+            return (
+              <div
+                key={t.id}
+                className={`chip ${active ? "active" : ""}`}
+                style={tagChipActiveStyle(t.color, active)}
+                onClick={() => setTag(active ? "" : t.name)}
+              >
+                {t.name}
+              </div>
+            );
+          })}
           <div style={{ flex: 1 }} />
           {[["this", "This day"], ["next", "Next day"], ["pick", "Date"]].map(p => (
             <div

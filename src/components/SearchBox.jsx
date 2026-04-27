@@ -2,16 +2,9 @@
 // Returns ranked text matches with date + snippet. Click → jump to that day.
 
 import { useState, useMemo } from "react";
+import { findTag, tagPillStyle } from "../config";
 
-function tagClass(tag) {
-  if (tag === "Work 1") return "work1";
-  if (tag === "Work 2") return "work2";
-  if (tag === "Channel") return "channel";
-  if (tag === "Personal") return "personal";
-  return "";
-}
-
-export default function SearchBox({ days, logs, onJump }) {
+export default function SearchBox({ days, logs, onJump, tags }) {
   const [q, setQ] = useState("");
   const ql = q.trim().toLowerCase();
 
@@ -77,7 +70,11 @@ export default function SearchBox({ days, logs, onJump }) {
               <div className="search-result-date">{r.date} · {r.kind === "task" ? "TASK" : "LOG"}</div>
               <div className="search-result-text">{r.text}</div>
               <div className="search-result-meta">
-                {r.kind === "task" && r.tag && <span className={`row-tag ${tagClass(r.tag)}`}>{r.tag}</span>}
+                {r.kind === "task" && r.tag && (() => {
+                  const tagObj = findTag(r.tag, tags || []);
+                  const c = tagObj ? tagObj.color : null;
+                  return <span className={`row-tag ${c ? "" : "orphan"}`} style={tagPillStyle(c)}>{r.tag}</span>;
+                })()}
                 {r.kind === "task" && r.rollCount > 0 && <span className="search-result-roll">↻{r.rollCount}</span>}
                 {r.kind === "task" && r.done && <span className="search-result-done">DONE</span>}
               </div>

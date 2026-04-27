@@ -25,14 +25,7 @@
   --pink-b: #ff7bbd;
   --pink-d: #c4236f;
 
-  /* Semantic tag colors — jewel tone harmony (ruby / sapphire / topaz / amethyst) */
-  --tag-channel: #e8102a;
-  --tag-work1: #5b7fbf;
-  --tag-work2: #d4a54a;
-  --tag-personal: #ff6fb2;
-  --tag-work1-d: #2f4a80;
-  --tag-work2-d: #8a6420;
-  --tag-personal-d: #b53476;
+  /* Tag colors live in data.tags now — applied via inline styles. */
 
   --overdue: #9a2030;
 }
@@ -2165,26 +2158,7 @@ body::after {
   box-shadow: 0 0 5px rgba(148, 142, 152, 0.45);
 }
 
-.wk-tick.task.work1:not(.done) { background: rgba(91, 127, 191, 0.15); }
-.wk-tick.task.work1.done {
-  background: linear-gradient(180deg, #8fb3e0, var(--tag-work1));
-  box-shadow: 0 0 5px rgba(91, 127, 191, 0.55);
-}
-.wk-tick.task.work2:not(.done) { background: rgba(212, 165, 74, 0.15); }
-.wk-tick.task.work2.done {
-  background: linear-gradient(180deg, #ebc880, var(--tag-work2));
-  box-shadow: 0 0 5px rgba(212, 165, 74, 0.55);
-}
-.wk-tick.task.channel:not(.done) { background: rgba(232, 16, 42, 0.14); }
-.wk-tick.task.channel.done {
-  background: linear-gradient(180deg, var(--red-b), var(--red));
-  box-shadow: 0 0 5px rgba(232, 16, 42, 0.55);
-}
-.wk-tick.task.personal:not(.done) { background: rgba(255, 111, 178, 0.15); }
-.wk-tick.task.personal.done {
-  background: linear-gradient(180deg, #ffa5cf, var(--tag-personal));
-  box-shadow: 0 0 5px rgba(255, 111, 178, 0.55);
-}
+/* Per-tag tick colors are applied inline from data.tags. */
 .wk-row-empty { font-size: 11px; color: var(--t3); font-family: 'JetBrains Mono', monospace; }
 .wk-row-pct {
   font-size: 14px;
@@ -2767,10 +2741,7 @@ body::after {
   transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
 }
 .task-tag:hover, .row-tag:hover { transform: scale(1.08) rotate(-2deg); filter: brightness(1.18); }
-.task-tag.work1 { background: linear-gradient(90deg, var(--tag-work1-d), var(--tag-work1)); box-shadow: 0 0 8px rgba(91, 127, 191, 0.35); }
-.task-tag.work2 { background: linear-gradient(90deg, var(--tag-work2-d), var(--tag-work2)); box-shadow: 0 0 8px rgba(212, 165, 74, 0.35); color: #1a1015; }
-.task-tag.channel { background: linear-gradient(90deg, var(--red-d), var(--red)); box-shadow: 0 0 8px rgba(232, 16, 42, 0.4); }
-.task-tag.personal { background: linear-gradient(90deg, var(--tag-personal-d), var(--tag-personal)); box-shadow: 0 0 8px rgba(255, 111, 178, 0.4); }
+/* Per-tag colors are applied inline from data.tags. */
 
 .task-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a8a8ae; font-weight: 600; flex-shrink: 0; letter-spacing: 0.06em; }
 .task-streak { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 14px; color: var(--red-b); text-shadow: 0 0 8px var(--red); flex-shrink: 0; }
@@ -2938,10 +2909,7 @@ body::after {
   box-shadow: 0 0 10px rgba(232, 16, 42, 0.25);
   text-shadow: 0 0 6px rgba(232, 16, 42, 0.5);
 }
-.chip.work1.active { background: rgba(91, 127, 191, 0.18); color: var(--tag-work1); border-color: rgba(91, 127, 191, 0.6); box-shadow: 0 0 10px rgba(91, 127, 191, 0.3); text-shadow: 0 0 6px rgba(91, 127, 191, 0.6); }
-.chip.work2.active { background: rgba(212, 165, 74, 0.18); color: var(--tag-work2); border-color: rgba(212, 165, 74, 0.6); box-shadow: 0 0 10px rgba(212, 165, 74, 0.3); text-shadow: 0 0 6px rgba(212, 165, 74, 0.6); }
-.chip.channel.active { background: rgba(232, 16, 42, 0.18); color: var(--red); border-color: rgba(232, 16, 42, 0.6); box-shadow: 0 0 10px rgba(232, 16, 42, 0.35); text-shadow: 0 0 6px rgba(232, 16, 42, 0.6); }
-.chip.personal.active { background: rgba(255, 111, 178, 0.18); color: var(--tag-personal); border-color: rgba(255, 111, 178, 0.6); box-shadow: 0 0 10px rgba(255, 111, 178, 0.35); text-shadow: 0 0 6px rgba(255, 111, 178, 0.65); }
+/* Per-tag chip-active colors are applied inline from data.tags. */
 
 .add-date-input {
   margin-top: 8px;
@@ -3188,10 +3156,8 @@ body::after {
   background: linear-gradient(90deg, var(--red-d), var(--red));
   transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
 }
-.row-tag.work1 { background: linear-gradient(90deg, var(--tag-work1-d), var(--tag-work1)); box-shadow: 0 0 8px rgba(91, 127, 191, 0.35); }
-.row-tag.work2 { background: linear-gradient(90deg, var(--tag-work2-d), var(--tag-work2)); box-shadow: 0 0 8px rgba(212, 165, 74, 0.35); color: #1a1015; }
-.row-tag.channel { background: linear-gradient(90deg, var(--red-d), var(--red)); box-shadow: 0 0 8px rgba(232, 16, 42, 0.4); }
-.row-tag.personal { background: linear-gradient(90deg, var(--tag-personal-d), var(--tag-personal)); box-shadow: 0 0 8px rgba(255, 111, 178, 0.4); }
+/* Per-tag colors are applied inline from data.tags. */
+.row-tag.orphan { background: linear-gradient(90deg, #4a4a4a, #6e6e6e); box-shadow: 0 0 8px rgba(120, 120, 120, 0.3); opacity: 0.7; }
 
 .row-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a8a8ae; font-weight: 600; flex-shrink: 0; letter-spacing: 0.06em; }
 .row-delete {

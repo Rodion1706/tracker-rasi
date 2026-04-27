@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db, auth, provider, doc, getDoc, setDoc, signInWithPopup, signOut, onAuthStateChanged } from "./firebase";
-import { DEF_HABITS, DEF_GOALS, argDate, niceDate } from "./config";
+import { DEF_HABITS, DEF_GOALS, DEF_TAGS, argDate, niceDate } from "./config";
 import { isDayClean, getLevel, getDisplayLevel, applyGamificationUpdates, BADGES } from "./gamification";
 import { applyRollover } from "./rollover";
 import { scheduleReminders } from "./notifications";
@@ -219,6 +219,7 @@ function Tracker({ uid }) {
   const habits = data.habits || DEF_HABITS;
   const goals = data.goals || DEF_GOALS;
   const recurring = data.recurring || [];
+  const tags = data.tags || DEF_TAGS;
   const days = data.days || {};
   const logs = data.logs || {};
 
@@ -226,6 +227,73 @@ function Tracker({ uid }) {
   function setGoals(g) { save(Object.assign({}, data, { goals: g })); }
   function setRecurring(r) { save(Object.assign({}, data, { recurring: r })); }
   function setLogs(l) { save(Object.assign({}, data, { logs: l })); }
+  function setTags(t) { save(Object.assign({}, data, { tags: t })); }
+
+  // Rename a tag: update the entry in tags AND sweep every task and
+  // recurring item that references the old name. Past data included —
+  // a renamed tag is still "the same tag", just with a new label.
+  function renameTag(id, newName, newColor) {
+    const old = tags.find(t => t.id === id);
+    if (!old) return;
+    const trimmed = newName.trim();
+    const nextTags = tags.map(t => t.id === id ? Object.assign({}, t, { name: trimmed, color: newColor }) : t);
+    const nd = Object.assign({}, data, { tags: nextTags });
+    if (old.name !== trimmed) {
+      const nextDays = Object.assign({}, data.days || {});
+      for (const k of Object.keys(nextDays)) {
+        const dd = nextDays[k];
+        if (!dd || !dd.tasks) continue;
+        let touched = false;
+        const nextTasks = dd.tasks.map(t => {
+          if (t && t.tag === old.name) { touched = true; return Object.assign({}, t, { tag: trimmed }); }
+          return t;
+        });
+        if (touched) nextDays[k] = Object.assign({}, dd, { tasks: nextTasks });
+      }
+      nd.days = nextDays;
+      nd.recurring = (data.recurring || []).map(r => r && r.tag === old.name ? Object.assign({}, r, { tag: trimmed }) : r);
+    }
+    save(nd);
+  }
+
+  // Delete a tag: drop from tags, strip the tag string from tasks ONLY
+  // on today + future days. Past days keep the orphan string so the
+  // historical record stays honest. Recurring items always feed future
+  // days, so we strip the tag there too.
+  function deleteTag(id) {
+    const old = tags.find(t => t.id === id);
+    if (!old) return;
+    const nextTags = tags.filter(t => t.id !== id);
+    const nd = Object.assign({}, data, { tags: nextTags });
+    const nextDays = Object.assign({}, data.days || {});
+    for (const k of Object.keys(nextDays)) {
+      if (k < today) continue;
+      const dd = nextDays[k];
+      if (!dd || !dd.tasks) continue;
+      let touched = false;
+      const nextTasks = dd.tasks.map(t => {
+        if (t && t.tag === old.name) { touched = true; return Object.assign({}, t, { tag: "" }); }
+        return t;
+      });
+      if (touched) nextDays[k] = Object.assign({}, dd, { tasks: nextTasks });
+    }
+    nd.days = nextDays;
+    nd.recurring = (data.recurring || []).map(r => r && r.tag === old.name ? Object.assign({}, r, { tag: "" }) : r);
+    save(nd);
+  }
+
+  // How many today+future tasks reference a tag (used by the delete confirm dialog).
+  function countTagUsage(name) {
+    let n = 0;
+    const dd = data.days || {};
+    for (const k of Object.keys(dd)) {
+      if (k < today) continue;
+      const day = dd[k];
+      if (!day || !day.tasks) continue;
+      for (const t of day.tasks) if (t && t.tag === name) n++;
+    }
+    return n;
+  }
   function setDay(key, val) {
     const nd = Object.assign({}, data);
     nd.days = Object.assign({}, nd.days);
@@ -399,7 +467,7 @@ function Tracker({ uid }) {
             dayOff={dayOff} setDayOff={setDayOff}
             setDay={setDay} getDayData={getDayData}
             streak={streak} bestStreak={bestStreak} hardInStreak={hardInStreak}
-            recurring={recurring}
+            recurring={recurring} tags={tags}
             openHabitModal={h => setHabitModal(h)}
             levelInfo={levelInfo} badgeInfo={badgeInfo}
             claimNextLevel={claimNextLevel}
@@ -414,7 +482,7 @@ function Tracker({ uid }) {
           <WeekTab
             days={days} habits={habits} today={today}
             dayOff={dayOff} setDayOff={setDayOff}
-            setTab={setTab}
+            setTab={setTab} tags={tags}
           />
         )}
         {tab === "month" && (
@@ -438,6 +506,8 @@ function Tracker({ uid }) {
           <SettingsTab
             habits={habits} setHabits={setHabits}
             recurring={recurring} setRecurring={setRecurring}
+            tags={tags} renameTag={renameTag} deleteTag={deleteTag}
+            setTags={setTags} countTagUsage={countTagUsage}
             data={data} setDay={setDay} getDayData={getDayData}
             today={today} bulkSetDays={bulkSetDays}
             badgeInfo={badgeInfo} levelInfo={levelInfo}

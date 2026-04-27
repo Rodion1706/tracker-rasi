@@ -20,8 +20,97 @@ export var DEF_GOALS = [
   { id:"g5", text:"Independent income", target:1000, current:0, unit:"$/mo", quarter:"Q4" },
 ];
 
-export var TAGS = ["Work 1","Work 2","Channel","Personal"];
-export var TAG_COLORS = { "Work 1":"#5b7fbf", "Work 2":"#d4a54a", "Channel":"#e8102a", "Personal":"#ff6fb2" };
+// Default tag set seeded into Firestore on first load. After that the
+// list lives at data.tags and is fully editable in Settings.
+export var DEF_TAGS = [
+  { id:"t01", name:"Work 1",   color:"#5b7fbf" },
+  { id:"t02", name:"Work 2",   color:"#d4a54a" },
+  { id:"t03", name:"Channel",  color:"#e8102a" },
+  { id:"t04", name:"Personal", color:"#ff6fb2" },
+];
+
+// Locked palette for tag color choice.
+export var TAG_PALETTE = [
+  "#5b7fbf", "#d4a54a", "#e8102a", "#ff6fb2",
+  "#3aa15c", "#a76bd0", "#48b3c2", "#e8862e",
+];
+
+// Returns the tag object by name (case-sensitive). Used everywhere that
+// renders a task's stored tag string. Returns null for orphan tags
+// (string left over from a deleted tag in past days).
+export function findTag(name, tags) {
+  if (!name || !tags) return null;
+  for (var i = 0; i < tags.length; i++) if (tags[i].name === name) return tags[i];
+  return null;
+}
+
+// Shift a hex color toward black (amt > 0) or white (amt < 0). amt in -1..1.
+function shade(hex, amt) {
+  var h = hex.replace("#", "");
+  var r = parseInt(h.substr(0, 2), 16);
+  var g = parseInt(h.substr(2, 2), 16);
+  var b = parseInt(h.substr(4, 2), 16);
+  function adj(c) {
+    if (amt >= 0) return Math.round(c * (1 - amt));
+    return Math.round(c + (255 - c) * (-amt));
+  }
+  r = Math.max(0, Math.min(255, adj(r)));
+  g = Math.max(0, Math.min(255, adj(g)));
+  b = Math.max(0, Math.min(255, adj(b)));
+  return "#" + [r, g, b].map(function(x){ var s = x.toString(16); return s.length < 2 ? "0" + s : s; }).join("");
+}
+
+function hexToRgb(hex) {
+  var h = hex.replace("#", "");
+  return {
+    r: parseInt(h.substr(0, 2), 16),
+    g: parseInt(h.substr(2, 2), 16),
+    b: parseInt(h.substr(4, 2), 16),
+  };
+}
+
+// Inline-style helpers for tag visuals. color === null means orphan tag —
+// rendered in neutral grey so deleted tags from past days still readable.
+export function tagPillStyle(color) {
+  if (!color) {
+    return {
+      background: "linear-gradient(90deg, #4a4a4a, #6e6e6e)",
+      boxShadow: "0 0 8px rgba(120, 120, 120, 0.3)",
+      opacity: 0.7,
+    };
+  }
+  var rgb = hexToRgb(color);
+  return {
+    background: "linear-gradient(90deg, " + shade(color, 0.45) + ", " + color + ")",
+    boxShadow: "0 0 8px rgba(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ", 0.4)",
+  };
+}
+
+export function tagChipActiveStyle(color, active) {
+  if (!active || !color) return {};
+  var rgb = hexToRgb(color);
+  var rgba = function(a){ return "rgba(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ", " + a + ")"; };
+  return {
+    background: rgba(0.18),
+    color: color,
+    borderColor: rgba(0.6),
+    boxShadow: "0 0 10px " + rgba(0.3),
+    textShadow: "0 0 6px " + rgba(0.6),
+  };
+}
+
+export function tagTickStyle(color, done) {
+  if (!color) {
+    return done
+      ? { background: "linear-gradient(180deg, #9a9a9a, #6e6e6e)" }
+      : { background: "rgba(120, 120, 120, 0.15)" };
+  }
+  var rgb = hexToRgb(color);
+  if (done) {
+    return { background: "linear-gradient(180deg, " + shade(color, -0.25) + ", " + color + ")" };
+  }
+  return { background: "rgba(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ", 0.15)" };
+}
 export var MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
 export var WDAYS = ["M","T","W","T","F","S","S"];
 export var QUOTES = [

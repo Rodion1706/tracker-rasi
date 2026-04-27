@@ -1,16 +1,8 @@
-import { niceDate, dayDiff, argDate, getWeekDays } from "../config";
+import { niceDate, dayDiff, argDate, getWeekDays, findTag, tagTickStyle } from "../config";
 import { WeekBigStrip } from "../components/StatCards";
 import { activeHabitsOn } from "../gamification";
 
-function tagClass(tag) {
-  if (tag === "Work 1") return "work1";
-  if (tag === "Work 2") return "work2";
-  if (tag === "Channel") return "channel";
-  if (tag === "Personal") return "personal";
-  return "";
-}
-
-export default function WeekTab({ days, habits, today, dayOff, setDayOff, setTab }) {
+export default function WeekTab({ days, habits, today, dayOff, setDayOff, setTab, tags }) {
   const weekDays = getWeekDays(argDate(dayOff));
 
   return (
@@ -72,12 +64,15 @@ export default function WeekTab({ days, habits, today, dayOff, setDayOff, setTab
                   <div className="wk-row-empty">—</div>
                 ) : (
                   allTicks.map((t, i) => {
-                    const tagCls = t.kind === "t" ? tagClass(t.tag) : "";
+                    const isTask = t.kind === "t";
+                    const tagObj = isTask && t.tag ? findTag(t.tag, tags) : null;
+                    const c = tagObj ? tagObj.color : null;
+                    const colorStyle = isTask ? tagTickStyle(c, !!t.done) : {};
                     return (
                       <div
                         key={i}
-                        className={`wk-tick ${t.done ? "done" : ""} ${t.kind === "t" ? "task" : "habit"} ${tagCls}`}
-                        style={{ animationDelay: `${i * 0.015}s` }}
+                        className={`wk-tick ${t.done ? "done" : ""} ${isTask ? "task" : "habit"}`}
+                        style={Object.assign({ animationDelay: `${i * 0.015}s` }, colorStyle)}
                       />
                     );
                   })

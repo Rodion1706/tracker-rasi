@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TAGS, argDate } from "../config";
+import { argDate, findTag, tagPillStyle, tagChipActiveStyle, TAG_PALETTE } from "../config";
 import TabHeader from "../components/TabHeader";
 import SectionHeader from "../components/SectionHeader";
 import BadgeWall from "../components/BadgeWall";
@@ -12,13 +12,6 @@ import { DEFAULT_BANNER_LINES } from "../components/Celebration";
 const DAY_LABELS = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
 const inputStyle = { width: "100%", background: "transparent", border: "none", borderBottom: "1px solid var(--brd)", color: "var(--t1)", fontSize: 14, outline: "none", padding: "5px 0", boxSizing: "border-box", fontFamily: "inherit" };
 
-function tagClass(tag) {
-  if (tag === "Work 1") return "work1";
-  if (tag === "Work 2") return "work2";
-  if (tag === "Channel") return "channel";
-  if (tag === "Personal") return "personal";
-  return "";
-}
 
 function HardModeToggle({ on, setOn }) {
   if (!setOn) return null;
@@ -163,7 +156,7 @@ function BannerEditor({ phrases, setPhrases }) {
   );
 }
 
-function ImportTasks({ setDay, getDayData, today, bulkSetDays }) {
+function ImportTasks({ setDay, getDayData, today, bulkSetDays, tags }) {
   const [text, setText] = useState("");
   const [preview, setPreview] = useState(null);
   const [error, setError] = useState("");
@@ -199,7 +192,7 @@ function ImportTasks({ setDay, getDayData, today, bulkSetDays }) {
       let tag = "", taskText = "";
       if (parts.length === 2) { taskText = parts[1]; }
       else if (parts.length >= 3) {
-        if (TAGS.includes(parts[1])) { tag = parts[1]; taskText = parts.slice(2).join(" | "); }
+        if (tags.some(t => t.name === parts[1])) { tag = parts[1]; taskText = parts.slice(2).join(" | "); }
         else { taskText = parts.slice(1).join(" | "); }
       }
       if (!taskText) { errors.push(`Line ${idx + 1}: empty task text`); return; }
@@ -227,13 +220,17 @@ function ImportTasks({ setDay, getDayData, today, bulkSetDays }) {
     alert(`Imported ${preview.total} tasks`);
   }
 
+  const tagNamesLine = tags.length > 0 ? `# Tags: ${tags.map(t => t.name).join(", ")}` : "# Tags: (none configured)";
+  const sampleTag1 = tags[0] ? tags[0].name : "Personal";
+  const sampleTag2 = tags[1] ? tags[1].name : (tags[0] ? tags[0].name : "Personal");
+  const sampleTag3 = tags[2] ? tags[2].name : sampleTag2;
   const exampleText = `# Format: DATE | TAG (optional) | TASK
 # Dates: YYYY-MM-DD, today, tomorrow, monday..sunday
-# Tags: Work 1, Work 2, Channel, Personal
+${tagNamesLine}
 
-2026-04-20 | Channel | Red Team cat niche
-tomorrow | Work 1 | Review Ars brief
-friday | Personal | Dentist follow-up`;
+2026-04-20 | ${sampleTag1} | First task
+tomorrow | ${sampleTag2} | Second task
+friday | ${sampleTag3} | Third task`;
 
   return (
     <div style={{ marginTop: 24 }}>
@@ -265,12 +262,16 @@ friday | Personal | Dentist follow-up`;
               <div style={{ fontSize: 12, color: "var(--red)", fontWeight: 700, marginBottom: 7, fontFamily: "'JetBrains Mono', monospace" }}>
                 {date} ({preview.grouped[date].length})
               </div>
-              {preview.grouped[date].map((p, i) => (
-                <div key={i} style={{ fontSize: 12, color: "var(--t2)", padding: "4px 0 4px 14px", borderLeft: "1px solid rgba(232, 16, 42, 0.25)", marginLeft: 4, display: "flex", gap: 8, alignItems: "center" }}>
-                  {p.tag && <span className={`row-tag ${tagClass(p.tag)}`} style={{ fontSize: 8, padding: "2px 7px" }}>{p.tag}</span>}
-                  <span>{p.text}</span>
-                </div>
-              ))}
+              {preview.grouped[date].map((p, i) => {
+                const tagObj = p.tag ? findTag(p.tag, tags) : null;
+                const pillColor = tagObj ? tagObj.color : null;
+                return (
+                  <div key={i} style={{ fontSize: 12, color: "var(--t2)", padding: "4px 0 4px 14px", borderLeft: "1px solid rgba(232, 16, 42, 0.25)", marginLeft: 4, display: "flex", gap: 8, alignItems: "center" }}>
+                    {p.tag && <span className="row-tag" style={Object.assign({ fontSize: 8, padding: "2px 7px" }, tagPillStyle(pillColor))}>{p.tag}</span>}
+                    <span>{p.text}</span>
+                  </div>
+                );
+              })}
             </div>
           ))}
         </div>
@@ -279,7 +280,7 @@ friday | Personal | Dentist follow-up`;
   );
 }
 
-export default function SettingsTab({ habits, setHabits, recurring, setRecurring, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, claimNextLevel, bannerPhrases, setBannerPhrases, hardModeOn, setHardModeOn, strictStreak, setStrictStreak, jumpToDay }) {
+export default function SettingsTab({ habits, setHabits, recurring, setRecurring, tags, setTags, renameTag, deleteTag, countTagUsage, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, claimNextLevel, bannerPhrases, setBannerPhrases, hardModeOn, setHardModeOn, strictStreak, setStrictStreak, jumpToDay }) {
   const [newH, setNewH] = useState("");
   const [newHS, setNewHS] = useState("");
   const [eId, setEId] = useState(null);
@@ -288,6 +289,54 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
   const [newR, setNewR] = useState("");
   const [newRTag, setNewRTag] = useState("");
   const [newRDays, setNewRDays] = useState([]);
+
+  // Tag editing state
+  const [tagEId, setTagEId] = useState(null);          // id of tag being edited
+  const [tagEName, setTagEName] = useState("");
+  const [tagEColor, setTagEColor] = useState("");
+  const [tagEErr, setTagEErr] = useState("");
+  const [newTagName, setNewTagName] = useState("");
+  const [newTagColor, setNewTagColor] = useState(TAG_PALETTE[0]);
+  const [newTagErr, setNewTagErr] = useState("");
+
+  function validateTagName(name, ignoreId) {
+    const t = name.trim();
+    if (!t) return "Name required";
+    if (t.length > 20) return "Max 20 chars";
+    if (t.includes("|")) return "No | allowed";
+    if (tags.some(x => x.id !== ignoreId && x.name.toLowerCase() === t.toLowerCase())) return "Name already taken";
+    return null;
+  }
+  function startEditTag(t) {
+    setTagEId(t.id);
+    setTagEName(t.name);
+    setTagEColor(t.color);
+    setTagEErr("");
+  }
+  function saveEditTag() {
+    const err = validateTagName(tagEName, tagEId);
+    if (err) { setTagEErr(err); return; }
+    renameTag(tagEId, tagEName.trim(), tagEColor);
+    setTagEId(null);
+    setTagEErr("");
+  }
+  function addTag() {
+    const err = validateTagName(newTagName, null);
+    if (err) { setNewTagErr(err); return; }
+    const id = "t" + Date.now();
+    setTags(tags.concat([{ id, name: newTagName.trim(), color: newTagColor }]));
+    setNewTagName("");
+    setNewTagColor(TAG_PALETTE[0]);
+    setNewTagErr("");
+  }
+  function removeTag(t) {
+    const usage = countTagUsage(t.name);
+    const msg = usage > 0
+      ? `Delete tag "${t.name}"?\n${usage} task${usage === 1 ? "" : "s"} today + future will lose this tag.\nPast tasks keep the tag (greyed out).`
+      : `Delete tag "${t.name}"?\nNo tasks today + future use this tag. Past tasks keep the tag (greyed out).`;
+    if (!confirm(msg)) return;
+    deleteTag(t.id);
+  }
 
   function addH() {
     if (!newH.trim()) return;
@@ -391,13 +440,13 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
       <TabHeader title="Settings" subtitle={`${habits.filter(h => !h.archivedAt).length} habits · ${recurring.length} recurring`} />
 
       {/* Bulk task import — front and center for batch loading */}
-      <ImportTasks setDay={setDay} getDayData={getDayData} today={today} bulkSetDays={bulkSetDays} />
+      <ImportTasks setDay={setDay} getDayData={getDayData} today={today} bulkSetDays={bulkSetDays} tags={tags} />
 
       {/* Search across history */}
       <div style={{ marginTop: 22 }}>
         <SectionHeader label="SEARCH" />
       </div>
-      <SearchBox days={data.days || {}} logs={data.logs || {}} onJump={jumpToDay} />
+      <SearchBox days={data.days || {}} logs={data.logs || {}} onJump={jumpToDay} tags={tags} />
 
       {/* Habits — only show currently active ones (archived stay in the
           list invisibly so past days keep their snapshot semantics). */}
@@ -470,11 +519,107 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
         </div>
         <div className="brute-field-l">Tag (optional)</div>
         <div className="chip-row" style={{ marginBottom: 14 }}>
-          {TAGS.map(t => (
-            <div key={t} className={`chip ${tagClass(t)} ${newRTag === t ? "active" : ""}`} onClick={() => setNewRTag(newRTag === t ? "" : t)}>{t}</div>
-          ))}
+          {tags.map(t => {
+            const active = newRTag === t.name;
+            return (
+              <div
+                key={t.id}
+                className={`chip ${active ? "active" : ""}`}
+                style={tagChipActiveStyle(t.color, active)}
+                onClick={() => setNewRTag(active ? "" : t.name)}
+              >{t.name}</div>
+            );
+          })}
         </div>
         <div onClick={addR} className="add-btn" style={{ display: "inline-flex" }}>ADD RECURRING</div>
+      </div>
+
+      {/* Tags — editable categories. Reads from data.tags, mutations
+          handled by parent (renameTag sweeps all days; deleteTag only
+          touches today + future). */}
+      <div style={{ marginTop: 30 }}>
+        <SectionHeader label="TAGS" count={tags.length} />
+      </div>
+      {tags.map(t => {
+        if (tagEId === t.id) return (
+          <div key={t.id} className="brute" style={{ marginBottom: 5 }}>
+            <div className="brute-field">
+              <div className="brute-field-l">Name</div>
+              <input
+                value={tagEName}
+                onChange={e => { setTagEName(e.target.value); setTagEErr(""); }}
+                style={inputStyle}
+                maxLength={20}
+                autoFocus
+                onKeyDown={e => { if (e.key === "Enter") saveEditTag(); }}
+              />
+            </div>
+            <div className="brute-field-l">Color</div>
+            <div className="chip-row" style={{ marginBottom: 14, gap: 8, flexWrap: "wrap" }}>
+              {TAG_PALETTE.map(c => (
+                <div
+                  key={c}
+                  onClick={() => setTagEColor(c)}
+                  style={{
+                    width: 28, height: 28, borderRadius: 14, cursor: "pointer",
+                    background: c,
+                    border: tagEColor === c ? "2px solid var(--t1)" : "2px solid transparent",
+                    boxShadow: tagEColor === c ? `0 0 10px ${c}` : "none",
+                  }}
+                />
+              ))}
+            </div>
+            {tagEErr && (
+              <div style={{ fontSize: 11, color: "#ff6070", marginBottom: 10, fontFamily: "'JetBrains Mono', monospace" }}>{tagEErr}</div>
+            )}
+            <div style={{ display: "flex", gap: 10 }}>
+              <div onClick={saveEditTag} className="add-btn">SAVE</div>
+              <div onClick={() => { setTagEId(null); setTagEErr(""); }} style={{ padding: "11px 16px", color: "var(--t3)", cursor: "pointer", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", fontFamily: "'Cinzel', serif" }}>CANCEL</div>
+            </div>
+          </div>
+        );
+        return (
+          <div key={t.id} className="row" style={{ cursor: "default", gap: 10 }}>
+            <div style={{ width: 18, height: 18, borderRadius: 9, background: t.color, flexShrink: 0, boxShadow: `0 0 8px ${t.color}66` }} />
+            <div className="row-body">
+              <div className="row-text">{t.name}</div>
+            </div>
+            <div onClick={() => startEditTag(t)} style={{ fontSize: 11, color: "var(--t2)", cursor: "pointer", fontFamily: "'Cinzel', serif", letterSpacing: "0.14em", padding: "4px 10px" }}>edit</div>
+            <div onClick={() => removeTag(t)} style={{ fontSize: 18, color: "var(--t3)", cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>×</div>
+          </div>
+        );
+      })}
+      <div className="brute" style={{ marginTop: 10 }}>
+        <div className="brute-field">
+          <div className="brute-field-l">New tag</div>
+          <input
+            value={newTagName}
+            onChange={e => { setNewTagName(e.target.value); setNewTagErr(""); }}
+            placeholder="e.g. Health"
+            style={inputStyle}
+            maxLength={20}
+            onKeyDown={e => { if (e.key === "Enter") addTag(); }}
+          />
+        </div>
+        <div className="brute-field-l">Color</div>
+        <div className="chip-row" style={{ marginBottom: 14, gap: 8, flexWrap: "wrap" }}>
+          {TAG_PALETTE.map(c => (
+            <div
+              key={c}
+              onClick={() => setNewTagColor(c)}
+              style={{
+                width: 28, height: 28, borderRadius: 14, cursor: "pointer",
+                background: c,
+                border: newTagColor === c ? "2px solid var(--t1)" : "2px solid transparent",
+                boxShadow: newTagColor === c ? `0 0 10px ${c}` : "none",
+              }}
+            />
+          ))}
+        </div>
+        {newTagErr && (
+          <div style={{ fontSize: 11, color: "#ff6070", marginBottom: 10, fontFamily: "'JetBrains Mono', monospace" }}>{newTagErr}</div>
+        )}
+        <div onClick={addTag} className="add-btn" style={{ display: "inline-flex" }}>ADD TAG</div>
       </div>
 
       {/* Personalization — moved to bottom per Boss preference */}
