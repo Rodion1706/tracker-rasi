@@ -49,7 +49,11 @@ function SortableHabitRow({ habit, index, editMode, isInlineEditing, eT, eS, set
     );
   }
 
-  const dragProps = editMode ? { ...attributes, ...listeners } : {};
+  // Listeners must ALWAYS be on the row — otherwise the sensor never sees
+  // pointerdown and the long-press never activates. The sensor's
+  // activationConstraint (500ms hold OR 5px move while in editMode) decides
+  // when a drag actually starts. Edit/× buttons stop propagation so a tap
+  // on them never starts the long-press timer.
   const cls = "row habit-sortable-row" +
     (editMode ? " in-edit-mode" : "") +
     (editMode && !isDragging ? " habit-jiggle" : "") +
@@ -62,7 +66,7 @@ function SortableHabitRow({ habit, index, editMode, isInlineEditing, eT, eS, set
   };
 
   return (
-    <div ref={setNodeRef} className={cls} style={rowStyle} {...dragProps}>
+    <div ref={setNodeRef} className={cls} style={rowStyle} {...attributes} {...listeners}>
       <div className="row-body">
         <div className="row-text">{habit.text}</div>
         {habit.sub && <div className="row-sub">{habit.sub}</div>}
@@ -89,14 +93,14 @@ function SortableHabitList({ habits, setHabits, eId, eT, eS, setEId, setET, setE
   const [editMode, setEditMode] = useState(false);
   const visibleHabits = habits.filter(h => !h.archivedAt);
 
-  // 500ms hold (with 8px tolerance) to ENTER edit mode = the long-press.
-  // Once in edit mode, drag activates with a tiny 5px movement so habits
-  // grab instantly, like iOS jiggle mode.
+  // 500ms hold (with 12px tolerance — finger jitter forgiveness on iPhone)
+  // to ENTER edit mode = the long-press. Once in edit mode, drag activates
+  // with a tiny 5px movement so habits grab instantly, like iOS jiggle mode.
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: editMode
         ? { distance: 5 }
-        : { delay: 500, tolerance: 8 },
+        : { delay: 500, tolerance: 12 },
     })
   );
 
