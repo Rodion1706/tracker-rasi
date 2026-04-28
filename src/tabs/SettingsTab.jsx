@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { DndContext, PointerSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { argDate, findTag, tagPillStyle, tagChipActiveStyle, TAG_PALETTE } from "../config";
 import TabHeader from "../components/TabHeader";
 import SectionHeader from "../components/SectionHeader";
@@ -11,6 +14,146 @@ import { DEFAULT_BANNER_LINES } from "../components/Celebration";
 
 const DAY_LABELS = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
 const inputStyle = { width: "100%", background: "transparent", border: "none", borderBottom: "1px solid var(--brd)", color: "var(--t1)", fontSize: 14, outline: "none", padding: "5px 0", boxSizing: "border-box", fontFamily: "inherit" };
+
+// Long-press on a habit row enters iOS-style "jiggle" mode: every habit
+// starts wobbling, the row becomes draggable, siblings smoothly shift
+// to make space. Tap DONE (or Esc) to exit. Order is just the array
+// index in data.habits — activeHabitsOn keeps order, so DayTab/WeekTab
+// pick up the new sequence automatically without any schema change.
+function SortableHabitRow({ habit, index, editMode, isInlineEditing, eT, eS, setET, setES, setEId, saveE, delH }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: habit.id,
+    disabled: isInlineEditing,
+  });
+  const baseStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  if (isInlineEditing) {
+    return (
+      <div ref={setNodeRef} className="brute" style={{ ...baseStyle, marginBottom: 5 }}>
+        <div className="brute-field">
+          <div className="brute-field-l">Habit</div>
+          <input value={eT} onChange={e => setET(e.target.value)} style={inputStyle} autoFocus />
+        </div>
+        <div className="brute-field">
+          <div className="brute-field-l">Subtitle</div>
+          <input value={eS} onChange={e => setES(e.target.value)} placeholder="Optional" style={{ ...inputStyle, fontSize: 12 }} />
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <div onClick={saveE} className="add-btn">SAVE</div>
+          <div onClick={() => setEId(null)} style={{ padding: "11px 16px", color: "var(--t3)", cursor: "pointer", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", fontFamily: "'Cinzel', serif" }}>CANCEL</div>
+        </div>
+      </div>
+    );
+  }
+
+  const dragProps = editMode ? { ...attributes, ...listeners } : {};
+  const cls = "row habit-sortable-row" +
+    (editMode ? " in-edit-mode" : "") +
+    (editMode && !isDragging ? " habit-jiggle" : "") +
+    (isDragging ? " habit-dragging" : "");
+  const rowStyle = {
+    ...baseStyle,
+    cursor: editMode ? (isDragging ? "grabbing" : "grab") : "default",
+    gap: 10,
+    animationDelay: editMode && !isDragging ? (index * 0.04) + "s" : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} className={cls} style={rowStyle} {...dragProps}>
+      <div className="row-body">
+        <div className="row-text">{habit.text}</div>
+        {habit.sub && <div className="row-sub">{habit.sub}</div>}
+      </div>
+      {!editMode && (
+        <>
+          <div
+            onPointerDown={e => e.stopPropagation()}
+            onClick={() => { setEId(habit.id); setET(habit.text); setES(habit.sub || ""); }}
+            style={{ fontSize: 11, color: "var(--t2)", cursor: "pointer", fontFamily: "'Cinzel', serif", letterSpacing: "0.14em", padding: "4px 10px" }}
+          >edit</div>
+          <div
+            onPointerDown={e => e.stopPropagation()}
+            onClick={() => delH(habit.id)}
+            style={{ fontSize: 18, color: "var(--t3)", cursor: "pointer", lineHeight: 1, padding: "0 4px" }}
+          >×</div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function SortableHabitList({ habits, setHabits, eId, eT, eS, setEId, setET, setES, saveE, delH }) {
+  const [editMode, setEditMode] = useState(false);
+  const visibleHabits = habits.filter(h => !h.archivedAt);
+
+  // 500ms hold (with 8px tolerance) to ENTER edit mode = the long-press.
+  // Once in edit mode, drag activates with a tiny 5px movement so habits
+  // grab instantly, like iOS jiggle mode.
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: editMode
+        ? { distance: 5 }
+        : { delay: 500, tolerance: 8 },
+    })
+  );
+
+  function handleDragStart() {
+    if (eId) setEId(null);
+    if (!editMode) setEditMode(true);
+  }
+  function handleDragEnd(event) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = habits.findIndex(h => h.id === active.id);
+    const newIndex = habits.findIndex(h => h.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    setHabits(arrayMove(habits, oldIndex, newIndex));
+  }
+
+  useEffect(() => {
+    if (!editMode) return;
+    function onKey(e) { if (e.key === "Escape") setEditMode(false); }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [editMode]);
+
+  return (
+    <>
+      {editMode && (
+        <div className="habit-edit-banner">
+          <span className="habit-edit-banner-text">REARRANGE · drag to reorder</span>
+          <div className="habit-edit-done-btn" onClick={() => setEditMode(false)}>DONE</div>
+        </div>
+      )}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={visibleHabits.map(h => h.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          {visibleHabits.map((h, i) => (
+            <SortableHabitRow
+              key={h.id}
+              habit={h}
+              index={i}
+              editMode={editMode}
+              isInlineEditing={eId === h.id}
+              eT={eT} eS={eS} setET={setET} setES={setES}
+              setEId={setEId} saveE={saveE} delH={delH}
+            />
+          ))}
+        </SortableContext>
+      </DndContext>
+    </>
+  );
+}
 
 
 function HardModeToggle({ on, setOn }) {
@@ -449,36 +592,17 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
       <SearchBox days={data.days || {}} logs={data.logs || {}} onJump={jumpToDay} tags={tags} />
 
       {/* Habits — only show currently active ones (archived stay in the
-          list invisibly so past days keep their snapshot semantics). */}
+          list invisibly so past days keep their snapshot semantics).
+          Long-press a row to enter iOS-style jiggle mode and drag to
+          reorder. Order = array index in data.habits. */}
       <SectionHeader label="HABITS" count={habits.filter(h => !h.archivedAt).length} />
-      {habits.filter(h => !h.archivedAt).map(h => {
-        if (eId === h.id) return (
-          <div key={h.id} className="brute" style={{ marginBottom: 5 }}>
-            <div className="brute-field">
-              <div className="brute-field-l">Habit</div>
-              <input value={eT} onChange={e => setET(e.target.value)} style={inputStyle} autoFocus />
-            </div>
-            <div className="brute-field">
-              <div className="brute-field-l">Subtitle</div>
-              <input value={eS} onChange={e => setES(e.target.value)} placeholder="Optional" style={{ ...inputStyle, fontSize: 12 }} />
-            </div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <div onClick={saveE} className="add-btn">SAVE</div>
-              <div onClick={() => setEId(null)} style={{ padding: "11px 16px", color: "var(--t3)", cursor: "pointer", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", fontFamily: "'Cinzel', serif" }}>CANCEL</div>
-            </div>
-          </div>
-        );
-        return (
-          <div key={h.id} className="row" style={{ cursor: "default", gap: 10 }}>
-            <div className="row-body">
-              <div className="row-text">{h.text}</div>
-              {h.sub && <div className="row-sub">{h.sub}</div>}
-            </div>
-            <div onClick={() => { setEId(h.id); setET(h.text); setES(h.sub || ""); }} style={{ fontSize: 11, color: "var(--t2)", cursor: "pointer", fontFamily: "'Cinzel', serif", letterSpacing: "0.14em", padding: "4px 10px" }}>edit</div>
-            <div onClick={() => delH(h.id)} style={{ fontSize: 18, color: "var(--t3)", cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>×</div>
-          </div>
-        );
-      })}
+      <SortableHabitList
+        habits={habits}
+        setHabits={setHabits}
+        eId={eId} eT={eT} eS={eS}
+        setEId={setEId} setET={setET} setES={setES}
+        saveE={saveE} delH={delH}
+      />
       <div className="brute" style={{ marginTop: 10 }}>
         <div className="brute-field">
           <div className="brute-field-l">New habit</div>

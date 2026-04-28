@@ -3453,3 +3453,71 @@ body::after {
   /* On desktop the FAB sits a touch further from the corner. */
   .fab { bottom: 32px; right: 32px; width: 60px; height: 60px; }
 }
+
+/* ══════ HABIT REORDER (iOS jiggle/drag mode) ══════ */
+@keyframes habitJiggle {
+  0%   { transform: rotate(-1.1deg); }
+  50%  { transform: rotate(1.1deg); }
+  100% { transform: rotate(-1.1deg); }
+}
+.habit-sortable-row {
+  -webkit-user-select: none;
+  user-select: none;
+}
+.habit-sortable-row.in-edit-mode {
+  touch-action: none;
+}
+.habit-jiggle {
+  animation: habitJiggle 0.22s ease-in-out infinite;
+  transform-origin: center center;
+}
+.habit-dragging {
+  animation: none !important;
+  transform: scale(1.04);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--brdOn);
+  z-index: 50;
+  opacity: 0.96;
+  background: var(--itemOn);
+}
+.habit-edit-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 0 12px 0;
+  padding: 9px 14px;
+  background: rgba(232, 16, 42, 0.08);
+  border: 1px solid rgba(232, 16, 42, 0.32);
+  border-radius: 8px;
+  animation: popIn 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+  position: sticky;
+  top: 8px;
+  z-index: 30;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.habit-edit-banner-text {
+  color: var(--red);
+  font-family: 'Cinzel', serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.habit-edit-done-btn {
+  padding: 7px 18px;
+  background: var(--red);
+  color: #fff;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  user-select: none;
+}
+.habit-edit-done-btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 18px rgba(232, 16, 42, 0.5);
+}
