@@ -7,7 +7,7 @@ import { scheduleReminders } from "./notifications";
 
 /* ══════ ACCESS CONTROL ══════ */
 // Only these emails can sign in. Add more if needed.
-const ALLOWED_EMAILS = ["radzivonlavyshwork@gmail.com"];
+const ALLOWED_EMAILS = ["radzivonlavyshwork@gmail.com", "dmytro.merzliakov@gmail.com"];
 
 import PillTabs from "./components/PillTabs";
 import YearStrip from "./components/YearStrip";
