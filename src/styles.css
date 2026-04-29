@@ -3455,15 +3455,19 @@ body::after {
 }
 
 /* ══════ HABIT REORDER (iOS jiggle/drag mode) ══════ */
-/* Two keyframes (A/B) at slightly different periods so neighbouring
-   rows wiggle in counter-phase, mimicking iPhone home-screen feel. */
+/* Jiggle uses the standalone `rotate` CSS property (not transform) so
+   it composes cleanly with dnd-kit's `transform: translate3d(...)` for
+   row shifts. Without this separation, the animation overrides the
+   shift transform every frame and rows appear stuck while the dragged
+   item visually "squashes" into them. Two keyframes (A/B) at slightly
+   different periods so neighbours wobble in counter-phase. */
 @keyframes habitJiggleA {
-  0%, 100% { transform: rotate(-0.55deg) translateY(0); }
-  50%      { transform: rotate(0.55deg) translateY(-0.4px); }
+  0%, 100% { rotate: -0.55deg; }
+  50%      { rotate: 0.55deg; }
 }
 @keyframes habitJiggleB {
-  0%, 100% { transform: rotate(0.5deg) translateY(0); }
-  50%      { transform: rotate(-0.5deg) translateY(-0.3px); }
+  0%, 100% { rotate: 0.5deg; }
+  50%      { rotate: -0.5deg; }
 }
 .habit-sortable-row {
   -webkit-user-select: none;
@@ -3482,7 +3486,7 @@ body::after {
 }
 .habit-dragging {
   animation: none !important;
-  transform: scale(1.04);
+  scale: 1.04;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--brdOn);
   z-index: 50;
   opacity: 0.96;
