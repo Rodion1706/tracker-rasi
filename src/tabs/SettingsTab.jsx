@@ -54,15 +54,20 @@ function SortableHabitRow({ habit, index, editMode, isInlineEditing, eT, eS, set
   // activationConstraint (500ms hold OR 5px move while in editMode) decides
   // when a drag actually starts. Edit/× buttons stop propagation so a tap
   // on them never starts the long-press timer.
+  // Alternate jiggle keyframe (A/B) per row so neighbours wobble in
+  // counter-phase. Negative delay (every 3rd row) starts the animation
+  // mid-cycle, giving the organic phase scatter iOS uses.
+  const useVariantB = index % 2 === 1;
   const cls = "row habit-sortable-row" +
     (editMode ? " in-edit-mode" : "") +
     (editMode && !isDragging ? " habit-jiggle" : "") +
+    (editMode && !isDragging && useVariantB ? " habit-jiggle-b" : "") +
     (isDragging ? " habit-dragging" : "");
   const rowStyle = {
     ...baseStyle,
     cursor: editMode ? (isDragging ? "grabbing" : "grab") : "default",
     gap: 10,
-    animationDelay: editMode && !isDragging ? (index * 0.04) + "s" : undefined,
+    animationDelay: editMode && !isDragging ? (-((index % 3) * 0.08)) + "s" : undefined,
   };
 
   return (
