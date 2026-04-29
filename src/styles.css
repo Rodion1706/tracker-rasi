@@ -3462,12 +3462,12 @@ body::after {
    item visually "squashes" into them. Two keyframes (A/B) at slightly
    different periods so neighbours wobble in counter-phase. */
 @keyframes habitJiggleA {
-  0%, 100% { rotate: -0.55deg; }
-  50%      { rotate: 0.55deg; }
+  0%, 100% { rotate: -0.4deg; }
+  50%      { rotate: 0.4deg; }
 }
 @keyframes habitJiggleB {
-  0%, 100% { rotate: 0.5deg; }
-  50%      { rotate: -0.5deg; }
+  0%, 100% { rotate: 0.36deg; }
+  50%      { rotate: -0.36deg; }
 }
 .habit-sortable-row {
   -webkit-user-select: none;
@@ -3477,19 +3477,18 @@ body::after {
   touch-action: none;
 }
 .habit-jiggle {
-  animation: habitJiggleA 0.34s ease-in-out infinite;
+  animation: habitJiggleA 0.42s ease-in-out infinite;
   transform-origin: center center;
 }
 .habit-jiggle-b {
   animation-name: habitJiggleB;
-  animation-duration: 0.38s;
+  animation-duration: 0.46s;
 }
 .habit-dragging {
   animation: none !important;
-  scale: 1.04;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--brdOn);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
   z-index: 50;
-  opacity: 0.96;
+  opacity: 0.95;
   background: var(--itemOn);
 }
 .habit-edit-banner {
