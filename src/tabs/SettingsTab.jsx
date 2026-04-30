@@ -432,7 +432,22 @@ friday | ${sampleTag3} | Third task`;
   );
 }
 
-export default function SettingsTab({ habits, setHabits, recurring, setRecurring, tags, setTags, renameTag, deleteTag, countTagUsage, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, claimNextLevel, bannerPhrases, setBannerPhrases, hardModeOn, setHardModeOn, strictStreak, setStrictStreak, jumpToDay }) {
+function TabVisibilityToggle({ id, label, sub, visibility, setVisibility }) {
+  const on = !!visibility[id];
+  return (
+    <div className="sound-toggle" onClick={() => setVisibility(Object.assign({}, visibility, { [id]: !on }))}>
+      <div className={`sound-toggle-sw ${on ? "on" : ""}`}>
+        <div className="sound-toggle-knob" />
+      </div>
+      <div>
+        <div className="sound-toggle-label">SHOW {label}</div>
+        <div className="sound-toggle-sub">{sub}</div>
+      </div>
+    </div>
+  );
+}
+
+export default function SettingsTab({ habits, setHabits, recurring, setRecurring, tags, setTags, renameTag, deleteTag, countTagUsage, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, claimNextLevel, bannerPhrases, setBannerPhrases, hardModeOn, setHardModeOn, strictStreak, setStrictStreak, tabVisibility, setTabVisibility, jumpToDay }) {
   const [newH, setNewH] = useState("");
   const [newHS, setNewHS] = useState("");
   const [eId, setEId] = useState(null);
@@ -591,7 +606,27 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
     <div>
       <TabHeader title="Settings" subtitle={`${habits.filter(h => !h.archivedAt).length} habits · ${recurring.length} recurring`} />
 
+      {/* Tab visibility — Day / Month / Log / Settings always show.
+          Week / Stats / Goals are opt-in, hidden by default. */}
+      <SectionHeader label="TABS" />
+      <TabVisibilityToggle
+        id="week" label="WEEK"
+        sub="Per-day habit grid for the current week."
+        visibility={tabVisibility} setVisibility={setTabVisibility}
+      />
+      <TabVisibilityToggle
+        id="stats" label="STATS"
+        sub="XP, level, badges, completion charts."
+        visibility={tabVisibility} setVisibility={setTabVisibility}
+      />
+      <TabVisibilityToggle
+        id="goals" label="GOALS"
+        sub="Quarterly goal tracker."
+        visibility={tabVisibility} setVisibility={setTabVisibility}
+      />
+
       {/* Bulk task import — front and center for batch loading */}
+      <div style={{ marginTop: 28 }} />
       <ImportTasks setDay={setDay} getDayData={getDayData} today={today} bulkSetDays={bulkSetDays} tags={tags} />
 
       {/* Search across history */}

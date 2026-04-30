@@ -72,19 +72,21 @@ function useData(uid) {
 // ← / → → prev/next day on Day tab
 // n → focus add-task input
 // Ignored when typing in inputs.
-function useKeyboardShortcuts(setTab, setDayOff, tab) {
+function useKeyboardShortcuts(setTab, setDayOff, tab, visibleIds) {
   useEffect(() => {
     function onKey(e) {
       const t = e.target;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
+      // Skip shortcut if tab is currently hidden via Settings toggle.
+      const goto = id => { if (visibleIds.includes(id)) setTab(id); };
       switch (e.key) {
         case "d": setTab("day"); setDayOff(0); break;
-        case "w": setTab("week"); break;
-        case "m": setTab("month"); break;
-        case "x": setTab("stats"); break;
-        case "l": setTab("log"); break;
-        case "g": setTab("goals"); break;
+        case "w": goto("week"); break;
+        case "m": goto("month"); break;
+        case "x": goto("stats"); break;
+        case "l": goto("log"); break;
+        case "g": goto("goals"); break;
         case "s": setTab("settings"); break;
         case "t": setTab("day"); setDayOff(0); break;
         case "ArrowLeft":
@@ -104,7 +106,7 @@ function useKeyboardShortcuts(setTab, setDayOff, tab) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [setTab, setDayOff, tab]);
+  }, [setTab, setDayOff, tab, visibleIds.join(",")]);
 }
 
 /* ══════ APP ROOT ══════ */
@@ -206,7 +208,32 @@ function Tracker({ uid }) {
   const [mOff, setMOff] = useState(0);
   const [habitModal, setHabitModal] = useState(null);
 
-  useKeyboardShortcuts(setTab, setDayOff, tab);
+  // Tab visibility (Settings → TABS). Day / Month / Log / Settings are
+  // always shown. Week / Stats / Goals are opt-in and start hidden.
+  const tabVisibility = data.tabVisibility || {};
+  const allTabs = [
+    ["day", "DAY", "always"],
+    ["week", "WEEK", "optional"],
+    ["month", "MONTH", "always"],
+    ["stats", "STATS", "optional"],
+    ["log", "LOG", "always"],
+    ["goals", "GOALS", "optional"],
+    ["settings", "SET", "always"],
+  ];
+  const tabs = allTabs
+    .filter(([id, , kind]) => kind === "always" || tabVisibility[id])
+    .map(([id, label]) => [id, label]);
+  const visibleTabIds = tabs.map(([id]) => id);
+
+  useKeyboardShortcuts(setTab, setDayOff, tab, visibleTabIds);
+
+  // If the active tab gets toggled off in Settings, fall back to Day.
+  useEffect(() => {
+    if (!visibleTabIds.includes(tab)) {
+      setTab("day");
+      setDayOff(0);
+    }
+  }, [visibleTabIds.join(",")]);
 
   // Re-push the notification schedule to the SW on every app load.
   // Internal helper bails out when notifications are disabled or
@@ -409,16 +436,6 @@ function Tracker({ uid }) {
     return () => clearTimeout(t);
   }, [justUnlocked.length]);
 
-  const tabs = [
-    ["day", "DAY"],
-    ["week", "WEEK"],
-    ["month", "MONTH"],
-    ["stats", "STATS"],
-    ["log", "LOG"],
-    ["goals", "GOALS"],
-    ["settings", "SET"],
-  ];
-
   if (loading) {
     return (
       <div style={{ background: "var(--bg)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -518,6 +535,8 @@ function Tracker({ uid }) {
             setHardModeOn={v => save(Object.assign({}, data, { hardModeOn: v }))}
             strictStreak={!!data.strictStreak}
             setStrictStreak={v => save(Object.assign({}, data, { strictStreak: v }))}
+            tabVisibility={tabVisibility}
+            setTabVisibility={v => save(Object.assign({}, data, { tabVisibility: v }))}
             jumpToDay={dateKey => {
               const offset = Math.round(
                 (new Date(dateKey + "T12:00:00") - new Date(today + "T12:00:00")) / 86400000
