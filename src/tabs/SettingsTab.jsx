@@ -25,8 +25,10 @@ function SortableHabitRow({ habit, index, editMode, isInlineEditing, eT, eS, set
     id: habit.id,
     disabled: isInlineEditing,
   });
+  // CSS.Translate (not Transform) so dnd-kit's auto scaleX/scaleY morph
+  // between rows of different heights doesn't stretch the dragged row.
   const baseStyle = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
     transition,
   };
 

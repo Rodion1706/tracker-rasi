@@ -16,29 +16,45 @@ function streakFlameTier(n) {
 }
 
 function Flame({ tier }) {
+  // TikTok-style flame: tall pointed silhouette, bright white-yellow core,
+  // slight asymmetric tilt. Tier color drives the body gradient via the
+  // tier-specific stop colors, the core is always warm-white so the flame
+  // looks alive even on low streaks.
+  const gid = `fg-${tier.cls}`;
+  const cid = `fc-${tier.cls}`;
   return (
     <div className={`flame flame-${tier.cls}`} aria-hidden>
-      <svg viewBox="0 0 24 32" fill="none">
+      <svg viewBox="0 0 24 36" fill="none">
         <defs>
-          <linearGradient id={`fg-${tier.cls}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="currentColor" stopOpacity="0.15" />
-            <stop offset="55%" stopColor="currentColor" stopOpacity="0.55" />
+          <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"  stopColor="currentColor" stopOpacity="0.85" />
+            <stop offset="40%" stopColor="currentColor" stopOpacity="1" />
             <stop offset="100%" stopColor="currentColor" stopOpacity="1" />
           </linearGradient>
+          <radialGradient id={cid} cx="50%" cy="78%" r="55%">
+            <stop offset="0%"  stopColor="#fff8d6" stopOpacity="1" />
+            <stop offset="55%" stopColor="#ffd24d" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#ff8a1a" stopOpacity="0" />
+          </radialGradient>
         </defs>
-        {/* Outer flame silhouette */}
+        {/* Outer flame silhouette — tall, pointed top, slight S-curve lick on the right */}
         <path
           className="flame-outer"
-          d="M12 2 C 9 8 5 11 5 17 C 5 24 8 30 12 30 C 16 30 19 24 19 17 C 19 13 17 10 16 7 C 14.5 10 14 11 13 11 C 12.5 9.5 13 6 12 2 Z"
-          fill={`url(#fg-${tier.cls})`}
+          d="M12 1.5
+             C 10 6 7.5 9 7 14
+             C 6.5 18 5 22 6 27
+             C 7 32 9.5 34.5 12 34.5
+             C 14.5 34.5 17 32 18 27
+             C 19 22 17.8 18 17 14
+             C 16.4 11 16 8 15 5
+             C 14 8.5 13.4 10 12.6 10
+             C 12 8.5 13 5 12 1.5 Z"
+          fill={`url(#${gid})`}
         />
-        {/* Inner core */}
-        <path
-          className="flame-inner"
-          d="M12 11 C 10 14 8.5 17 8.5 21 C 8.5 25 10 29 12 29 C 14 29 15.5 25 15.5 21 C 15.5 17.5 14 15 12 11 Z"
-          fill="currentColor"
-          opacity="0.6"
-        />
+        {/* Inner bright core — warm white-yellow, always glowing */}
+        <ellipse className="flame-inner" cx="12" cy="26" rx="4.6" ry="6.6" fill={`url(#${cid})`} />
+        {/* Tip highlight — small white spear at the top of the core */}
+        <path className="flame-tip" d="M12 9 C 11.4 12 11.4 15 12 17 C 12.6 15 12.6 12 12 9 Z" fill="#fff7c0" opacity="0.65" />
       </svg>
     </div>
   );
