@@ -16,45 +16,65 @@ function streakFlameTier(n) {
 }
 
 function Flame({ tier }) {
-  // TikTok-style flame: tall pointed silhouette, bright white-yellow core,
-  // slight asymmetric tilt. Tier color drives the body gradient via the
-  // tier-specific stop colors, the core is always warm-white so the flame
-  // looks alive even on low streaks.
+  // Three-layer flame with strong dance: outer wraps the silhouette,
+  // middle layer is a translucent inner shell that shimmies on its own
+  // beat, core is a bright white-yellow blob that licks up. Sparks drift
+  // off the tip on a slow loop. Each layer animates at a different speed
+  // so the whole thing reads as a living flame, not a coloured shape.
   const gid = `fg-${tier.cls}`;
   const cid = `fc-${tier.cls}`;
   return (
     <div className={`flame flame-${tier.cls}`} aria-hidden>
-      <svg viewBox="0 0 24 36" fill="none">
+      <svg viewBox="0 0 26 42" fill="none">
         <defs>
           <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"  stopColor="currentColor" stopOpacity="0.85" />
-            <stop offset="40%" stopColor="currentColor" stopOpacity="1" />
+            <stop offset="0%"  stopColor="currentColor" stopOpacity="0.7" />
+            <stop offset="35%" stopColor="currentColor" stopOpacity="1" />
             <stop offset="100%" stopColor="currentColor" stopOpacity="1" />
           </linearGradient>
-          <radialGradient id={cid} cx="50%" cy="78%" r="55%">
-            <stop offset="0%"  stopColor="#fff8d6" stopOpacity="1" />
-            <stop offset="55%" stopColor="#ffd24d" stopOpacity="0.95" />
+          <radialGradient id={cid} cx="50%" cy="80%" r="55%">
+            <stop offset="0%"  stopColor="#fffbe5" stopOpacity="1" />
+            <stop offset="50%" stopColor="#ffd24d" stopOpacity="0.95" />
             <stop offset="100%" stopColor="#ff8a1a" stopOpacity="0" />
           </radialGradient>
         </defs>
-        {/* Outer flame silhouette — tall, pointed top, slight S-curve lick on the right */}
+        {/* Layer 1 — outer flame body, sharp asymmetric tip */}
         <path
           className="flame-outer"
-          d="M12 1.5
-             C 10 6 7.5 9 7 14
-             C 6.5 18 5 22 6 27
-             C 7 32 9.5 34.5 12 34.5
-             C 14.5 34.5 17 32 18 27
-             C 19 22 17.8 18 17 14
-             C 16.4 11 16 8 15 5
-             C 14 8.5 13.4 10 12.6 10
-             C 12 8.5 13 5 12 1.5 Z"
+          d="M13 1
+             C 11 5 8 8 7 13
+             C 5.5 18 4 23 5 28
+             C 6 34 9 38 11 39
+             C 11.6 39.4 12 39.5 13 39.5
+             C 14 39.5 14.6 39.3 15 39
+             C 17.5 37.5 20.2 33 21 28
+             C 22 23 20 18 18.5 13
+             C 17.5 10 17 7 16 4
+             C 15.4 7 15 9 14 10
+             C 13.5 8 13.7 5 13 1 Z"
           fill={`url(#${gid})`}
         />
-        {/* Inner bright core — warm white-yellow, always glowing */}
-        <ellipse className="flame-inner" cx="12" cy="26" rx="4.6" ry="6.6" fill={`url(#${cid})`} />
-        {/* Tip highlight — small white spear at the top of the core */}
-        <path className="flame-tip" d="M12 9 C 11.4 12 11.4 15 12 17 C 12.6 15 12.6 12 12 9 Z" fill="#fff7c0" opacity="0.65" />
+        {/* Layer 2 — translucent inner shell, dances at its own speed */}
+        <path
+          className="flame-mid"
+          d="M13 9
+             C 11 12 9.5 16 9 21
+             C 8.5 26 9 31 11 34
+             C 11.6 34.6 12.4 34.8 13 34.8
+             C 13.7 34.8 14.4 34.5 15 34
+             C 17 31 17.6 26 17 21
+             C 16.5 16 14.6 12 13 9 Z"
+          fill="#fff5d4"
+          opacity="0.35"
+        />
+        {/* Core — warm white-yellow heart */}
+        <ellipse className="flame-core" cx="13" cy="29" rx="4.4" ry="6.4" fill={`url(#${cid})`} />
+        {/* Tip highlight — sliver of white at the upper core */}
+        <path className="flame-tip" d="M13 13 C 12.3 16 12.3 20 13 22 C 13.7 20 13.7 16 13 13 Z" fill="#fffbe5" opacity="0.85" />
+        {/* Sparks drifting off the tip */}
+        <circle className="flame-spark flame-spark-1" cx="13" cy="3"  r="0.9" fill="#fff5b8" />
+        <circle className="flame-spark flame-spark-2" cx="9.5" cy="5" r="0.7" fill="#fff5b8" />
+        <circle className="flame-spark flame-spark-3" cx="16" cy="6"  r="0.6" fill="#fff5b8" />
       </svg>
     </div>
   );
