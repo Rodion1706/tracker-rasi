@@ -16,61 +16,62 @@ function streakFlameTier(n) {
 }
 
 function Flame({ tier }) {
-  // Wider teardrop silhouette — was too narrow. Three layers each
-  // animating on a non-divisible duration (4.3s / 3.7s / 2.9s) so the
-  // pattern never quite repeats — feels like watching a real candle.
+  // Chubby teardrop — Duolingo / TikTok proportions. Width:height
+  // ~ 1:1.15 instead of 1:1.5. Three layers swaying at non-divisible
+  // durations (4.3s / 3.7s / 2.9s) so the combined motion never lines
+  // up the same way twice.
   const gid = `fg-${tier.cls}`;
   const cid = `fc-${tier.cls}`;
   return (
     <div className={`flame flame-${tier.cls}`} aria-hidden>
-      <svg viewBox="0 0 28 42" fill="none">
+      <svg viewBox="0 0 30 34" fill="none">
         <defs>
           <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"  stopColor="currentColor" stopOpacity="0.55" />
+            <stop offset="0%"  stopColor="currentColor" stopOpacity="0.6" />
             <stop offset="40%" stopColor="currentColor" stopOpacity="1" />
             <stop offset="100%" stopColor="currentColor" stopOpacity="1" />
           </linearGradient>
-          <radialGradient id={cid} cx="50%" cy="78%" r="55%">
+          <radialGradient id={cid} cx="50%" cy="76%" r="58%">
             <stop offset="0%"  stopColor="#fffce8" stopOpacity="1" />
             <stop offset="50%" stopColor="#ffd24d" stopOpacity="0.95" />
             <stop offset="100%" stopColor="#ff8a1a" stopOpacity="0" />
           </radialGradient>
         </defs>
-        {/* Layer 1 — wide teardrop body */}
+        {/* Layer 1 — chubby teardrop body, wide bulb at base */}
         <path
           className="flame-outer"
-          d="M14 2.5
-             C 13 4.5 13.2 6.5 13 9
-             C 11 13 8 17 7 22
-             C 6 27 6 32 8 35
-             C 10 37.5 12 38.5 14 38.5
-             C 16 38.5 18 37.5 20 35
-             C 22 32 22 27 21 22
-             C 20 17 17 13 15 9
-             C 14.8 6.5 15 4.5 14 2.5 Z"
+          d="M15 2.5
+             C 13.2 4.5 12.4 7 12.4 10
+             C 11.6 13 7.5 15 5 19
+             C 2.5 23 2.5 27.5 5.5 30
+             C 8.5 32 11.5 32.5 15 32.5
+             C 18.5 32.5 21.5 32 24.5 30
+             C 27.5 27.5 27.5 23 25 19
+             C 22.5 15 18.4 13 17.6 10
+             C 17.6 7 16.8 4.5 15 2.5 Z"
           fill={`url(#${gid})`}
         />
-        {/* Layer 2 — middle shell */}
+        {/* Layer 2 — translucent inner shell */}
         <path
           className="flame-mid"
-          d="M14 9
-             C 13 12 11 16 10.5 21
-             C 10 26 10.5 30 12 33
-             C 13 34 13.5 34.5 14 34.5
-             C 14.5 34.5 15 34 16 33
-             C 17.5 30 18 26 17.5 21
-             C 17 16 15 12 14 9 Z"
+          d="M15 8.5
+             C 13.5 11 11 14 10 18
+             C 9 22 9.5 26 11.5 28.5
+             C 13 30 14 30.5 15 30.5
+             C 16 30.5 17 30 18.5 28.5
+             C 20.5 26 21 22 20 18
+             C 19 14 16.5 11 15 8.5 Z"
           fill="#fff5d4"
-          opacity="0.4"
+          opacity="0.42"
         />
-        {/* Core — bright warm heart */}
-        <ellipse className="flame-core" cx="14" cy="30" rx="4.2" ry="6.4" fill={`url(#${cid})`} />
-        {/* Tip — tall sliver at upper core */}
-        <path className="flame-tip" d="M14 14 C 13.4 17 13.4 21 14 23 C 14.6 21 14.6 17 14 14 Z" fill="#fffce8" opacity="0.8" />
-        {/* Sparks — three at irregular cycles */}
-        <circle className="flame-spark flame-spark-1" cx="14" cy="3" r="0.9" fill="#fff5b8" />
-        <circle className="flame-spark flame-spark-2" cx="11" cy="5" r="0.6" fill="#fff5b8" />
-        <circle className="flame-spark flame-spark-3" cx="17" cy="7" r="0.5" fill="#fff5b8" />
+        {/* Core — bright warm heart, sits low and wide */}
+        <ellipse className="flame-core" cx="15" cy="24" rx="5.2" ry="6.6" fill={`url(#${cid})`} />
+        {/* Tip — sliver at upper core */}
+        <path className="flame-tip" d="M15 12 C 14.3 15 14.3 19 15 21 C 15.7 19 15.7 15 15 12 Z" fill="#fffce8" opacity="0.85" />
+        {/* Sparks at irregular cycles */}
+        <circle className="flame-spark flame-spark-1" cx="15"   cy="2.5" r="1"   fill="#fff5b8" />
+        <circle className="flame-spark flame-spark-2" cx="11.5" cy="4"   r="0.7" fill="#fff5b8" />
+        <circle className="flame-spark flame-spark-3" cx="18.5" cy="5"   r="0.6" fill="#fff5b8" />
       </svg>
     </div>
   );

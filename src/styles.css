@@ -1893,8 +1893,8 @@ body::after {
   display: inline-flex;
   align-items: flex-end;
   margin-left: 10px;
-  width: 26px;
-  height: 38px;
+  width: 30px;
+  height: 34px;
   vertical-align: baseline;
   position: relative;
   transform-origin: 50% 95%;
@@ -1959,40 +1959,40 @@ body::after {
   0%, 100% { opacity: 0.28; transform: scale(0.92); }
   50%      { opacity: 0.55; transform: scale(1.14); }
 }
-/* Many irregular keyframes (not just 3-4 evenly spaced) approximate
-   the random flicker of a real flame. Each layer has its own keyframe
-   pattern so they don't sync into a visible loop. */
+/* Big amplitude irregular keyframes — flame must visibly breathe and
+   sway, not just glow. Each layer has a different pattern so they
+   never sync into a perceptible loop. */
 @keyframes flameSwayOuter {
   0%   { transform: translateY(0)    skewX(0deg)    scaleY(1)    scaleX(1); }
-  9%   { transform: translateY(-1px) skewX(-1deg)   scaleY(1.04) scaleX(0.97); }
-  21%  { transform: translateY(0)    skewX(0.5deg)  scaleY(1.01) scaleX(1.02); }
-  34%  { transform: translateY(-2px) skewX(-1.5deg) scaleY(1.07) scaleX(0.94); }
-  47%  { transform: translateY(-1px) skewX(2deg)    scaleY(1.02) scaleX(1.04); }
-  58%  { transform: translateY(0)    skewX(-0.5deg) scaleY(0.97) scaleX(1.01); }
-  71%  { transform: translateY(-2px) skewX(1deg)    scaleY(1.05) scaleX(0.96); }
-  83%  { transform: translateY(-1px) skewX(1.5deg)  scaleY(1.0)  scaleX(1.03); }
-  93%  { transform: translateY(-1px) skewX(-1deg)   scaleY(1.03) scaleX(0.98); }
+  9%   { transform: translateY(-2px) skewX(-3deg)   scaleY(1.10) scaleX(0.92); }
+  21%  { transform: translateY(-1px) skewX(1deg)    scaleY(1.04) scaleX(1.05); }
+  34%  { transform: translateY(-3px) skewX(-4deg)   scaleY(1.16) scaleX(0.88); }
+  47%  { transform: translateY(-1px) skewX(4deg)    scaleY(1.06) scaleX(1.07); }
+  58%  { transform: translateY(0)    skewX(-1.5deg) scaleY(0.93) scaleX(1.04); }
+  71%  { transform: translateY(-3px) skewX(2deg)    scaleY(1.12) scaleX(0.91); }
+  83%  { transform: translateY(-1px) skewX(3deg)    scaleY(1.0)  scaleX(1.06); }
+  93%  { transform: translateY(-2px) skewX(-2deg)   scaleY(1.07) scaleX(0.95); }
   100% { transform: translateY(0)    skewX(0deg)    scaleY(1)    scaleX(1); }
 }
 @keyframes flameSwayMid {
   0%   { transform: translateY(0)    skewX(0deg)    scaleY(1)    scaleX(1); }
-  11%  { transform: translateY(-1px) skewX(2deg)    scaleY(1.06) scaleX(0.93); }
-  23%  { transform: translateY(-2px) skewX(0deg)    scaleY(1.02) scaleX(1.04); }
-  37%  { transform: translateY(0)    skewX(-2deg)   scaleY(1.08) scaleX(0.92); }
-  49%  { transform: translateY(-1px) skewX(1deg)    scaleY(0.97) scaleX(1.03); }
-  62%  { transform: translateY(-2px) skewX(-1deg)   scaleY(1.05) scaleX(0.96); }
-  74%  { transform: translateY(0)    skewX(2deg)    scaleY(1.01) scaleX(0.95); }
-  87%  { transform: translateY(-1px) skewX(0deg)    scaleY(1.04) scaleX(1.02); }
+  11%  { transform: translateY(-2px) skewX(4deg)    scaleY(1.13) scaleX(0.88); }
+  23%  { transform: translateY(-3px) skewX(0deg)    scaleY(1.05) scaleX(1.06); }
+  37%  { transform: translateY(-1px) skewX(-4deg)   scaleY(1.18) scaleX(0.86); }
+  49%  { transform: translateY(-2px) skewX(2deg)    scaleY(0.92) scaleX(1.07); }
+  62%  { transform: translateY(-3px) skewX(-2deg)   scaleY(1.11) scaleX(0.92); }
+  74%  { transform: translateY(0)    skewX(4deg)    scaleY(1.02) scaleX(0.93); }
+  87%  { transform: translateY(-2px) skewX(0deg)    scaleY(1.09) scaleX(1.04); }
   100% { transform: translateY(0)    skewX(0deg)    scaleY(1)    scaleX(1); }
 }
 @keyframes flameSwayCore {
   0%   { transform: translateY(0)    scaleY(1)    scaleX(1); }
-  13%  { transform: translateY(-1px) scaleY(1.10) scaleX(0.94); }
-  28%  { transform: translateY(-2px) scaleY(0.96) scaleX(1.04); }
-  41%  { transform: translateY(0)    scaleY(1.05) scaleX(0.97); }
-  56%  { transform: translateY(-1px) scaleY(1.13) scaleX(0.92); }
-  69%  { transform: translateY(0)    scaleY(0.94) scaleX(1.05); }
-  82%  { transform: translateY(-1px) scaleY(1.08) scaleX(0.96); }
+  13%  { transform: translateY(-1px) scaleY(1.20) scaleX(0.88); }
+  28%  { transform: translateY(-2px) scaleY(0.90) scaleX(1.10); }
+  41%  { transform: translateY(0)    scaleY(1.10) scaleX(0.94); }
+  56%  { transform: translateY(-2px) scaleY(1.25) scaleX(0.85); }
+  69%  { transform: translateY(0)    scaleY(0.88) scaleX(1.12); }
+  82%  { transform: translateY(-1px) scaleY(1.15) scaleX(0.92); }
   100% { transform: translateY(0)    scaleY(1)    scaleX(1); }
 }
 @keyframes flameSpark {
