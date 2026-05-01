@@ -1842,7 +1842,13 @@ body::after {
   display: inline-block;
   width: 0.62em;
   height: 1em;
+  /* overflow: clip + overflow-clip-margin lets the text-shadow bleed
+     outside the digit's bounding box without revealing adjacent
+     digits in the column. Falls back to overflow: hidden where unsupported,
+     which crops shadow into a hard rectangle (the bug we are fixing). */
   overflow: hidden;
+  overflow: clip;
+  overflow-clip-margin: 0.6em;
   position: relative;
   vertical-align: baseline;
 }
