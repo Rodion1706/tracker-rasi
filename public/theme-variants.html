@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Theme variants — pick a minimalism direction</title>
+<title>Theme variants — 30 minimalism directions</title>
 <style>
   /* ════ PAGE FRAME ════ */
   :root {
@@ -26,334 +26,324 @@
   }
   h1 { text-align: center; font-size: 22px; letter-spacing: 0.34em; color: var(--pg-red); text-shadow: 0 0 18px var(--pg-red); margin: 0 0 8px; font-weight: 700; }
   .sub { text-align: center; color: var(--pg-t2); font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.18em; margin-bottom: 32px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 22px; max-width: 1300px; margin: 0 auto; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 22px; max-width: 1400px; margin: 0 auto; }
+  /* Whole card adopts the theme — bg, font, border, label color. So
+     each card visually IS the theme, not a theme island in a dark frame. */
   .theme-card-wrap {
-    background: var(--pg-card);
-    border: 1px solid var(--pg-brd);
-    border-radius: 12px;
-    padding: 18px;
-    transition: border-color 0.2s, transform 0.2s;
-  }
-  .theme-card-wrap:hover { border-color: rgba(232,16,42,0.5); transform: translateY(-2px); }
-  .theme-label { font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 4px; text-align: center; }
-  .theme-num { color: var(--pg-red); font-family: 'JetBrains Mono', monospace; margin-right: 8px; font-weight: 700; }
-  .theme-desc { font-size: 10.5px; color: var(--pg-t3); line-height: 1.5; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em; text-align: center; margin-top: 8px; }
-
-  /* ════ MOCK UI BASE — overridden per theme ════ */
-  .mock {
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 12px;
-    min-height: 280px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .mock-header { display: flex; justify-content: space-between; align-items: baseline; }
-  .mock-brand { font-weight: 700; }
-  .mock-date  { opacity: 0.6; font-size: 11px; }
-  .mock-tabs { display: flex; gap: 4px; }
-  .mock-tab { flex: 1; text-align: center; padding: 6px 4px; font-size: 10px; letter-spacing: 0.14em; }
-  .mock-stat { padding: 12px; display: flex; justify-content: space-between; align-items: center; }
-  .mock-stat-label { font-size: 10px; letter-spacing: 0.18em; }
-  .mock-stat-value { font-weight: 700; font-size: 22px; }
-  .mock-habit { display: flex; align-items: center; gap: 10px; padding: 8px 4px; font-size: 12px; }
-  .mock-check { width: 14px; height: 14px; flex-shrink: 0; }
-
-  /* ════ V1 PURE B&W ════ */
-  [data-theme="v1"] .mock {
-    background: #ffffff;
-    color: #000000;
-    font-family: 'Inter', system-ui, sans-serif;
-    border: 1px solid #000;
-    border-radius: 0;
-  }
-  [data-theme="v1"] .mock-tab { border: 1px solid #000; text-transform: uppercase; }
-  [data-theme="v1"] .mock-tab.active { background: #000; color: #fff; }
-  [data-theme="v1"] .mock-stat { border: 1px solid #000; }
-  [data-theme="v1"] .mock-check { border: 1px solid #000; border-radius: 0; }
-  [data-theme="v1"] .mock-check.on { background: #000; }
-  [data-theme="v1"] .mock-habit { border-bottom: 1px solid #000; }
-
-  /* ════ V2 CREAM SOFT ════ */
-  [data-theme="v2"] .mock {
-    background: #f5efe6;
-    color: #3a2818;
-    font-family: Georgia, 'Times New Roman', serif;
-    border: 1px solid #e0d4be;
-    border-radius: 6px;
-  }
-  [data-theme="v2"] .mock-tab { border-radius: 14px; padding: 6px 10px; }
-  [data-theme="v2"] .mock-tab.active { background: #a85a32; color: #fff; }
-  [data-theme="v2"] .mock-stat { background: #ede4d2; border-radius: 6px; }
-  [data-theme="v2"] .mock-stat-value { color: #a85a32; }
-  [data-theme="v2"] .mock-check { border: 1.5px solid #a85a32; border-radius: 50%; }
-  [data-theme="v2"] .mock-check.on { background: #a85a32; }
-
-  /* ════ V3 DARK LINEAR ════ */
-  [data-theme="v3"] .mock {
-    background: #0a0a0e;
-    color: #d4d4dc;
-    font-family: 'Inter', system-ui, sans-serif;
-    border: 1px solid #1d1d26;
-    border-radius: 10px;
-  }
-  [data-theme="v3"] .mock-brand { color: #fff; }
-  [data-theme="v3"] .mock-tab { color: #6e6878; padding: 6px 8px; border-radius: 6px; }
-  [data-theme="v3"] .mock-tab.active { background: rgba(124,92,255,0.12); color: #a896ff; }
-  [data-theme="v3"] .mock-stat { background: #14141c; border: 1px solid #1d1d26; border-radius: 8px; }
-  [data-theme="v3"] .mock-stat-label { color: #6e6878; }
-  [data-theme="v3"] .mock-stat-value { color: #7c5cff; }
-  [data-theme="v3"] .mock-check { border: 1.5px solid #2a2a36; border-radius: 4px; }
-  [data-theme="v3"] .mock-check.on { background: #7c5cff; border-color: #7c5cff; }
-
-  /* ════ V4 APPLE LIGHT ════ */
-  [data-theme="v4"] .mock {
-    background: #f5f5f7;
-    color: #1d1d1f;
-    font-family: -apple-system, 'SF Pro Text', 'Inter', sans-serif;
-    border: none;
+    background: var(--bg, var(--pg-card));
+    color: var(--t1, var(--pg-t1));
+    font-family: var(--font, 'Cinzel', serif);
+    border: var(--bw, 1px) solid var(--brd, var(--pg-brd));
     border-radius: 14px;
+    padding: 18px 16px 14px;
+    transition: transform 0.2s;
+    box-shadow: var(--shadow, none);
   }
-  [data-theme="v4"] .mock-tab { padding: 6px 10px; border-radius: 8px; color: #6e6e73; }
-  [data-theme="v4"] .mock-tab.active { background: #fff; color: #1d1d1f; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-  [data-theme="v4"] .mock-stat { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-  [data-theme="v4"] .mock-stat-value { color: #007aff; }
-  [data-theme="v4"] .mock-check { border-radius: 50%; border: 1.5px solid #c7c7cc; }
-  [data-theme="v4"] .mock-check.on { background: #007aff; border-color: #007aff; }
+  .theme-card-wrap:hover { transform: translateY(-2px); }
+  .theme-label { font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase; margin-top: 14px; text-align: center; color: var(--t1); }
+  .theme-num { color: var(--accent); margin-right: 8px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .theme-desc { font-size: 10.5px; color: var(--t3); line-height: 1.5; letter-spacing: 0.04em; text-align: center; margin-top: 6px; }
 
-  /* ════ V5 BRUTALIST ════ */
-  [data-theme="v5"] .mock {
-    background: #fff;
-    color: #000;
-    font-family: 'JetBrains Mono', 'Courier New', monospace;
-    border: 3px solid #000;
-    border-radius: 0;
-  }
-  [data-theme="v5"] .mock-tab { border: 2px solid #000; text-transform: uppercase; padding: 6px; }
-  [data-theme="v5"] .mock-tab.active { background: #ff3030; color: #fff; }
-  [data-theme="v5"] .mock-stat { border: 2px solid #000; }
-  [data-theme="v5"] .mock-stat-value { color: #ff3030; }
-  [data-theme="v5"] .mock-check { border: 2px solid #000; border-radius: 0; }
-  [data-theme="v5"] .mock-check.on { background: #ff3030; }
-  [data-theme="v5"] .mock-habit { border-bottom: 1.5px solid #000; }
-
-  /* ════ V6 NOTION SOFT ════ */
-  [data-theme="v6"] .mock {
-    background: #f8f7f4;
-    color: #37352f;
-    font-family: 'Inter', -apple-system, sans-serif;
-    border: 1px solid rgba(0,0,0,0.06);
-    border-radius: 6px;
-  }
-  [data-theme="v6"] .mock-tab { color: rgba(55,53,47,0.5); padding: 6px 8px; border-radius: 4px; }
-  [data-theme="v6"] .mock-tab.active { background: rgba(55,53,47,0.08); color: #37352f; }
-  [data-theme="v6"] .mock-stat { background: rgba(0,0,0,0.025); border-radius: 6px; }
-  [data-theme="v6"] .mock-check { border: 1.5px solid rgba(0,0,0,0.2); border-radius: 4px; }
-  [data-theme="v6"] .mock-check.on { background: #37352f; border-color: #37352f; }
-
-  /* ════ V7 JAPANESE ZEN ════ */
-  [data-theme="v7"] .mock {
-    background: #faf8f5;
-    color: #2a2520;
-    font-family: 'Noto Serif', Georgia, serif;
+  /* ════ MOCK DAY UI BASE ════ */
+  /* Day-mock is now just the inner layout. Background/font/border come
+     from the wrapper. Inner card sections still get their own bg via
+     .stat / .lvl / .small (via --card variable). */
+  .day-mock {
+    background: transparent;
+    color: var(--t1);
+    font-family: inherit;
     border: none;
-    border-top: 1px solid rgba(0,0,0,0.08);
-    border-bottom: 1px solid rgba(0,0,0,0.08);
-    border-radius: 0;
-    padding: 28px 20px;
-    gap: 20px;
+    padding: 4px 2px;
   }
-  [data-theme="v7"] .mock-tabs { gap: 0; border-top: 1px solid rgba(0,0,0,0.06); border-bottom: 1px solid rgba(0,0,0,0.06); padding: 4px 0; }
-  [data-theme="v7"] .mock-tab { padding: 4px 0; border-right: 1px solid rgba(0,0,0,0.06); }
-  [data-theme="v7"] .mock-tab:last-child { border-right: none; }
-  [data-theme="v7"] .mock-tab.active { color: #b03020; }
-  [data-theme="v7"] .mock-stat { border: none; padding: 8px 0; border-top: 1px solid rgba(0,0,0,0.06); border-bottom: 1px solid rgba(0,0,0,0.06); }
-  [data-theme="v7"] .mock-stat-value { color: #b03020; font-style: italic; }
-  [data-theme="v7"] .mock-check { width: 8px; height: 8px; border-radius: 50%; border: 1px solid #b03020; }
-  [data-theme="v7"] .mock-check.on { background: #b03020; }
+  .day-mock .header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+  .day-mock .brand { color: var(--accent, var(--t1)); font-weight: 700; font-size: 14px; letter-spacing: var(--brand-ls, 0.06em); }
+  .day-mock .brand-sub { color: var(--t3, #999); font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; margin-top: 2px; }
+  .day-mock .date-main { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; }
+  .day-mock .date-sub { font-size: 8px; color: var(--t3); margin-top: 2px; letter-spacing: 0.1em; }
 
-  /* ════ V8 BAUHAUS ════ */
-  [data-theme="v8"] .mock {
-    background: #f0e8d8;
-    color: #1a1a1a;
-    font-family: 'Futura', 'Inter', sans-serif;
-    font-weight: 700;
-    border: 2px solid #1a1a1a;
-    border-radius: 0;
+  .day-mock .tabs { display: flex; gap: var(--tab-gap, 2px); margin-bottom: 10px; }
+  .day-mock .tab {
+    flex: 1; text-align: center; padding: 5px 2px;
+    font-size: 8.5px; letter-spacing: 0.14em;
+    color: var(--t2, #888);
+    border: var(--tab-border, none);
+    border-radius: var(--tab-rad, 4px);
+    background: var(--tab-bg, transparent);
+    text-transform: uppercase;
   }
-  [data-theme="v8"] .mock-tabs { gap: 0; }
-  [data-theme="v8"] .mock-tab { border: 2px solid #1a1a1a; text-transform: uppercase; padding: 6px 4px; margin-right: -2px; }
-  [data-theme="v8"] .mock-tab:last-child { margin-right: 0; }
-  [data-theme="v8"] .mock-tab.active { background: #d6202d; color: #fff; }
-  [data-theme="v8"] .mock-stat { border: 2px solid #1a1a1a; background: #f4c220; }
-  [data-theme="v8"] .mock-stat-value { color: #1e60a8; }
-  [data-theme="v8"] .mock-check { border: 2px solid #1a1a1a; border-radius: 50%; }
-  [data-theme="v8"] .mock-check.on { background: #d6202d; }
+  .day-mock .tab.active {
+    background: var(--accent, #000);
+    color: var(--accent-text, var(--bg, #fff));
+    border-color: var(--accent, #000);
+  }
 
-  /* ════ V9 SEPIA PAPER ════ */
-  [data-theme="v9"] .mock {
-    background: #ede2c5;
-    background-image: linear-gradient(rgba(0,0,0,0.015) 1px, transparent 1px);
-    background-size: 1px 4px;
-    color: #3a2818;
-    font-family: Georgia, 'Times New Roman', serif;
-    border: 1px solid #6b4a30;
-    border-radius: 2px;
-  }
-  [data-theme="v9"] .mock-tab { color: #6b4a30; padding: 6px 4px; border-bottom: 1px dotted #6b4a30; }
-  [data-theme="v9"] .mock-tab.active { color: #3a2818; border-bottom-color: #3a2818; font-weight: 700; }
-  [data-theme="v9"] .mock-stat { border-top: 1px dotted #6b4a30; border-bottom: 1px dotted #6b4a30; }
-  [data-theme="v9"] .mock-stat-value { font-style: italic; color: #6b4a30; }
-  [data-theme="v9"] .mock-check { width: 12px; height: 12px; border: 1px solid #6b4a30; border-radius: 0; }
-  [data-theme="v9"] .mock-check.on { background: #6b4a30; }
-  [data-theme="v9"] .mock-habit { border-bottom: 1px dotted rgba(107,74,48,0.4); }
+  .day-mock .ystrip { margin-bottom: 10px; }
+  .day-mock .y-label { font-size: 8px; color: var(--t3); display: block; margin-bottom: 3px; letter-spacing: 0.14em; }
+  .day-mock .y-bar { height: 3px; background: var(--brd-soft, #eee); border-radius: 1.5px; overflow: hidden; }
+  .day-mock .y-fill { height: 100%; background: var(--accent); }
 
-  /* ════ V10 CYBER MONO ════ */
-  [data-theme="v10"] .mock {
-    background: #0c0c0c;
-    color: #00ff88;
-    font-family: 'JetBrains Mono', 'Courier New', monospace;
-    border: 1px solid #1a1a1a;
-    border-radius: 0;
+  .day-mock .today { text-align: center; font-size: 9px; color: var(--accent); letter-spacing: 0.2em; margin: 10px 0 6px; font-weight: 700; text-transform: uppercase; }
+
+  .day-mock .stats { display: flex; gap: 6px; margin-bottom: 6px; }
+  .day-mock .stat {
+    flex: 1; padding: 7px 10px;
+    background: var(--card, transparent);
+    border: var(--bw, 1px) solid var(--brd, #ddd);
+    border-radius: var(--rad, 6px);
   }
-  [data-theme="v10"] .mock-brand::before { content: "> "; color: #00ff88; }
-  [data-theme="v10"] .mock-tab { border: 1px solid #1a1a1a; text-transform: uppercase; padding: 6px 4px; color: #4a8068; }
-  [data-theme="v10"] .mock-tab.active { background: #00ff88; color: #000; }
-  [data-theme="v10"] .mock-stat { border: 1px solid #1a1a1a; }
-  [data-theme="v10"] .mock-stat-label { color: #4a8068; }
-  [data-theme="v10"] .mock-stat-value { color: #ff8800; }
-  [data-theme="v10"] .mock-check { border: 1px solid #1a4030; border-radius: 0; }
-  [data-theme="v10"] .mock-check.on { background: #00ff88; }
-  [data-theme="v10"] .mock-habit::before { content: "[*] "; color: #4a8068; }
+  .day-mock .stat-l { font-size: 8px; letter-spacing: 0.18em; color: var(--t3); margin-bottom: 1px; text-transform: uppercase; }
+  .day-mock .stat-v { font-size: 18px; font-weight: 700; color: var(--accent); }
+
+  .day-mock .small-row { display: flex; gap: 6px; margin-bottom: 8px; }
+  .day-mock .small {
+    flex: 1; padding: 4px 8px;
+    background: var(--card);
+    border-radius: var(--rad);
+    border: var(--bw) solid var(--brd);
+    font-size: 8.5px; letter-spacing: 0.14em;
+    color: var(--t2);
+  }
+  .day-mock .small b { color: var(--accent); font-weight: 700; }
+
+  .day-mock .prog { height: 5px; background: var(--brd-soft, #eee); border-radius: 2.5px; overflow: hidden; margin-bottom: 8px; }
+  .day-mock .prog-fill { height: 100%; background: var(--accent); width: 100%; }
+
+  .day-mock .lvl {
+    padding: 7px 9px;
+    background: var(--card);
+    border-radius: var(--rad);
+    border: var(--bw) solid var(--brd);
+    margin-bottom: 10px;
+  }
+  .day-mock .lvl-h { font-size: 8.5px; letter-spacing: 0.14em; margin-bottom: 4px; text-transform: uppercase; }
+  .day-mock .lvl-h b { color: var(--accent); }
+  .day-mock .lvl-bar { height: 3px; background: var(--brd-soft, #eee); border-radius: 1.5px; overflow: hidden; margin-bottom: 3px; }
+  .day-mock .lvl-fill { height: 100%; background: var(--accent); width: 42%; }
+  .day-mock .lvl-sub { font-size: 7.5px; color: var(--t3); letter-spacing: 0.1em; }
+
+  .day-mock .checklist-h { font-size: 8.5px; letter-spacing: 0.18em; color: var(--t3); margin: 12px 0 4px; text-transform: uppercase; }
+  .day-mock .habit {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 2px; font-size: 11px;
+    border-bottom: var(--habit-divider, 1px solid var(--brd-soft, transparent));
+  }
+  .day-mock .habit:last-child { border-bottom: none; }
+  .day-mock .check {
+    width: 13px; height: 13px;
+    border: var(--bw, 1px) solid var(--brd, #000);
+    border-radius: var(--check-rad, 0);
+    flex-shrink: 0;
+    background: var(--check-bg, transparent);
+  }
+  .day-mock .habit.on .check { background: var(--accent); border-color: var(--accent); }
+  .day-mock .habit.on .habit-text { text-decoration: line-through; color: var(--t3); }
+
+  .day-mock .footer { text-align: center; font-size: 8px; color: var(--t3); letter-spacing: 0.22em; margin-top: 12px; text-transform: uppercase; }
+
+  /* ════ THEMES ════ */
+
+  /* 01 Pure B&W */
+  [data-theme="v1"] { --bg:#fff; --card:#fff; --t1:#000; --t2:#444; --t3:#888; --accent:#000; --accent-text:#fff; --brd:#000; --brd-soft:#ddd; --bw:1px; --rad:0; --font:Inter,system-ui,sans-serif; --check-rad:0; --tab-border:1px solid #000; --habit-divider:1px solid #ddd; }
+
+  /* 02 Cream Soft Paper */
+  [data-theme="v2"] { --bg:#f5efe6; --card:#ede4d2; --t1:#3a2818; --t2:#7a6248; --t3:#a89888; --accent:#a85a32; --accent-text:#fff; --brd:#dfd2b8; --brd-soft:#dfd2b8; --bw:1px; --rad:6px; --font:Georgia,'Times New Roman',serif; --check-rad:50%; --tab-rad:14px; }
+
+  /* 03 Linear Dark Violet */
+  [data-theme="v3"] { --bg:#0a0a0e; --card:#14141c; --t1:#d8d8e0; --t2:#888894; --t3:#5a5a66; --accent:#7c5cff; --accent-text:#fff; --brd:#1d1d26; --brd-soft:#1d1d26; --bw:1px; --rad:8px; --font:Inter,system-ui,sans-serif; --check-rad:4px; --tab-rad:6px; --tab-bg:transparent; }
+
+  /* 04 Apple Light Blue */
+  [data-theme="v4"] { --bg:#f5f5f7; --card:#fff; --t1:#1d1d1f; --t2:#6e6e73; --t3:#a8a8ad; --accent:#007aff; --accent-text:#fff; --brd:transparent; --brd-soft:#e5e5ea; --bw:0px; --rad:12px; --font:-apple-system,'SF Pro Text',Inter,sans-serif; --check-rad:50%; --tab-rad:8px; --shadow:0 1px 4px rgba(0,0,0,0.04); }
+
+  /* 05 Brutalist Mono Red */
+  [data-theme="v5"] { --bg:#fff; --card:#fff; --t1:#000; --t2:#333; --t3:#666; --accent:#ff3030; --accent-text:#fff; --brd:#000; --brd-soft:#000; --bw:2px; --rad:0; --font:'JetBrains Mono','Courier New',monospace; --check-rad:0; --tab-border:2px solid #000; --habit-divider:1.5px solid #000; }
+
+  /* 06 Notion Off-White */
+  [data-theme="v6"] { --bg:#f7f6f3; --card:#fff; --t1:#37352f; --t2:rgba(55,53,47,0.65); --t3:rgba(55,53,47,0.4); --accent:#37352f; --accent-text:#fff; --brd:rgba(55,53,47,0.09); --brd-soft:rgba(55,53,47,0.09); --bw:1px; --rad:6px; --font:Inter,-apple-system,sans-serif; --check-rad:4px; --tab-rad:4px; }
+
+  /* 07 Japanese Zen Paper */
+  [data-theme="v7"] { --bg:#faf8f5; --card:#faf8f5; --t1:#2a2520; --t2:#6e6258; --t3:#a89c92; --accent:#b03020; --accent-text:#fff; --brd:rgba(0,0,0,0.08); --brd-soft:rgba(0,0,0,0.05); --bw:1px; --rad:0; --font:'Noto Serif',Georgia,serif; --check-rad:50%; }
+
+  /* 08 Sepia Aged Paper */
+  [data-theme="v8"] { --bg:#ede2c5; --card:#e3d7b5; --t1:#3a2818; --t2:#6b4a30; --t3:#9a8260; --accent:#6b4a30; --accent-text:#fdf8e8; --brd:#a78c5a; --brd-soft:rgba(107,74,48,0.25); --bw:1px; --rad:2px; --font:Georgia,'Times New Roman',serif; --check-rad:0; }
+
+  /* 09 Cyber Terminal */
+  [data-theme="v9"] { --bg:#0c0c0c; --card:#0c0c0c; --t1:#00ff88; --t2:#4a8068; --t3:#2a5040; --accent:#ff8800; --accent-text:#000; --brd:#1a3020; --brd-soft:#1a3020; --bw:1px; --rad:0; --font:'JetBrains Mono','Courier New',monospace; --check-rad:0; --tab-border:1px solid #1a3020; }
+
+  /* 10 Nordic Soft Blue */
+  [data-theme="v10"] { --bg:#f0f3f7; --card:#fff; --t1:#2c3e50; --t2:#5d6d7e; --t3:#aeb6bf; --accent:#5b8fb4; --accent-text:#fff; --brd:#dde4ec; --brd-soft:#e8eef4; --bw:1px; --rad:8px; --font:Inter,system-ui,sans-serif; --check-rad:50%; --tab-rad:6px; }
+
+  /* 11 Solarized Light */
+  [data-theme="v11"] { --bg:#fdf6e3; --card:#eee8d5; --t1:#586e75; --t2:#839496; --t3:#93a1a1; --accent:#268bd2; --accent-text:#fdf6e3; --brd:#eee8d5; --brd-soft:#eee8d5; --bw:1px; --rad:4px; --font:'JetBrains Mono',Menlo,monospace; --check-rad:2px; }
+
+  /* 12 Solarized Dark */
+  [data-theme="v12"] { --bg:#002b36; --card:#073642; --t1:#93a1a1; --t2:#657b83; --t3:#586e75; --accent:#b58900; --accent-text:#002b36; --brd:#073642; --brd-soft:#073642; --bw:1px; --rad:4px; --font:'JetBrains Mono',Menlo,monospace; --check-rad:2px; }
+
+  /* 13 Stripe Indigo */
+  [data-theme="v13"] { --bg:#fff; --card:#f6f9fc; --t1:#0a2540; --t2:#425466; --t3:#8898aa; --accent:#635bff; --accent-text:#fff; --brd:#e3e8ee; --brd-soft:#e3e8ee; --bw:1px; --rad:8px; --font:Inter,-apple-system,sans-serif; --check-rad:4px; --tab-rad:6px; }
+
+  /* 14 Vercel Pure */
+  [data-theme="v14"] { --bg:#fff; --card:#fafafa; --t1:#000; --t2:#666; --t3:#999; --accent:#000; --accent-text:#fff; --brd:#eaeaea; --brd-soft:#eaeaea; --bw:1px; --rad:6px; --font:Inter,system-ui,sans-serif; --check-rad:4px; --tab-rad:6px; }
+
+  /* 15 iA Writer Cream */
+  [data-theme="v15"] { --bg:#f5efe0; --card:#f5efe0; --t1:#262626; --t2:#5a5a5a; --t3:#9a9a9a; --accent:#1a3a6e; --accent-text:#f5efe0; --brd:#d8d0bd; --brd-soft:#e2dac8; --bw:1px; --rad:0; --font:'JetBrains Mono','Nitti',Menlo,monospace; --check-rad:0; }
+
+  /* 16 Coffee Brown Dark */
+  [data-theme="v16"] { --bg:#3a2d20; --card:#4a3a2c; --t1:#f0e5d2; --t2:#c0a888; --t3:#80684c; --accent:#d4a35a; --accent-text:#3a2d20; --brd:#594434; --brd-soft:#594434; --bw:1px; --rad:6px; --font:Georgia,serif; --check-rad:50%; --tab-rad:6px; }
+
+  /* 17 Forest Green Soft */
+  [data-theme="v17"] { --bg:#f0eee5; --card:#fff; --t1:#1f3a2e; --t2:#5a6e60; --t3:#8a9a8e; --accent:#3d6b4f; --accent-text:#fff; --brd:#dde2d6; --brd-soft:#e8ece2; --bw:1px; --rad:8px; --font:Inter,system-ui,sans-serif; --check-rad:50%; --tab-rad:6px; }
+
+  /* 18 Lavender Pale */
+  [data-theme="v18"] { --bg:#eee7f5; --card:#fff; --t1:#3a2c50; --t2:#6e5c80; --t3:#a08eaa; --accent:#9568b8; --accent-text:#fff; --brd:#e0d6ed; --brd-soft:#ebe2f3; --bw:1px; --rad:12px; --font:Inter,system-ui,sans-serif; --check-rad:50%; --tab-rad:14px; }
+
+  /* 19 Monaco Hairline */
+  [data-theme="v19"] { --bg:#fefefe; --card:#fff; --t1:#101010; --t2:#666; --t3:#aaa; --accent:#101010; --accent-text:#fff; --brd:#eee; --brd-soft:#f0f0f0; --bw:0.5px; --rad:0; --font:Inter,system-ui,sans-serif; --check-rad:0; }
+
+  /* 20 OLED Black + Lime */
+  [data-theme="v20"] { --bg:#000; --card:#0a0a0a; --t1:#fff; --t2:#888; --t3:#555; --accent:#a0ff20; --accent-text:#000; --brd:#1a1a1a; --brd-soft:#1a1a1a; --bw:1px; --rad:6px; --font:Inter,system-ui,sans-serif; --check-rad:4px; --tab-rad:6px; }
+
+  /* 21 Pastel Mix Soft */
+  [data-theme="v21"] { --bg:#fef8f8; --card:#fff; --t1:#3a3030; --t2:#6e5e5e; --t3:#aa9e9e; --accent:#f08090; --accent-text:#fff; --brd:#f5e0e0; --brd-soft:#fceaea; --bw:1px; --rad:14px; --font:Inter,system-ui,sans-serif; --check-rad:50%; --tab-rad:14px; }
+
+  /* 22 Graph Paper */
+  [data-theme="v22"] { --bg:#fafcff; --card:#fff; --t1:#1a3a6e; --t2:#5a7aa0; --t3:#8aa0c0; --accent:#1a3a6e; --accent-text:#fff; --brd:#c0d0e0; --brd-soft:#dde6f0; --bw:1px; --rad:0; --font:'JetBrains Mono',monospace; --check-rad:0; }
+  .theme-card-wrap[data-theme="v22"] {
+    background-image:
+      linear-gradient(rgba(26,58,110,0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(26,58,110,0.07) 1px, transparent 1px);
+    background-size: 8px 8px, 8px 8px;
+    background-color: #fafcff;
+  }
+
+  /* 23 Newspaper Print */
+  [data-theme="v23"] { --bg:#f5f0e6; --card:#f5f0e6; --t1:#1a1a1a; --t2:#4a4a4a; --t3:#8a8a8a; --accent:#1a1a1a; --accent-text:#f5f0e6; --brd:#1a1a1a; --brd-soft:#cac4b4; --bw:2px; --rad:0; --font:Georgia,'Times New Roman',serif; --check-rad:0; }
+
+  /* 24 Material Tonal Purple */
+  [data-theme="v24"] { --bg:#fef7ff; --card:#fff; --t1:#1d1b20; --t2:#49454f; --t3:#79747e; --accent:#6750a4; --accent-text:#fff; --brd:#e7e0ec; --brd-soft:#f1e9f5; --bw:1px; --rad:16px; --font:Inter,'Roboto',sans-serif; --check-rad:50%; --tab-rad:18px; }
+
+  /* 25 Mint Fresh */
+  [data-theme="v25"] { --bg:#f4faf7; --card:#fff; --t1:#1f3a2e; --t2:#5a7a6a; --t3:#9aaba0; --accent:#3eb489; --accent-text:#fff; --brd:#dceee5; --brd-soft:#e7f3ed; --bw:1px; --rad:10px; --font:Inter,system-ui,sans-serif; --check-rad:50%; --tab-rad:8px; }
+
+  /* 26 Indigo Ink */
+  [data-theme="v26"] { --bg:#fafaf5; --card:#fff; --t1:#1a1a4a; --t2:#4a4a7a; --t3:#8a8aa0; --accent:#1a1a4a; --accent-text:#fafaf5; --brd:#dadae5; --brd-soft:#e8e8ee; --bw:1px; --rad:4px; --font:'EB Garamond',Georgia,serif; --check-rad:0; }
+
+  /* 27 GitHub Light */
+  [data-theme="v27"] { --bg:#f6f8fa; --card:#fff; --t1:#1f2328; --t2:#656d76; --t3:#8c959f; --accent:#2da44e; --accent-text:#fff; --brd:#d0d7de; --brd-soft:#eaeef2; --bw:1px; --rad:6px; --font:-apple-system,'Segoe UI',Inter,sans-serif; --check-rad:4px; --tab-rad:6px; }
+
+  /* 28 Calm Slate Dark */
+  [data-theme="v28"] { --bg:#1e2228; --card:#2a2f37; --t1:#e5e1d6; --t2:#a0a4ad; --t3:#5e636e; --accent:#f5b876; --accent-text:#1e2228; --brd:#363c46; --brd-soft:#363c46; --bw:1px; --rad:8px; --font:Inter,system-ui,sans-serif; --check-rad:50%; --tab-rad:6px; }
+
+  /* 29 Risograph Pastel */
+  [data-theme="v29"] { --bg:#fef4ec; --card:#fff; --t1:#3a2840; --t2:#6e5a7a; --t3:#a896b0; --accent:#e87c70; --accent-text:#fff; --brd:#f0d8c8; --brd-soft:#f7e6d8; --bw:1px; --rad:8px; --font:Inter,system-ui,sans-serif; --check-rad:50%; --tab-rad:8px; }
+
+  /* 30 Greyscale + Mustard */
+  [data-theme="v30"] { --bg:#fafafa; --card:#fff; --t1:#222; --t2:#666; --t3:#aaa; --accent:#d4a838; --accent-text:#fff; --brd:#e5e5e5; --brd-soft:#ededed; --bw:1px; --rad:4px; --font:Inter,system-ui,sans-serif; --check-rad:4px; --tab-rad:4px; }
 </style>
 </head>
 <body>
-  <h1>THEME VARIANTS — MINIMALISM</h1>
-  <div class="sub">Pick a direction. Each card shows the same UI in a different style.</div>
+  <h1>THEME VARIANTS — 30</h1>
+  <div class="sub">Each card = full Day-page mock in that theme</div>
 
-  <div class="grid">
-
+  <template id="theme-template">
     <div class="theme-card-wrap">
-      <div class="mock" data-theme="v1">
-        <div class="mock-header"><div class="mock-brand">RODION</div><div class="mock-date">WED · APR 30</div></div>
-        <div class="mock-tabs"><div class="mock-tab active">DAY</div><div class="mock-tab">MONTH</div><div class="mock-tab">LOG</div><div class="mock-tab">SET</div></div>
-        <div class="mock-stat"><div class="mock-stat-label">STREAK</div><div class="mock-stat-value">3d</div></div>
-        <div class="mock-habit"><div class="mock-check on"></div><div>Wake up 7:00</div></div>
-        <div class="mock-habit"><div class="mock-check"></div><div>Glass of warm water</div></div>
+      <div class="day-mock">
+        <div class="header">
+          <div>
+            <div class="brand">RODION</div>
+            <div class="brand-sub">Command Center</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="date-main">WED · APR 30</div>
+            <div class="date-sub">W18 · Q2 · 2026</div>
+          </div>
+        </div>
+        <div class="tabs">
+          <div class="tab active">Day</div>
+          <div class="tab">Month</div>
+          <div class="tab">Log</div>
+          <div class="tab">Set</div>
+        </div>
+        <div class="ystrip">
+          <div class="y-label">W18 / 52 · 34.6%</div>
+          <div class="y-bar"><div class="y-fill" style="width:34.6%;"></div></div>
+        </div>
+        <div class="today">‹ &nbsp; TODAY &nbsp; ›</div>
+        <div class="stats">
+          <div class="stat"><div class="stat-l">Streak</div><div class="stat-v">3d</div></div>
+          <div class="stat"><div class="stat-l">Done</div><div class="stat-v">23/23</div></div>
+        </div>
+        <div class="small-row">
+          <div class="small">Best · <b>3d</b></div>
+          <div class="small">Week · <b>3/7</b></div>
+        </div>
+        <div class="prog"><div class="prog-fill"></div></div>
+        <div class="lvl">
+          <div class="lvl-h">Lvl <b>2</b> · Disciplined</div>
+          <div class="lvl-bar"><div class="lvl-fill"></div></div>
+          <div class="lvl-sub">1200 XP to Sharpened</div>
+        </div>
+        <div class="checklist-h">Daily Checklist · 2/5</div>
+        <div class="habit on"><div class="check"></div><div class="habit-text">Wake up 7:00</div></div>
+        <div class="habit on"><div class="check"></div><div class="habit-text">Glass of warm water</div></div>
+        <div class="habit"><div class="check"></div><div class="habit-text">Morning without phone</div></div>
+        <div class="habit"><div class="check"></div><div class="habit-text">No TikTok before 2 PM</div></div>
+        <div class="habit"><div class="check"></div><div class="habit-text">Channel slot 20:00-21:00</div></div>
+        <div class="footer">Subtraction is the strategy</div>
       </div>
-      <div class="theme-label"><span class="theme-num">01</span>Pure B&W</div>
-      <div class="theme-desc">Hard contrast, sans-serif, sharp corners. Maximum minimalism.</div>
+      <div class="theme-label"><span class="theme-num"></span><span class="name"></span></div>
+      <div class="theme-desc"></div>
     </div>
+  </template>
 
-    <div class="theme-card-wrap">
-      <div class="mock" data-theme="v2">
-        <div class="mock-header"><div class="mock-brand">Rodion</div><div class="mock-date">Wed · Apr 30</div></div>
-        <div class="mock-tabs"><div class="mock-tab active">Day</div><div class="mock-tab">Month</div><div class="mock-tab">Log</div><div class="mock-tab">Set</div></div>
-        <div class="mock-stat"><div class="mock-stat-label">Streak</div><div class="mock-stat-value">3d</div></div>
-        <div class="mock-habit"><div class="mock-check on"></div><div>Wake up 7:00</div></div>
-        <div class="mock-habit"><div class="mock-check"></div><div>Glass of warm water</div></div>
-      </div>
-      <div class="theme-label"><span class="theme-num">02</span>Cream Soft</div>
-      <div class="theme-desc">Beige paper tones, serif font, terracotta accent. Cozy reading.</div>
-    </div>
+  <div class="grid" id="grid"></div>
 
-    <div class="theme-card-wrap">
-      <div class="mock" data-theme="v3">
-        <div class="mock-header"><div class="mock-brand">RODION</div><div class="mock-date">Wed · Apr 30</div></div>
-        <div class="mock-tabs"><div class="mock-tab active">Day</div><div class="mock-tab">Month</div><div class="mock-tab">Log</div><div class="mock-tab">Set</div></div>
-        <div class="mock-stat"><div class="mock-stat-label">STREAK</div><div class="mock-stat-value">3d</div></div>
-        <div class="mock-habit"><div class="mock-check on"></div><div>Wake up 7:00</div></div>
-        <div class="mock-habit"><div class="mock-check"></div><div>Glass of warm water</div></div>
-      </div>
-      <div class="theme-label"><span class="theme-num">03</span>Linear Dark</div>
-      <div class="theme-desc">Near-black bg, single violet accent, subtle borders. Modern tech tool.</div>
-    </div>
+<script>
+  const themes = [
+    { id: 'v1',  name: 'Pure B&W',          desc: 'Black on white, sans-serif, sharp 0-radius corners. Maximum contrast.' },
+    { id: 'v2',  name: 'Cream Soft Paper',  desc: 'Beige paper bg, terracotta accent, serif font. Warm, calm, book-like.' },
+    { id: 'v3',  name: 'Linear Dark Violet',desc: 'Near-black bg, violet accent, soft borders. Modern dev-tool aesthetic.' },
+    { id: 'v4',  name: 'Apple Light Blue',  desc: 'Soft greys, blue accent, no borders, gentle shadows. iOS Settings vibe.' },
+    { id: 'v5',  name: 'Brutalist Mono Red',desc: 'Heavy 2px black borders, monospace, single red accent. Loud minimalism.' },
+    { id: 'v6',  name: 'Notion Off-White',  desc: 'Off-white bg, charcoal text, no decoration. Clean writing-tool feel.' },
+    { id: 'v7',  name: 'Japanese Zen',      desc: 'Paper bg, hairline borders, vermilion accent, serif. Tea ceremony quiet.' },
+    { id: 'v8',  name: 'Sepia Aged Paper',  desc: 'Aged ivory bg, brown ink, serif italic. Bullet-journal mood.' },
+    { id: 'v9',  name: 'Cyber Terminal',    desc: 'Black bg, lime green mono text, amber accent. Hacker/IDE feel.' },
+    { id: 'v10', name: 'Nordic Soft Blue',  desc: 'Cool greys + ice blue accent. Scandinavian calm.' },
+    { id: 'v11', name: 'Solarized Light',   desc: 'Famous ergonomic palette — warm cream + muted blue accent. Mono.' },
+    { id: 'v12', name: 'Solarized Dark',    desc: 'Solarized inverted — deep teal-grey + amber accent. Mono.' },
+    { id: 'v13', name: 'Stripe Indigo',     desc: 'Pure white + saturated indigo. SaaS-product polish.' },
+    { id: 'v14', name: 'Vercel Pure',       desc: 'White / off-white / black. No accent color, contrast only. Inter font.' },
+    { id: 'v15', name: 'iA Writer Cream',   desc: 'Cream bg, mono font, navy accent. Distraction-free writer.' },
+    { id: 'v16', name: 'Coffee Brown',      desc: 'Espresso-brown dark bg, gold accent, serif. Speakeasy warmth.' },
+    { id: 'v17', name: 'Forest Green',      desc: 'Off-white + soft sage green. Outdoor-journal calm.' },
+    { id: 'v18', name: 'Lavender Pale',     desc: 'Pale purple bg, dusty lavender accent. Soft, gentle, dreamy.' },
+    { id: 'v19', name: 'Monaco Hairline',   desc: 'Pure white + 0.5px hairline borders. Maximum subtlety.' },
+    { id: 'v20', name: 'OLED Black + Lime', desc: 'Pure #000 bg + neon lime accent. Battery-friendly, futuristic.' },
+    { id: 'v21', name: 'Pastel Pink Soft',  desc: 'Pale pink bg, coral accent, large radii. Gentle / cute.' },
+    { id: 'v22', name: 'Graph Paper',       desc: 'Light grid bg, navy ink, mono. Like a notebook page.' },
+    { id: 'v23', name: 'Newspaper Print',   desc: 'Cream bg, 2px black borders, serif. Editorial / front-page.' },
+    { id: 'v24', name: 'Material Tonal',    desc: 'Soft purple-tinted off-white, big rounded corners. Material You vibes.' },
+    { id: 'v25', name: 'Mint Fresh',        desc: 'White bg + emerald-mint accent. Airy and light.' },
+    { id: 'v26', name: 'Indigo Ink',        desc: 'Off-white bg + deep indigo, serif (EB Garamond). Pen-on-paper feel.' },
+    { id: 'v27', name: 'GitHub Light',      desc: 'GitHub default — off-white + green accent, Segoe/SF font. Familiar.' },
+    { id: 'v28', name: 'Calm Slate Dark',   desc: 'Dark slate bg + warm peach accent. Easy on eyes at night.' },
+    { id: 'v29', name: 'Risograph Pastel',  desc: 'Risograph print colors — peach bg + coral accent. Quirky-friendly.' },
+    { id: 'v30', name: 'Greyscale + Mustard',desc: 'Pure greyscale + single mustard yellow accent. Restrained but warm.' },
+  ];
 
-    <div class="theme-card-wrap">
-      <div class="mock" data-theme="v4">
-        <div class="mock-header"><div class="mock-brand">Rodion</div><div class="mock-date">Wed, Apr 30</div></div>
-        <div class="mock-tabs"><div class="mock-tab active">Day</div><div class="mock-tab">Month</div><div class="mock-tab">Log</div><div class="mock-tab">Set</div></div>
-        <div class="mock-stat"><div class="mock-stat-label">Streak</div><div class="mock-stat-value">3d</div></div>
-        <div class="mock-habit"><div class="mock-check on"></div><div>Wake up 7:00</div></div>
-        <div class="mock-habit"><div class="mock-check"></div><div>Glass of warm water</div></div>
-      </div>
-      <div class="theme-label"><span class="theme-num">04</span>Apple Light</div>
-      <div class="theme-desc">SF font, soft greys, blue accent, gentle shadows. iOS Settings-style.</div>
-    </div>
+  const tpl = document.getElementById('theme-template');
+  const grid = document.getElementById('grid');
+  themes.forEach(t => {
+    const node = tpl.content.cloneNode(true);
+    // data-theme on the WRAPPER so theme variables cascade to every
+    // child including label, desc, day-mock, stats etc.
+    node.querySelector('.theme-card-wrap').dataset.theme = t.id;
+    node.querySelector('.theme-num').textContent = t.id.slice(1).padStart(2, '0');
+    node.querySelector('.name').textContent = t.name;
+    node.querySelector('.theme-desc').textContent = t.desc;
+    grid.appendChild(node);
+  });
+</script>
 
-    <div class="theme-card-wrap">
-      <div class="mock" data-theme="v5">
-        <div class="mock-header"><div class="mock-brand">RODION_</div><div class="mock-date">2026.04.30</div></div>
-        <div class="mock-tabs"><div class="mock-tab active">DAY</div><div class="mock-tab">MONTH</div><div class="mock-tab">LOG</div><div class="mock-tab">SET</div></div>
-        <div class="mock-stat"><div class="mock-stat-label">STREAK</div><div class="mock-stat-value">3d</div></div>
-        <div class="mock-habit"><div class="mock-check on"></div><div>WAKE UP 7:00</div></div>
-        <div class="mock-habit"><div class="mock-check"></div><div>GLASS OF WARM WATER</div></div>
-      </div>
-      <div class="theme-label"><span class="theme-num">05</span>Brutalist</div>
-      <div class="theme-desc">Heavy black borders, monospace, single red accent. Loud minimalism.</div>
-    </div>
-
-    <div class="theme-card-wrap">
-      <div class="mock" data-theme="v6">
-        <div class="mock-header"><div class="mock-brand">Rodion</div><div class="mock-date">Wed · Apr 30</div></div>
-        <div class="mock-tabs"><div class="mock-tab active">Day</div><div class="mock-tab">Month</div><div class="mock-tab">Log</div><div class="mock-tab">Set</div></div>
-        <div class="mock-stat"><div class="mock-stat-label">Streak</div><div class="mock-stat-value">3d</div></div>
-        <div class="mock-habit"><div class="mock-check on"></div><div>Wake up 7:00</div></div>
-        <div class="mock-habit"><div class="mock-check"></div><div>Glass of warm water</div></div>
-      </div>
-      <div class="theme-label"><span class="theme-num">06</span>Notion Soft</div>
-      <div class="theme-desc">Off-white bg, charcoal text, no decorations, just whitespace. Calm productivity.</div>
-    </div>
-
-    <div class="theme-card-wrap">
-      <div class="mock" data-theme="v7">
-        <div class="mock-header"><div class="mock-brand">羅 RODION</div><div class="mock-date">水 · 4.30</div></div>
-        <div class="mock-tabs"><div class="mock-tab active">DAY</div><div class="mock-tab">MONTH</div><div class="mock-tab">LOG</div><div class="mock-tab">SET</div></div>
-        <div class="mock-stat"><div class="mock-stat-label">STREAK</div><div class="mock-stat-value">3</div></div>
-        <div class="mock-habit"><div class="mock-check on"></div><div>Wake up 7:00</div></div>
-        <div class="mock-habit"><div class="mock-check"></div><div>Glass of warm water</div></div>
-      </div>
-      <div class="theme-label"><span class="theme-num">07</span>Japanese Zen</div>
-      <div class="theme-desc">Paper bg, hairline borders, vermilion dot accent, lots of whitespace.</div>
-    </div>
-
-    <div class="theme-card-wrap">
-      <div class="mock" data-theme="v8">
-        <div class="mock-header"><div class="mock-brand">RODION</div><div class="mock-date">30.04</div></div>
-        <div class="mock-tabs"><div class="mock-tab active">DAY</div><div class="mock-tab">MON</div><div class="mock-tab">LOG</div><div class="mock-tab">SET</div></div>
-        <div class="mock-stat"><div class="mock-stat-label">STREAK</div><div class="mock-stat-value">3d</div></div>
-        <div class="mock-habit"><div class="mock-check on"></div><div>WAKE UP 7:00</div></div>
-        <div class="mock-habit"><div class="mock-check"></div><div>WARM WATER</div></div>
-      </div>
-      <div class="theme-label"><span class="theme-num">08</span>Bauhaus</div>
-      <div class="theme-desc">Primary colors (red/yellow/blue) on cream, geometric, bold sans. Loud personality.</div>
-    </div>
-
-    <div class="theme-card-wrap">
-      <div class="mock" data-theme="v9">
-        <div class="mock-header"><div class="mock-brand">Rodion</div><div class="mock-date">XXX · Apr 30</div></div>
-        <div class="mock-tabs"><div class="mock-tab active">Day</div><div class="mock-tab">Month</div><div class="mock-tab">Log</div><div class="mock-tab">Set</div></div>
-        <div class="mock-stat"><div class="mock-stat-label">Streak</div><div class="mock-stat-value">3 days</div></div>
-        <div class="mock-habit"><div class="mock-check on"></div><div>Wake up 7:00</div></div>
-        <div class="mock-habit"><div class="mock-check"></div><div>Glass of warm water</div></div>
-      </div>
-      <div class="theme-label"><span class="theme-num">09</span>Sepia Paper</div>
-      <div class="theme-desc">Aged paper texture, serif italic, dotted borders. Bullet-journal mood.</div>
-    </div>
-
-    <div class="theme-card-wrap">
-      <div class="mock" data-theme="v10">
-        <div class="mock-header"><div class="mock-brand">rodion</div><div class="mock-date">~/2026.04.30</div></div>
-        <div class="mock-tabs"><div class="mock-tab active">DAY</div><div class="mock-tab">MNTH</div><div class="mock-tab">LOG</div><div class="mock-tab">SET</div></div>
-        <div class="mock-stat"><div class="mock-stat-label">STREAK</div><div class="mock-stat-value">3d</div></div>
-        <div class="mock-habit"><div class="mock-check on"></div><div>wake_up_07:00</div></div>
-        <div class="mock-habit"><div class="mock-check"></div><div>warm_water</div></div>
-      </div>
-      <div class="theme-label"><span class="theme-num">10</span>Cyber Mono</div>
-      <div class="theme-desc">Terminal-style. Black bg, mono font, neon green. For night-coder vibe.</div>
-    </div>
-
-  </div>
 </body>
 </html>
