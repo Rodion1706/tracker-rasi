@@ -483,6 +483,8 @@ body::after {
   text-shadow: 0 0 14px rgba(232, 16, 42, 0.6);
   animation: numberPop 0.55s cubic-bezier(0.3, 1.6, 0.5, 1) both;
   transition: transform 0.3s, text-shadow 0.3s;
+  display: flex;
+  align-items: center;
 }
 .stat-card:hover .sc-value { transform: scale(1.06); text-shadow: 0 0 20px var(--red), 0 0 32px rgba(232, 16, 42, 0.55); }
 
@@ -1894,11 +1896,12 @@ body::after {
 .flame {
   display: inline-flex;
   align-items: flex-end;
-  margin-left: 10px;
+  margin-left: auto;        /* pushes flame to the right edge of .sc-value */
   width: 38px;
   height: 52px;
   vertical-align: baseline;
   position: relative;
+  flex-shrink: 0;
 }
 .flame::after {
   content: '';
