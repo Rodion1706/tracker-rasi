@@ -16,10 +16,10 @@ function streakFlameTier(n) {
 }
 
 function Flame({ tier }) {
-  // Chubby teardrop — Duolingo / TikTok proportions. Width:height
-  // ~ 1:1.15 instead of 1:1.5. Three layers swaying at non-divisible
-  // durations (4.3s / 3.7s / 2.9s) so the combined motion never lines
-  // up the same way twice.
+  // Chubby teardrop body + two side tongues that lick independently —
+  // gives the multi-flame "languages" feel of a real fire instead of a
+  // single rounded blob. Core gradient warmed toward orange (less
+  // banana-yellow) so it matches the tracker's red brand palette.
   const gid = `fg-${tier.cls}`;
   const cid = `fc-${tier.cls}`;
   return (
@@ -32,12 +32,36 @@ function Flame({ tier }) {
             <stop offset="100%" stopColor="currentColor" stopOpacity="1" />
           </linearGradient>
           <radialGradient id={cid} cx="50%" cy="76%" r="58%">
-            <stop offset="0%"  stopColor="#fffce8" stopOpacity="1" />
-            <stop offset="50%" stopColor="#ffd24d" stopOpacity="0.95" />
-            <stop offset="100%" stopColor="#ff8a1a" stopOpacity="0" />
+            <stop offset="0%"  stopColor="#fff5d6" stopOpacity="1" />
+            <stop offset="45%" stopColor="#ffb84d" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#ff5e1a" stopOpacity="0" />
           </radialGradient>
         </defs>
-        {/* Layer 1 — chubby teardrop body, wide bulb at base */}
+
+        {/* Side tongue — left, slim, licks above the shoulder */}
+        <path
+          className="flame-tongue-l"
+          d="M9 8
+             C 7.5 10.5 6.5 13 7 15.5
+             C 7.4 17 8.4 17.5 9.2 17.5
+             C 10.2 17.5 11 16.8 11.4 15.5
+             C 11.6 13 11 10.5 9 8 Z"
+          fill="currentColor"
+          opacity="0.85"
+        />
+        {/* Side tongue — right, slimmer, licks shorter */}
+        <path
+          className="flame-tongue-r"
+          d="M21 6
+             C 19.5 8.5 18.8 11 19.2 13.5
+             C 19.5 14.8 20.4 15.3 21.1 15.3
+             C 22 15.3 22.7 14.7 23 13.5
+             C 23.4 11 23 8.5 21 6 Z"
+          fill="currentColor"
+          opacity="0.92"
+        />
+
+        {/* Layer 1 — main body, chubby teardrop with wide bulb at base */}
         <path
           className="flame-outer"
           d="M15 2.5
@@ -64,14 +88,14 @@ function Flame({ tier }) {
           fill="#fff5d4"
           opacity="0.42"
         />
-        {/* Core — bright warm heart, sits low and wide */}
+        {/* Core — bright warm heart */}
         <ellipse className="flame-core" cx="15" cy="24" rx="5.2" ry="6.6" fill={`url(#${cid})`} />
         {/* Tip — sliver at upper core */}
-        <path className="flame-tip" d="M15 12 C 14.3 15 14.3 19 15 21 C 15.7 19 15.7 15 15 12 Z" fill="#fffce8" opacity="0.85" />
+        <path className="flame-tip" d="M15 12 C 14.3 15 14.3 19 15 21 C 15.7 19 15.7 15 15 12 Z" fill="#fff5d6" opacity="0.85" />
         {/* Sparks at irregular cycles */}
-        <circle className="flame-spark flame-spark-1" cx="15"   cy="2.5" r="1"   fill="#fff5b8" />
-        <circle className="flame-spark flame-spark-2" cx="11.5" cy="4"   r="0.7" fill="#fff5b8" />
-        <circle className="flame-spark flame-spark-3" cx="18.5" cy="5"   r="0.6" fill="#fff5b8" />
+        <circle className="flame-spark flame-spark-1" cx="15"   cy="2.5" r="1"   fill="#fff0b0" />
+        <circle className="flame-spark flame-spark-2" cx="11.5" cy="4"   r="0.7" fill="#fff0b0" />
+        <circle className="flame-spark flame-spark-3" cx="18.5" cy="5"   r="0.6" fill="#fff0b0" />
       </svg>
     </div>
   );
