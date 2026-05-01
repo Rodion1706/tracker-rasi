@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Flame — symmetric + rising detached tongues</title>
+<title>Flame — 3 independent tongues + rising sparks</title>
 <style>
   :root {
     --bg: #0e0c12;
@@ -33,7 +33,7 @@
   .num { color: var(--red); font-family: 'JetBrains Mono', monospace; margin-right: 8px; font-weight: 700; }
   .desc { font-size: 10.5px; color: var(--t3); line-height: 1.5; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em; text-transform: none; }
 
-  /* Same particles as before */
+  /* Particles */
   .particles { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
   .particle { position: absolute; border-radius: 50%; bottom: 8px; }
   @keyframes p-rise {
@@ -43,9 +43,8 @@
     100% { transform: translate(var(--dx2,0), -150px) scale(0.18); opacity: 0; background: #b81818; }
   }
 
-  /* Detached rising tongues above the flame body — procedural via JS.
-     Each tongue lives ~1.6s, drifts up, deforms, fades. */
-  .tongues-layer { position: absolute; left: 50%; bottom: 90px; transform: translateX(-50%); width: 60px; height: 80px; pointer-events: none; }
+  /* Detached rising tongues above the flame body */
+  .tongues-layer { position: absolute; left: 50%; bottom: 100px; transform: translateX(-50%); width: 60px; height: 90px; pointer-events: none; }
   .tongue {
     position: absolute;
     left: 50%;
@@ -62,56 +61,76 @@
     100% { transform: translate(calc(-50% + var(--tx4,0)), -78px) scale(0.25, 0.4); opacity: 0; }
   }
 
-  /* Flame body — same single-layer styling as the V13 chubby blob */
+  /* Flame body container */
   .flame-shape {
     width: 76px;
     height: 100px;
     filter: drop-shadow(0 0 14px rgba(255,80,20,0.7)) drop-shadow(0 0 26px rgba(232,16,42,0.3));
-    transform-origin: 50% 95%;
     position: relative;
     z-index: 2;
   }
   .flame-shape svg { width: 100%; height: 100%; overflow: visible; }
 
-  /* ═══ ANIMATIONS ═══ */
+  /* Three independent tongue paths share the same gradient and overlap
+     at the base. transform-origin set in user-units to each tongue's
+     own bottom, so they pivot in place. */
+  .t-left   { transform-origin: 16px 96px; }
+  .t-center { transform-origin: 35px 96px; }
+  .t-right  { transform-origin: 54px 96px; }
 
-  /* 01 — JS Noise RAF on body */
-  .v1 .flame-shape { /* JS handles transform */ }
+  /* ═══ V1 — JS NOISE PER-TONGUE (RAF) ═══ */
+  /* No CSS animations — JS animates each tongue independently */
 
-  /* 02 — Hyper-noisy 11-stop CSS */
-  .v2 .flame-shape { animation: a2 3.7s cubic-bezier(0.45,0.05,0.55,0.95) infinite; }
-  @keyframes a2 {
-    0%   { transform: scaleY(1) skewX(0) translateY(0); }
-    7%   { transform: scaleY(1.05) skewX(-2deg) translateY(-1px); }
-    17%  { transform: scaleY(1.02) skewX(1deg) translateY(0); }
-    29%  { transform: scaleY(1.1) skewX(-3deg) translateY(-2px); }
-    41%  { transform: scaleY(1.04) skewX(3deg) translateY(-1px); }
-    53%  { transform: scaleY(0.95) skewX(0) translateY(0); }
-    61%  { transform: scaleY(1.08) skewX(-2deg) translateY(-2px); }
-    73%  { transform: scaleY(1.0) skewX(2deg) translateY(-1px); }
-    81%  { transform: scaleY(1.07) skewX(-1deg) translateY(-2px); }
-    91%  { transform: scaleY(1.02) skewX(1deg) translateY(0); }
-    100% { transform: scaleY(1) skewX(0) translateY(0); }
+  /* ═══ V2 — HYPER-NOISY CSS PER-TONGUE ═══ */
+  .v2 .t-left   { animation: t2L 2.3s cubic-bezier(0.45,0.05,0.55,0.95) infinite; }
+  .v2 .t-center { animation: t2C 3.1s cubic-bezier(0.45,0.05,0.55,0.95) infinite; }
+  .v2 .t-right  { animation: t2R 2.7s cubic-bezier(0.45,0.05,0.55,0.95) infinite; }
+  @keyframes t2L {
+    0%,100% { transform: skewX(0) scaleY(1); }
+    13% { transform: skewX(-3deg) scaleY(1.07); }
+    34% { transform: skewX(2deg) scaleY(0.96); }
+    52% { transform: skewX(-2deg) scaleY(1.05); }
+    71% { transform: skewX(3deg) scaleY(1.02); }
+    88% { transform: skewX(-1deg) scaleY(1.04); }
+  }
+  @keyframes t2C {
+    0%,100% { transform: skewX(0) scaleY(1); }
+    11% { transform: skewX(2deg) scaleY(1.06); }
+    27% { transform: skewX(-3deg) scaleY(1.1); }
+    44% { transform: skewX(1deg) scaleY(0.96); }
+    63% { transform: skewX(3deg) scaleY(1.08); }
+    81% { transform: skewX(-2deg) scaleY(1.04); }
+  }
+  @keyframes t2R {
+    0%,100% { transform: skewX(0) scaleY(1); }
+    16% { transform: skewX(3deg) scaleY(1.05); }
+    37% { transform: skewX(-2deg) scaleY(0.97); }
+    58% { transform: skewX(2deg) scaleY(1.06); }
+    78% { transform: skewX(-3deg) scaleY(1.03); }
   }
 
-  /* 03 — Wood-fire dance medium */
-  .v3 .flame-shape { animation: a3 1.6s ease-in-out infinite; }
-  @keyframes a3 {
-    0%,100% { transform: skewX(0) scaleY(1) scaleX(1); }
-    33% { transform: skewX(-3deg) scaleY(1.06) scaleX(0.96); }
-    66% { transform: skewX(3deg) scaleY(1.04) scaleX(0.97); }
-  }
+  /* ═══ V3 — WOOD DANCE PER-TONGUE ═══ */
+  .v3 .t-left   { animation: t3L 1.7s ease-in-out infinite; }
+  .v3 .t-center { animation: t3C 2.1s ease-in-out infinite; }
+  .v3 .t-right  { animation: t3R 1.9s ease-in-out infinite; }
+  @keyframes t3L { 0%,100% { transform: skewX(0) scaleY(1); } 50% { transform: skewX(-3deg) scaleY(1.06); } }
+  @keyframes t3C { 0%,100% { transform: skewX(0) scaleY(1); } 50% { transform: skewX(2deg) scaleY(1.08); } }
+  @keyframes t3R { 0%,100% { transform: skewX(0) scaleY(1); } 50% { transform: skewX(3deg) scaleY(1.05); } }
 
-  /* 04 — Turbulence warp */
+  /* ═══ V4 — TURBULENCE WARP (whole body, all tongues warped together) ═══ */
   .v4 .flame-shape svg { filter: url(#turb-filter); }
-  .v4 .flame-shape { animation: a4 3s ease-in-out infinite; }
-  @keyframes a4 { 0%,100% { transform: skewX(0) scaleY(1); } 50% { transform: skewX(-2deg) scaleY(1.04); } }
+  .v4 .t-left   { animation: t4L 2.0s ease-in-out infinite; }
+  .v4 .t-center { animation: t4C 2.6s ease-in-out infinite; }
+  .v4 .t-right  { animation: t4R 2.2s ease-in-out infinite; }
+  @keyframes t4L { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(1.04); } }
+  @keyframes t4C { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(1.07); } }
+  @keyframes t4R { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(1.04); } }
 
 </style>
 </head>
 <body>
-  <h1>SYMMETRIC FLAME + RISING TONGUES</h1>
-  <div class="sub">Same V13 styling. New symmetric silhouette + detached tongues that rise off the top.</div>
+  <h1>3 INDEPENDENT TONGUES</h1>
+  <div class="sub">Symmetric body. 3 separate tongue paths sharing the base, each animating on its own.</div>
 
   <svg width="0" height="0" style="position:absolute;">
     <defs>
@@ -128,52 +147,67 @@
     <div class="card v1">
       <div class="stage"><div class="particles"></div><div class="tongues-layer"></div><div class="flame-shape"></div></div>
       <div class="label"><span class="num">01</span>JS Noise RAF</div>
-      <div class="desc">Body sways via Perlin-style noise (RAF). Detached tongues spawn off the top every ~700ms.</div>
+      <div class="desc">Each tongue gets its own Perlin-style noise output. Truly independent, never repeats.</div>
     </div>
 
     <div class="card v2">
       <div class="stage"><div class="particles"></div><div class="tongues-layer"></div><div class="flame-shape"></div></div>
       <div class="label"><span class="num">02</span>Hyper-Noisy CSS</div>
-      <div class="desc">Body uses 11-stop irregular CSS keyframes. Same rising tongues above.</div>
+      <div class="desc">Each tongue has 6-stop irregular keyframes at different durations (2.3s/3.1s/2.7s).</div>
     </div>
 
     <div class="card v3">
       <div class="stage"><div class="particles"></div><div class="tongues-layer"></div><div class="flame-shape"></div></div>
       <div class="label"><span class="num">03</span>Wood Dance</div>
-      <div class="desc">Body sways at medium 1.6s tempo. Same rising tongues above.</div>
+      <div class="desc">Each tongue gentle sway at non-divisible timings (1.7s/2.1s/1.9s).</div>
     </div>
 
     <div class="card v4">
       <div class="stage"><div class="particles"></div><div class="tongues-layer"></div><div class="flame-shape"></div></div>
-      <div class="label"><span class="num">04</span>Turbulence Warp</div>
-      <div class="desc">Body silhouette warped by SVG turbulence. Same rising tongues above.</div>
+      <div class="label"><span class="num">04</span>Turbulence + Sway</div>
+      <div class="desc">SVG turbulence warps the whole silhouette, plus per-tongue scale breathing on top.</div>
     </div>
   </div>
 
 <script>
-  // ════════ SYMMETRIC FLAME BODY ════════
-  // Wide rounded base, two equal peaks left and right, central valley.
-  // Mirror-symmetric around x=35.
+  // ════════ 3-TONGUE FLAME ════════
+  // Three flame paths overlap at the base (shared lower region creates a
+  // unified body), but each peak is its own path that can deform on
+  // its own animation. Same radial gradient on all three so the
+  // overlap reads as one body.
   const FLAME_SVG = (idx) => `
     <svg viewBox="0 0 70 100">
       <defs>
-        <radialGradient id="g${idx}" cx="50%" cy="76%" r="62%">
+        <radialGradient id="g${idx}" cx="50%" cy="78%" r="62%">
           <stop offset="0%" stop-color="#fff8d6"/>
           <stop offset="40%" stop-color="#ff9418"/>
           <stop offset="100%" stop-color="#a81010"/>
         </radialGradient>
       </defs>
-      <path
+      <!-- LEFT tongue (small, peak around x=15 y=22) -->
+      <path class="t-left" fill="url(#g${idx})"
+        d="M 16 96
+           C 6 96, 1 82, 3 64
+           C 5 44, 9 26, 13 18
+           C 14 16, 16 18, 16 24
+           C 16 38, 20 60, 25 80
+           C 27 90, 24 96, 16 96 Z"/>
+      <!-- CENTER tongue (tall, peak at x=35 y=4) -->
+      <path class="t-center" fill="url(#g${idx})"
         d="M 35 96
-           C 10 95, 2 78, 4 56
-           C 7 32, 14 12, 22 6
-           C 25 4, 28 8, 28 16
-           C 28 24, 30 30, 35 32
-           C 40 30, 42 24, 42 16
-           C 42 8, 45 4, 48 6
-           C 56 12, 63 32, 66 56
-           C 68 78, 60 95, 35 96 Z"
-        fill="url(#g${idx})"/>
+           C 18 96, 10 80, 12 56
+           C 16 30, 24 8, 32 2
+           C 34 0, 36 0, 38 2
+           C 46 8, 54 30, 58 56
+           C 60 80, 52 96, 35 96 Z"/>
+      <!-- RIGHT tongue (mirror of LEFT, peak around x=55 y=22) -->
+      <path class="t-right" fill="url(#g${idx})"
+        d="M 54 96
+           C 46 96, 43 90, 45 80
+           C 50 60, 54 38, 54 24
+           C 54 18, 56 16, 57 18
+           C 61 26, 65 44, 67 64
+           C 69 82, 64 96, 54 96 Z"/>
     </svg>
   `;
   document.querySelectorAll('.flame-shape').forEach((el, i) => {
@@ -200,69 +234,64 @@
     }
   });
 
-  // ════════ DETACHED TONGUES ════════
-  // Procedurally spawn small flame tongues that rise from the top of
-  // the body and drift up while deforming and fading.
+  // ════════ DETACHED RISING TONGUES ════════
   const TONGUE_PATHS = [
-    // Small pointed flame
     'M 8 0 C 5 5 2 10 2 16 C 2 22 5 24 8 24 C 11 24 14 22 14 16 C 14 10 11 5 8 0 Z',
-    // Mushroom-blob
     'M 8 2 C 4 6 2 12 4 18 C 5 22 7 24 8 24 C 9 24 11 22 12 18 C 14 12 12 6 8 2 Z',
-    // Slim taper
     'M 8 0 C 6 8 5 14 5 18 C 5 22 6 24 8 24 C 10 24 11 22 11 18 C 11 14 10 8 8 0 Z',
-    // Asymmetric lick
     'M 8 1 C 4 8 2 14 4 19 C 6 23 8 24 8 24 C 8 24 10 23 12 19 C 14 14 12 8 8 1 Z',
   ];
-
   function spawnTongue(layer) {
     const t = document.createElement('div');
     t.className = 'tongue';
-    const w = 12 + Math.random() * 6;       // 12-18 px wide
-    const h = 18 + Math.random() * 10;      // 18-28 px tall
-    const dur = 1.4 + Math.random() * 0.8;  // 1.4-2.2s lifecycle
+    const w = 12 + Math.random() * 6;
+    const h = 18 + Math.random() * 10;
+    const dur = 1.4 + Math.random() * 0.8;
     const tx1 = (Math.random() - 0.5) * 6;
     const tx2 = tx1 + (Math.random() - 0.5) * 10;
     const tx3 = tx2 + (Math.random() - 0.5) * 10;
     const tx4 = tx3 + (Math.random() - 0.5) * 12;
     const path = TONGUE_PATHS[Math.floor(Math.random() * TONGUE_PATHS.length)];
-    const colorIdx = Math.random();
-    const fillColor = colorIdx < 0.5 ? '#ff8a18' : (colorIdx < 0.8 ? '#ff5018' : '#ffd24d');
-
-    t.innerHTML = `
-      <svg viewBox="0 0 16 24" width="${w}" height="${h}">
-        <path d="${path}" fill="${fillColor}"/>
-      </svg>
-    `;
+    const c = Math.random();
+    const fillColor = c < 0.5 ? '#ff8a18' : (c < 0.8 ? '#ff5018' : '#ffd24d');
+    t.innerHTML = `<svg viewBox="0 0 16 24" width="${w}" height="${h}"><path d="${path}" fill="${fillColor}"/></svg>`;
     t.style.cssText =
       `--tx1:${tx1}px; --tx2:${tx2}px; --tx3:${tx3}px; --tx4:${tx4}px;` +
       `animation: tongue-rise ${dur}s ease-out forwards;`;
     layer.appendChild(t);
     setTimeout(() => t.remove(), dur * 1000);
   }
-
   document.querySelectorAll('.tongues-layer').forEach(layer => {
     function loop() {
       spawnTongue(layer);
-      const next = 600 + Math.random() * 800; // 600-1400ms between spawns
-      setTimeout(loop, next);
+      setTimeout(loop, 600 + Math.random() * 800);
     }
-    // Stagger the start so all 4 cards don't fire on the same beat
     setTimeout(loop, Math.random() * 800);
   });
 
-  // ════════ V1 — JS noise on body ════════
+  // ════════ V1 — JS NOISE RAF, EACH TONGUE INDEPENDENT ════════
   (function() {
-    const el = document.querySelector('.v1 .flame-shape');
-    if (!el) return;
+    const svg = document.querySelector('.v1 .flame-shape svg');
+    if (!svg) return;
+    const tL = svg.querySelector('.t-left');
+    const tC = svg.querySelector('.t-center');
+    const tR = svg.querySelector('.t-right');
     let t = 0;
     const noise = (x) => Math.sin(x * 1.0) * 0.5 + Math.sin(x * 2.3) * 0.3 + Math.sin(x * 4.7) * 0.2;
     function frame() {
       t += 0.016;
-      const sk = noise(t * 1.2) * 4;
-      const sy = 1 + noise(t * 0.9 + 100) * 0.05;
-      const sx = 1 + noise(t * 1.1 + 50) * 0.04;
-      const ty = noise(t * 1.4 + 200) * 1.5;
-      el.style.transform = `skewX(${sk.toFixed(2)}deg) scaleY(${sy.toFixed(3)}) scaleX(${sx.toFixed(3)}) translateY(${ty.toFixed(2)}px)`;
+      // Left — own seed offset
+      const skL = (noise(t * 1.1 + 10) * 4).toFixed(2);
+      const syL = (1 + noise(t * 0.95 + 20) * 0.05).toFixed(3);
+      tL.style.transform = `skewX(${skL}deg) scaleY(${syL})`;
+      // Center — bigger amplitude
+      const skC = (noise(t * 1.3 + 100) * 4).toFixed(2);
+      const syC = (1 + noise(t * 1.0 + 200) * 0.07).toFixed(3);
+      tC.style.transform = `skewX(${skC}deg) scaleY(${syC})`;
+      // Right — own seed offset
+      const skR = (noise(t * 1.2 + 300) * 4).toFixed(2);
+      const syR = (1 + noise(t * 0.9 + 400) * 0.05).toFixed(3);
+      tR.style.transform = `skewX(${skR}deg) scaleY(${syR})`;
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
