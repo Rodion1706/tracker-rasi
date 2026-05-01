@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Flame — 20 realistic campfire variants</title>
+<title>Flame — 20 animation variants on the same shape</title>
 <style>
   :root {
     --bg: #0e0c12;
@@ -28,691 +28,327 @@
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; max-width: 1200px; margin: 0 auto; }
   .card { background: var(--card); border: 1px solid var(--brd); border-radius: 12px; padding: 18px 14px 16px; text-align: center; transition: border-color 0.2s, transform 0.2s; }
   .card:hover { border-color: rgba(232,16,42,0.5); transform: translateY(-2px); }
-  .stage { height: 180px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 14px; padding-bottom: 4px; position: relative; overflow: visible; }
+  .stage { height: 160px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 14px; padding-bottom: 6px; position: relative; overflow: visible; }
   .label { font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 4px; }
   .num { color: var(--red); font-family: 'JetBrains Mono', monospace; margin-right: 8px; font-weight: 700; }
   .desc { font-size: 10.5px; color: var(--t3); line-height: 1.5; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em; text-transform: none; }
 
-  /* ════════ SHARED ANIM ════════ */
-  /* Tongue lifecycle — born small, grow, flicker, die. The realistic core. */
-  @keyframes tongue-life {
-    0%   { transform: scaleY(0.15) scaleX(1) translateY(15px); opacity: 0; }
-    10%  { opacity: 1; }
-    35%  { transform: scaleY(1) scaleX(0.92) translateY(0); opacity: 1; }
-    55%  { transform: scaleY(0.95) scaleX(1.05) translateY(-2px) skewX(-2deg); opacity: 0.95; }
-    75%  { transform: scaleY(0.7) scaleX(1.1) translateY(-6px) skewX(1deg); opacity: 0.6; }
-    100% { transform: scaleY(0.25) scaleX(1.15) translateY(-12px); opacity: 0; }
-  }
-  /* Particle base */
+  /* Particles — identical across all cards */
   .particles { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
-  .particle { position: absolute; border-radius: 50%; bottom: 12px; }
+  .particle { position: absolute; border-radius: 50%; bottom: 8px; }
   @keyframes p-rise {
     0%   { transform: translate(0,0) scale(0.3); opacity: 0; background: #fff5b8; box-shadow: 0 0 4px #ffd24d; }
     15%  { opacity: 1; background: #ffd24d; box-shadow: 0 0 6px #ffae3a; }
-    50%  { transform: translate(var(--dx,0), -70px) scale(0.85); opacity: 0.75; background: #ff7e1a; }
-    100% { transform: translate(var(--dx2,0), -140px) scale(0.18); opacity: 0; background: #b81818; }
-  }
-  @keyframes p-spark {
-    0%   { opacity: 0; transform: translate(0,0) scale(0); }
-    18%  { opacity: 1; transform: translate(0,0) scale(1); }
-    100% { opacity: 0; transform: translate(var(--dx,0), -90px) scale(0.2); }
-  }
-  @keyframes p-smoke {
-    0%   { transform: translate(0,0) scale(1); opacity: 0; }
-    25%  { opacity: 0.5; }
-    100% { transform: translate(var(--dx,0), -110px) scale(2.6); opacity: 0; }
+    50%  { transform: translate(var(--dx,0), -65px) scale(0.85); opacity: 0.75; background: #ff7e1a; }
+    100% { transform: translate(var(--dx2,0), -130px) scale(0.18); opacity: 0; background: #b81818; }
   }
 
-  /* ═══════ V1 — LIFECYCLE TONGUES ═══════ */
-  .v1 .stage { height: 180px; }
-  .v1-svg { width: 110px; height: 130px; overflow: visible; filter: drop-shadow(0 0 14px rgba(255,80,20,0.6)); }
-  .v1-t { transform-origin: 50% 100%; animation: tongue-life infinite cubic-bezier(0.4,0,0.5,1); }
-  .v1-t1 { animation-duration: 1.6s; animation-delay: 0s; }
-  .v1-t2 { animation-duration: 1.9s; animation-delay: 0.4s; }
-  .v1-t3 { animation-duration: 2.2s; animation-delay: 0.9s; }
-  .v1-t4 { animation-duration: 1.8s; animation-delay: 0.2s; }
-  .v1-t5 { animation-duration: 2.4s; animation-delay: 1.1s; }
-  .v1-t6 { animation-duration: 1.7s; animation-delay: 0.7s; }
-
-  /* ═══════ V2 — PROCEDURAL SPAWN ═══════ */
-  .v2-stage { width: 110px; height: 130px; position: relative; filter: drop-shadow(0 0 14px rgba(255,80,20,0.6)); }
-  .v2-tongue {
-    position: absolute;
-    bottom: 8px;
-    width: 22px;
-    height: 50px;
-    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-    background: radial-gradient(ellipse at 50% 75%, #fff5b8 0%, #ffae3a 30%, #ff5018 70%, #a81010 100%);
-    transform-origin: 50% 100%;
-    pointer-events: none;
+  /* Flame container — identical width/height/filter across all cards.
+     The SVG inside is the same V13 chubby blob. ONLY the animation
+     applied to .flame-shape changes per variant. */
+  .flame-shape {
+    width: 60px;
+    height: 78px;
+    filter: drop-shadow(0 0 14px rgba(255,80,20,0.75));
+    transform-origin: 50% 95%;
+    position: relative;
+    z-index: 2;
   }
-  @keyframes v2-spawn {
-    0%   { transform: scale(0.2,0.1) translateY(0); opacity: 0; }
-    10%  { opacity: 0.95; }
-    40%  { transform: scale(1,1) translateY(-3px); }
-    65%  { transform: scale(0.95,1.05) translateY(-8px) skewX(-3deg); opacity: 0.85; }
-    100% { transform: scale(1.1,0.5) translateY(-25px) skewX(2deg); opacity: 0; }
-  }
+  .flame-shape svg { width: 100%; height: 100%; overflow: visible; }
 
-  /* ═══════ V3 — SCREEN BLEND ═══════ */
-  .v3-stage { width: 100px; height: 130px; position: relative; mix-blend-mode: normal; filter: drop-shadow(0 0 18px rgba(255,80,20,0.6)); }
-  .v3-svg { width: 100%; height: 100%; overflow: visible; }
-  .v3-l { mix-blend-mode: screen; transform-origin: 50% 100%; }
-  .v3-l1 { animation: tongue-life 1.5s infinite cubic-bezier(0.4,0,0.5,1); animation-delay: 0s; }
-  .v3-l2 { animation: tongue-life 1.8s infinite cubic-bezier(0.4,0,0.5,1); animation-delay: 0.3s; }
-  .v3-l3 { animation: tongue-life 2.1s infinite cubic-bezier(0.4,0,0.5,1); animation-delay: 0.7s; }
-  .v3-l4 { animation: tongue-life 2.4s infinite cubic-bezier(0.4,0,0.5,1); animation-delay: 0.5s; }
-  .v3-l5 { animation: tongue-life 1.7s infinite cubic-bezier(0.4,0,0.5,1); animation-delay: 1.0s; }
+  /* ════════════════════════════════════════
+     20 ANIMATION VARIANTS — same shape, different motion
+     ════════════════════════════════════════ */
 
-  /* ═══════ V4 — JS CONTINUOUS SPAWN ═══════ */
-  .v4-stage { width: 110px; height: 140px; position: relative; filter: drop-shadow(0 0 16px rgba(255,80,20,0.65)); }
+  /* 01 — Slow gentle breath */
+  .v1 .flame-shape { animation: a1 2.4s ease-in-out infinite; }
+  @keyframes a1 { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05) translateY(-1px); } }
 
-  /* ═══════ V5 — HEAT-WARPED ═══════ */
-  .v5-svg { width: 80px; height: 130px; overflow: visible; filter: drop-shadow(0 0 16px rgba(255,80,20,0.7)); }
+  /* 02 — Still air, barely moves */
+  .v2 .flame-shape { animation: a2 4.5s ease-in-out infinite; }
+  @keyframes a2 { 0%,100% { transform: skewX(0deg) scaleY(1); } 50% { transform: skewX(-1deg) scaleY(1.025); } }
 
-  /* ═══════ V6 — MASS PARTICLE ═══════ */
-  .v6-stage { width: 110px; height: 150px; position: relative; }
-
-  /* ═══════ V7 — LOGS + FLAME ═══════ */
-  .v7-stage { width: 130px; height: 150px; position: relative; }
-  .v7-logs { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 110px; height: 28px; }
-  .v7-log { position: absolute; bottom: 0; width: 80px; height: 14px; border-radius: 7px; background: linear-gradient(to bottom, #3a2418, #1a0e08); box-shadow: inset 0 1px 0 #5a3828, 0 0 8px rgba(255,60,10,0.6); }
-  .v7-log1 { left: 14px; transform: rotate(-8deg); }
-  .v7-log2 { left: 18px; bottom: 10px; transform: rotate(6deg); }
-  .v7-log-glow { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: radial-gradient(circle, #ff7018, #c01818); animation: log-glow 1.4s ease-in-out infinite; }
-  @keyframes log-glow { 0%,100% { opacity: 0.6; } 50% { opacity: 1; box-shadow: 0 0 6px #ff5018; } }
-  .v7-flame { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); width: 90px; height: 100px; }
-  .v7-svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 14px rgba(255,80,20,0.7)); }
-  .v7-t { transform-origin: 50% 100%; animation: tongue-life infinite cubic-bezier(0.4,0,0.5,1); }
-  .v7-t1 { animation-duration: 1.7s; animation-delay: 0s; }
-  .v7-t2 { animation-duration: 2.2s; animation-delay: 0.6s; }
-  .v7-t3 { animation-duration: 1.9s; animation-delay: 1.0s; }
-  .v7-t4 { animation-duration: 2.4s; animation-delay: 0.3s; }
-
-  /* ═══════ V8 — THREE-TONGUE BONFIRE ═══════ */
-  .v8-svg { width: 110px; height: 130px; overflow: visible; filter: drop-shadow(0 0 16px rgba(255,80,20,0.7)) drop-shadow(0 0 28px rgba(232,16,42,0.4)); }
-  .v8-t { transform-origin: 50% 100%; animation: tongue-life infinite cubic-bezier(0.4,0,0.5,1); }
-  .v8-t1 { animation-duration: 2.1s; animation-delay: 0s; }
-  .v8-t2 { animation-duration: 2.5s; animation-delay: 0.7s; }
-  .v8-t3 { animation-duration: 1.8s; animation-delay: 0.3s; }
-
-  /* ═══════ V9 — WHITE-HOT CORE ═══════ */
-  .v9-svg { width: 80px; height: 110px; overflow: visible; filter: drop-shadow(0 0 18px rgba(255,80,20,0.85)) drop-shadow(0 0 36px rgba(255,30,10,0.5)); }
-  .v9-outer { transform-origin: 50% 100%; animation: v9-violent 0.4s ease-in-out infinite; }
-  @keyframes v9-violent { 0%,100% { transform: skewX(-2deg) scaleY(1) scaleX(1); } 50% { transform: skewX(2deg) scaleY(1.08) scaleX(0.92); } }
-  .v9-core { transform-origin: 50% 75%; animation: v9-core-pulse 0.3s ease-in-out infinite; }
-  @keyframes v9-core-pulse { 0%,100% { opacity: 1; transform: scaleY(1); } 50% { opacity: 0.85; transform: scaleY(1.15); } }
-
-  /* ═══════ V10 — BURST CYCLE ═══════ */
-  .v10-svg { width: 90px; height: 120px; overflow: visible; filter: drop-shadow(0 0 14px rgba(255,80,20,0.7)); }
-  .v10-body { transform-origin: 50% 100%; animation: v10-burst 4s ease-in-out infinite; }
-  @keyframes v10-burst {
-    0%,100% { transform: scaleY(0.7) scaleX(1.05); opacity: 0.8; }
-    25% { transform: scaleY(0.85) scaleX(1) skewX(-2deg); opacity: 0.9; }
-    50% { transform: scaleY(1.2) scaleX(0.85) skewX(1deg); opacity: 1; }
-    75% { transform: scaleY(0.9) scaleX(1) skewX(-1deg); opacity: 0.85; }
+  /* 03 — Wood-fire dance (medium tempo + skew) */
+  .v3 .flame-shape { animation: a3 1.5s ease-in-out infinite; }
+  @keyframes a3 {
+    0%,100% { transform: skewX(0) scaleY(1) scaleX(1); }
+    33% { transform: skewX(-3deg) scaleY(1.06) scaleX(0.96); }
+    66% { transform: skewX(3deg) scaleY(1.04) scaleX(0.97); }
   }
 
-  /* ═══════ V11 — WIND CURVED ═══════ */
-  .v11-svg { width: 110px; height: 110px; overflow: visible; filter: drop-shadow(0 0 14px rgba(255,80,20,0.7)); }
-  .v11-body { transform-origin: 30% 100%; animation: v11-wind 3s ease-in-out infinite; }
-  @keyframes v11-wind { 0%,100% { transform: skewX(20deg) scaleY(1); } 50% { transform: skewX(28deg) scaleY(1.05); } }
+  /* 04 — Strong gust (heavy slow sway) */
+  .v4 .flame-shape { animation: a4 3s ease-in-out infinite; }
+  @keyframes a4 { 0%,100% { transform: skewX(-7deg) scaleY(1); } 50% { transform: skewX(7deg) scaleY(1.04); } }
 
-  /* ═══════ V12 — COAL BED HEAVY ═══════ */
-  .v12-stage { width: 130px; height: 130px; position: relative; }
-  .v12-bed { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 120px; height: 30px; background: radial-gradient(ellipse at 50% 100%, #ff5018 0%, #c01010 35%, transparent 75%); border-radius: 50%; filter: blur(2px); animation: bed-glow 2s ease-in-out infinite; }
-  @keyframes bed-glow { 0%,100% { opacity: 0.7; transform: translateX(-50%) scale(1); } 50% { opacity: 1; transform: translateX(-50%) scale(1.06); } }
-  .v12-svg { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); width: 70px; height: 80px; overflow: visible; filter: drop-shadow(0 0 12px rgba(255,80,20,0.6)); }
-  .v12-t { transform-origin: 50% 100%; animation: tongue-life infinite cubic-bezier(0.4,0,0.5,1); }
-  .v12-t1 { animation-duration: 1.6s; animation-delay: 0s; }
-  .v12-t2 { animation-duration: 2.0s; animation-delay: 0.5s; }
-  .v12-t3 { animation-duration: 1.8s; animation-delay: 0.9s; }
-
-  /* ═══════ V13 — MULTI-SPAWN BASE ═══════ */
-  .v13-svg { width: 130px; height: 130px; overflow: visible; filter: drop-shadow(0 0 14px rgba(255,80,20,0.65)); }
-  .v13-t { transform-origin: 50% 100%; animation: tongue-life infinite cubic-bezier(0.4,0,0.5,1); }
-  .v13-t1 { animation-duration: 1.8s; animation-delay: 0s; }
-  .v13-t2 { animation-duration: 2.1s; animation-delay: 0.5s; }
-  .v13-t3 { animation-duration: 1.6s; animation-delay: 0.9s; }
-  .v13-t4 { animation-duration: 2.4s; animation-delay: 0.3s; }
-  .v13-t5 { animation-duration: 1.9s; animation-delay: 1.2s; }
-  .v13-t6 { animation-duration: 2.2s; animation-delay: 0.7s; }
-  .v13-t7 { animation-duration: 1.7s; animation-delay: 0.2s; }
-
-  /* ═══════ V14 — DRIPPING TONGUES ═══════ */
-  .v14-stage { width: 80px; height: 150px; position: relative; }
-  .v14-svg { width: 80px; height: 100px; overflow: visible; filter: drop-shadow(0 0 14px rgba(255,80,20,0.7)); }
-  .v14-drip { position: absolute; width: 6px; height: 12px; border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%; background: linear-gradient(to bottom, #ffae3a, #c01818); }
-  @keyframes drip-fall { 0% { transform: translateY(0) scale(1); opacity: 1; } 80% { opacity: 0.7; } 100% { transform: translateY(50px) scale(0.4); opacity: 0; } }
-
-  /* ═══════ V15 — COAL PULSE ═══════ */
-  .v15-stage { width: 130px; height: 130px; position: relative; }
-  .v15-bed-big { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 130px; height: 50px; background: radial-gradient(ellipse at 50% 100%, #ff5018 0%, #ff8a18 25%, #c01010 55%, transparent 80%); border-radius: 50%; filter: blur(1.5px); animation: bed-glow 1.6s ease-in-out infinite; }
-  .v15-svg { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 50px; height: 60px; overflow: visible; }
-  .v15-t { transform-origin: 50% 100%; animation: tongue-life 1.5s infinite cubic-bezier(0.4,0,0.5,1); }
-
-  /* ═══════ V16 — FIRE TORNADO ═══════ */
-  .v16-svg { width: 70px; height: 130px; overflow: visible; filter: drop-shadow(0 0 14px rgba(255,80,20,0.7)); animation: v16-spin 3s linear infinite; }
-  @keyframes v16-spin { 0% { transform: rotate(0deg) skewX(0); } 50% { transform: rotate(0deg) skewX(8deg); } 100% { transform: rotate(0deg) skewX(0deg); } }
-  .v16-coil { animation: v16-coil 1.5s ease-in-out infinite; transform-origin: 50% 100%; }
-  @keyframes v16-coil {
-    0%,100% { transform: scaleY(1) scaleX(1) skewX(0); }
-    25% { transform: scaleY(1.05) scaleX(0.9) skewX(-3deg); }
-    50% { transform: scaleY(1.1) scaleX(0.85) skewX(0); }
-    75% { transform: scaleY(1.05) scaleX(0.9) skewX(3deg); }
+  /* 05 — Frantic stepped flicker (the V13 baseline, but stepped) */
+  .v5 .flame-shape { animation: a5 0.42s steps(6) infinite; }
+  @keyframes a5 {
+    0% { transform: scaleY(1) skewX(0); }
+    16% { transform: scaleY(1.08) skewX(-2deg); }
+    32% { transform: scaleY(0.95) skewX(1deg); }
+    48% { transform: scaleY(1.05) skewX(2deg); }
+    66% { transform: scaleY(1.02) skewX(-1deg); }
+    84% { transform: scaleY(1.06) skewX(0); }
+    100% { transform: scaleY(1) skewX(0); }
   }
 
-  /* ═══════ V17 — REALISTIC MULTI-LAYER ═══════ */
-  .v17-svg { width: 110px; height: 130px; overflow: visible; filter: drop-shadow(0 0 16px rgba(255,80,20,0.7)) drop-shadow(0 0 30px rgba(232,16,42,0.35)); }
-  .v17-l { transform-origin: 50% 100%; mix-blend-mode: screen; }
-  .v17-l1 { animation: tongue-life 2.3s infinite cubic-bezier(0.4,0,0.5,1); animation-delay: 0s; }
-  .v17-l2 { animation: tongue-life 1.8s infinite cubic-bezier(0.4,0,0.5,1); animation-delay: 0.4s; }
-  .v17-l3 { animation: tongue-life 2.5s infinite cubic-bezier(0.4,0,0.5,1); animation-delay: 0.8s; }
-  .v17-l4 { animation: tongue-life 1.7s infinite cubic-bezier(0.4,0,0.5,1); animation-delay: 1.2s; }
+  /* 06 — JS noise-driven (RAF) — base styling, JS does the rest */
+  .v6 .flame-shape { /* JS sets transform per frame */ }
 
-  /* ═══════ V18 — RANDOM PER-FRAME (JS) ═══════ */
-  .v18-svg { width: 90px; height: 130px; overflow: visible; filter: drop-shadow(0 0 16px rgba(255,80,20,0.75)); }
-
-  /* ═══════ V19 — CRACKLING ═══════ */
-  .v19-stage { width: 130px; height: 130px; position: relative; }
-  .v19-svg { width: 60px; height: 80px; overflow: visible; filter: drop-shadow(0 0 12px rgba(255,80,20,0.7)); position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); }
-  .v19-t { transform-origin: 50% 100%; animation: tongue-life 1.6s infinite cubic-bezier(0.4,0,0.5,1); }
-
-  /* ═══════ V20 — PHOENIX CYCLE ═══════ */
-  .v20-stage { width: 110px; height: 150px; position: relative; }
-  .v20-svg { width: 90px; height: 110px; overflow: visible; filter: drop-shadow(0 0 18px rgba(255,80,20,0.8)) drop-shadow(0 0 36px rgba(232,16,42,0.5)); }
-  .v20-body { transform-origin: 50% 100%; animation: v20-cycle 4s ease-in-out infinite; }
-  @keyframes v20-cycle {
-    0%   { transform: scaleY(0.5) scaleX(1.1); opacity: 0.6; }
-    25%  { transform: scaleY(0.85) scaleX(1) skewX(-2deg); opacity: 0.9; }
-    50%  { transform: scaleY(1.3) scaleX(0.85) skewX(1deg); opacity: 1; filter: brightness(1.2); }
-    65%  { transform: scaleY(1.4) scaleX(0.8) skewX(0deg); opacity: 1; }
-    75%  { transform: scaleY(1) scaleX(1) skewX(-1deg); opacity: 0.85; }
-    100% { transform: scaleY(0.5) scaleX(1.1); opacity: 0.6; }
+  /* 07 — Asymmetric breath (left and right pump unequally) */
+  .v7 .flame-shape { animation: a7 2s ease-in-out infinite; }
+  @keyframes a7 {
+    0%,100% { transform: scale(1) skewX(0); }
+    30% { transform: scale(1.06) skewX(-3deg); }
+    70% { transform: scale(1.04) skewX(2deg); }
   }
+
+  /* 08 — Three independent properties (translate / rotate / scale) at
+     non-divisible durations. They never sync. */
+  .v8 .flame-shape { animation: a8a 0.5s ease-in-out infinite, a8b 1.7s ease-in-out infinite, a8c 3.3s ease-in-out infinite; }
+  @keyframes a8a { 0%,100% { translate: 0 0; } 50% { translate: 0 -1px; } }
+  @keyframes a8b { 0%,100% { rotate: 0deg; } 50% { rotate: -2.5deg; } }
+  @keyframes a8c { 0%,100% { scale: 1; } 50% { scale: 1.06; } }
+
+  /* 09 — Heavy stack: many irregular keyframes packed in */
+  .v9 .flame-shape { animation: a9 2.6s cubic-bezier(0.4,0,0.5,1) infinite; }
+  @keyframes a9 {
+    0% { transform: scaleY(1) skewX(0) translateY(0); }
+    11% { transform: scaleY(1.06) skewX(-2.5deg) translateY(-1px); }
+    23% { transform: scaleY(1.02) skewX(1deg) translateY(0); }
+    37% { transform: scaleY(1.1) skewX(-3deg) translateY(-2px); }
+    49% { transform: scaleY(1.04) skewX(2deg) translateY(-1px); }
+    63% { transform: scaleY(0.96) skewX(0) translateY(0); }
+    78% { transform: scaleY(1.08) skewX(-1.5deg) translateY(-2px); }
+    91% { transform: scaleY(1.0) skewX(2deg) translateY(0); }
+    100% { transform: scaleY(1) skewX(0) translateY(0); }
+  }
+
+  /* 10 — Lifecycle: shrink → grow → shrink, the whole blob */
+  .v10 .flame-shape { animation: a10 2.6s ease-in-out infinite; transform-origin: 50% 100%; }
+  @keyframes a10 {
+    0%,100% { transform: scale(0.55) translateY(20px); opacity: 0.7; }
+    25% { transform: scale(1) translateY(0); opacity: 1; }
+    55% { transform: scale(1.06) translateY(-2px); opacity: 1; }
+    85% { transform: scale(0.85) translateY(-6px); opacity: 0.85; }
+  }
+
+  /* 11 — SVG turbulence warp — has its OWN SVG markup since it needs a filter */
+  .v11 .flame-shape { animation: none; filter: drop-shadow(0 0 14px rgba(255,80,20,0.75)); }
+
+  /* 12 — Path morph — has its OWN SVG markup, animates the d attribute */
+  .v12 .flame-shape svg path { animation: a12 2.4s ease-in-out infinite; }
+  @keyframes a12 {
+    0%,100% { d: path("M25 6 C 14 16 8 28 8 42 C 8 52 14 56 25 56 C 36 56 42 52 42 42 C 42 28 36 16 25 6 Z"); }
+    33% { d: path("M25 4 C 12 14 6 28 6 42 C 6 52 14 56 25 56 C 36 56 44 52 44 42 C 44 28 38 14 25 4 Z"); }
+    66% { d: path("M25 8 C 16 18 10 28 10 42 C 10 52 14 56 25 56 C 36 56 40 52 40 42 C 40 28 34 18 25 8 Z"); }
+  }
+
+  /* 13 — Fast jitter + slow breath stacked (separate transform props) */
+  .v13 .flame-shape { animation: a13a 0.3s ease-in-out infinite, a13b 2.4s ease-in-out infinite; }
+  @keyframes a13a { 0%,100% { translate: 0 0; } 50% { translate: 0.3px -0.5px; } }
+  @keyframes a13b { 0%,100% { scale: 1; } 50% { scale: 1.06; } }
+
+  /* 14 — JS random pulse — irregular surge intervals */
+  .v14 .flame-shape { transition: transform 0.15s ease-out; }
+
+  /* 15 — Periodic surge (mostly calm + strong burst every 4s) */
+  .v15 .flame-shape { animation: a15 4s ease-in-out infinite; }
+  @keyframes a15 {
+    0%,42%,100% { transform: scale(1) skewX(0); filter: drop-shadow(0 0 14px rgba(255,80,20,0.75)); }
+    50% { transform: scale(1.18) translateY(-3px); filter: drop-shadow(0 0 22px rgba(255,140,40,1)) drop-shadow(0 0 40px rgba(232,16,42,0.6)); }
+    62% { transform: scale(1.04); filter: drop-shadow(0 0 16px rgba(255,100,30,0.85)); }
+  }
+
+  /* 16 — Asymmetric alternating (left grow, right grow, alternating) */
+  .v16 .flame-shape { animation: a16 1.8s ease-in-out infinite; }
+  @keyframes a16 {
+    0%,100% { transform: skewX(0) scaleX(1) scaleY(1); }
+    25% { transform: skewX(-5deg) scaleX(0.9) scaleY(1.07); }
+    50% { transform: skewX(0) scaleX(1.05) scaleY(0.96); }
+    75% { transform: skewX(5deg) scaleX(0.9) scaleY(1.07); }
+  }
+
+  /* 17 — Hyper-noisy realistic (12 irregular keyframes) */
+  .v17 .flame-shape { animation: a17 3.7s cubic-bezier(0.45,0.05,0.55,0.95) infinite; }
+  @keyframes a17 {
+    0%   { transform: scaleY(1) skewX(0) translateY(0); }
+    7%   { transform: scaleY(1.05) skewX(-2deg) translateY(-1px); }
+    17%  { transform: scaleY(1.02) skewX(1deg) translateY(0); }
+    29%  { transform: scaleY(1.1) skewX(-3deg) translateY(-2px); }
+    41%  { transform: scaleY(1.04) skewX(3deg) translateY(-1px); }
+    53%  { transform: scaleY(0.95) skewX(0) translateY(0); }
+    61%  { transform: scaleY(1.08) skewX(-2deg) translateY(-2px); }
+    73%  { transform: scaleY(1.0) skewX(2deg) translateY(-1px); }
+    81%  { transform: scaleY(1.07) skewX(-1deg) translateY(-2px); }
+    91%  { transform: scaleY(1.02) skewX(1deg) translateY(0); }
+    100% { transform: scaleY(1) skewX(0) translateY(0); }
+  }
+
+  /* 18 — Spring/elastic easing (bouncy) */
+  .v18 .flame-shape { animation: a18 1.6s cubic-bezier(0.5, 1.6, 0.5, 1) infinite; transform-origin: 50% 100%; }
+  @keyframes a18 {
+    0%,100% { transform: scaleY(0.95); }
+    50% { transform: scaleY(1.12); }
+  }
+
+  /* 19 — Smooth slow sway + crackle jitter on top */
+  .v19 .flame-shape { animation: a19a 3s ease-in-out infinite, a19b 0.2s steps(3) infinite; }
+  @keyframes a19a { 0%,100% { rotate: 0deg; } 50% { rotate: -3deg; } }
+  @keyframes a19b { 0%,100% { scale: 1 1; } 33% { scale: 1.02 0.99; } 66% { scale: 0.99 1.02; } }
+
+  /* 20 — Ultimate combo: layered animations + JS RAF perturbation */
+  .v20 .flame-shape { animation: a20a 2.4s ease-in-out infinite, a20b 0.4s ease-in-out infinite; }
+  @keyframes a20a { 0%,100% { rotate: 0deg; scale: 1; } 50% { rotate: -2deg; scale: 1.06; } }
+  @keyframes a20b { 0%,100% { translate: 0 0; } 50% { translate: 0.4px -0.6px; } }
 
 </style>
 </head>
 <body>
-  <h1>FLAME — REALISTIC CAMPFIRE</h1>
-  <div class="sub">20 variants focused on real-fire animation logic</div>
+  <h1>FLAME — 20 ANIMATION VARIANTS</h1>
+  <div class="sub">Same chubby blob + particles. Only the flame's motion differs.</div>
 
   <div class="grid">
 
-    <!-- V1 — LIFECYCLE TONGUES (THE CORE REALISTIC ONE) -->
-    <div class="card v1">
-      <div class="stage">
-        <svg class="v1-svg" viewBox="0 0 110 130">
-          <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#fff5d6"/>
-            <stop offset="40%" stop-color="#ffba3a"/>
-            <stop offset="80%" stop-color="#ff5018"/>
-            <stop offset="100%" stop-color="#a81010"/>
-          </linearGradient></defs>
-          <path class="v1-t v1-t1" d="M20 50 C 14 70 14 100 17 122 C 18 128 19 130 20 130 C 21 130 22 128 23 122 C 26 100 26 70 20 50 Z" fill="url(#g1)"/>
-          <path class="v1-t v1-t2" d="M40 30 C 32 56 32 90 36 122 C 38 128 39 130 40 130 C 41 130 42 128 44 122 C 48 90 48 56 40 30 Z" fill="url(#g1)"/>
-          <path class="v1-t v1-t3" d="M58 14 C 48 40 46 78 52 118 C 54 126 56 130 58 130 C 60 130 62 126 64 118 C 70 78 68 40 58 14 Z" fill="url(#g1)"/>
-          <path class="v1-t v1-t4" d="M75 22 C 66 50 64 86 70 120 C 72 127 74 130 75 130 C 76 130 78 127 80 120 C 86 86 84 50 75 22 Z" fill="url(#g1)"/>
-          <path class="v1-t v1-t5" d="M90 38 C 82 60 80 92 86 122 C 88 128 89 130 90 130 C 91 130 92 128 94 122 C 100 92 98 60 90 38 Z" fill="url(#g1)"/>
-          <path class="v1-t v1-t6" d="M48 60 C 44 76 44 100 47 124 C 48 128 49 130 49 130 C 49 130 50 128 51 124 C 54 100 54 76 48 60 Z" fill="url(#g1)" opacity="0.85"/>
-        </svg>
-      </div>
-      <div class="label"><span class="num">01</span>Lifecycle Tongues</div>
-      <div class="desc">6 flame tongues, each born small, grows, flickers, dies. Most realistic loop.</div>
-    </div>
+    <div class="card v1"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">01</span>Slow Breath</div>
+      <div class="desc">Just gentle scale 1 → 1.05 over 2.4s. Calm, candle on still air.</div></div>
 
-    <!-- V2 — PROCEDURAL SPAWN -->
-    <div class="card v2">
-      <div class="stage">
-        <div class="v2-stage" id="v2"></div>
-      </div>
-      <div class="label"><span class="num">02</span>Procedural Spawn</div>
-      <div class="desc">JS continuously spawns flame tongues at random base positions. Truly random.</div>
-    </div>
+    <div class="card v2"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">02</span>Still Air</div>
+      <div class="desc">Barely moves. 4.5s cycle, ±1deg skew, minimal scale. Meditative.</div></div>
 
-    <!-- V3 — SCREEN BLEND -->
-    <div class="card v3">
-      <div class="stage">
-        <div class="v3-stage">
-          <svg class="v3-svg" viewBox="0 0 100 130">
-            <defs>
-              <radialGradient id="g3a" cx="50%" cy="100%" r="80%">
-                <stop offset="0%" stop-color="#fff5d6"/>
-                <stop offset="50%" stop-color="#ff8a1a"/>
-                <stop offset="100%" stop-color="#000"/>
-              </radialGradient>
-              <radialGradient id="g3b" cx="50%" cy="100%" r="80%">
-                <stop offset="0%" stop-color="#ffd24d"/>
-                <stop offset="60%" stop-color="#ff5018"/>
-                <stop offset="100%" stop-color="#000"/>
-              </radialGradient>
-            </defs>
-            <path class="v3-l v3-l1" d="M20 60 C 16 80 16 110 18 128 C 19 130 20 130 20 130 C 20 130 21 130 22 128 C 24 110 24 80 20 60 Z" fill="url(#g3a)"/>
-            <path class="v3-l v3-l2" d="M40 30 C 32 56 32 100 36 128 C 38 130 39 130 40 130 C 41 130 42 130 44 128 C 48 100 48 56 40 30 Z" fill="url(#g3b)"/>
-            <path class="v3-l v3-l3" d="M55 12 C 46 40 44 90 50 128 C 52 130 54 130 55 130 C 56 130 58 130 60 128 C 66 90 64 40 55 12 Z" fill="url(#g3a)"/>
-            <path class="v3-l v3-l4" d="M70 24 C 62 50 60 96 66 128 C 68 130 69 130 70 130 C 71 130 72 130 74 128 C 80 96 78 50 70 24 Z" fill="url(#g3b)"/>
-            <path class="v3-l v3-l5" d="M84 50 C 78 70 78 102 82 128 C 84 130 85 130 85 130 C 85 130 86 130 88 128 C 90 102 90 70 84 50 Z" fill="url(#g3a)"/>
-          </svg>
-        </div>
-      </div>
-      <div class="label"><span class="num">03</span>Screen Blend</div>
-      <div class="desc">5 flames with mix-blend-mode: screen — overlapping zones glow brighter naturally.</div>
-    </div>
+    <div class="card v3"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">03</span>Wood Dance</div>
+      <div class="desc">Medium tempo (1.5s) with skew + scale. Real wood-fire vibe.</div></div>
 
-    <!-- V4 — JS CONTINUOUS SPAWN -->
-    <div class="card v4">
-      <div class="stage">
-        <div class="v4-stage" id="v4"></div>
-      </div>
-      <div class="label"><span class="num">04</span>JS Spawn Loop</div>
-      <div class="desc">JS spawns 1 fresh tongue every 200ms across the base. Most chaotic / real.</div>
-    </div>
+    <div class="card v4"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">04</span>Strong Gust</div>
+      <div class="desc">Heavy slow ±7° sway over 3s. Outdoors fire in the wind.</div></div>
 
-    <!-- V5 — HEAT-WARPED -->
-    <div class="card v5">
-      <div class="stage">
-        <svg class="v5-svg" viewBox="0 0 80 130">
+    <div class="card v5"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">05</span>Stepped Flicker</div>
+      <div class="desc">Frantic 0.42s with steps(6) — twitchy not smooth. Stepped digital feel.</div></div>
+
+    <div class="card v6"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">06</span>JS Noise (RAF)</div>
+      <div class="desc">requestAnimationFrame applies smooth Perlin-style random transforms. Truly organic.</div></div>
+
+    <div class="card v7"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">07</span>Asymmetric Breath</div>
+      <div class="desc">Left and right pump on different schedules. Slightly off-balance, alive.</div></div>
+
+    <div class="card v8"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">08</span>3-Speed Independent</div>
+      <div class="desc">Translate (0.5s) + rotate (1.7s) + scale (3.3s). Never syncs — never repeats.</div></div>
+
+    <div class="card v9"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">09</span>Packed Irregular</div>
+      <div class="desc">9 irregular keyframes (11%, 23%, 37%, ...) crammed into 2.6s. Random-feeling flicker.</div></div>
+
+    <div class="card v10"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">10</span>Full Lifecycle</div>
+      <div class="desc">Whole blob shrinks to 0.55, grows back to 1.06, dies again. Mimics burn cycle.</div></div>
+
+    <div class="card v11"><div class="stage"><div class="particles" data-count="14"></div>
+      <div class="flame-shape">
+        <svg viewBox="0 0 50 60">
           <defs>
-            <filter id="v5f" x="-30%" y="-30%" width="160%" height="160%">
-              <feTurbulence type="fractalNoise" baseFrequency="0.015 0.06" numOctaves="3" seed="3">
-                <animate attributeName="baseFrequency" dur="5s" values="0.015 0.06; 0.03 0.1; 0.015 0.06" repeatCount="indefinite"/>
-                <animate attributeName="seed" dur="2s" values="3;5;7;3" repeatCount="indefinite"/>
+            <filter id="v11f" x="-30%" y="-30%" width="160%" height="160%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.018 0.05" numOctaves="2" seed="3">
+                <animate attributeName="baseFrequency" dur="6s" values="0.018 0.05; 0.035 0.08; 0.018 0.05" repeatCount="indefinite"/>
               </feTurbulence>
-              <feDisplacementMap in="SourceGraphic" scale="14"/>
+              <feDisplacementMap in="SourceGraphic" scale="6"/>
             </filter>
-            <linearGradient id="g5" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#fff5d6"/>
-              <stop offset="40%" stop-color="#ffba3a"/>
-              <stop offset="80%" stop-color="#ff5018"/>
+            <radialGradient id="v11g" cx="50%" cy="80%" r="65%">
+              <stop offset="0%" stop-color="#fff8d6"/>
+              <stop offset="40%" stop-color="#ff9418"/>
               <stop offset="100%" stop-color="#a81010"/>
-            </linearGradient>
-          </defs>
-          <path filter="url(#v5f)" d="M40 12 C 24 30 14 60 14 92 C 14 116 26 128 40 128 C 54 128 66 116 66 92 C 66 60 56 30 40 12 Z" fill="url(#g5)"/>
-        </svg>
-      </div>
-      <div class="label"><span class="num">05</span>Heat-Warped</div>
-      <div class="desc">Heavy SVG turbulence + animated noise. Single body but warps like real plasma.</div>
-    </div>
-
-    <!-- V6 — MASS PARTICLE FIRE -->
-    <div class="card v6">
-      <div class="stage">
-        <div class="v6-stage" id="v6"></div>
-      </div>
-      <div class="label"><span class="num">06</span>Mass Particle</div>
-      <div class="desc">No silhouette at all — 80 particles in fire colors create the illusion of fire.</div>
-    </div>
-
-    <!-- V7 — LOGS + FLAME -->
-    <div class="card v7">
-      <div class="stage">
-        <div class="v7-stage">
-          <div class="v7-flame">
-            <svg class="v7-svg" viewBox="0 0 90 100">
-              <defs><linearGradient id="g7" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#fff5d6"/>
-                <stop offset="40%" stop-color="#ffba3a"/>
-                <stop offset="80%" stop-color="#ff5018"/>
-                <stop offset="100%" stop-color="#a81010"/>
-              </linearGradient></defs>
-              <path class="v7-t v7-t1" d="M20 30 C 14 50 14 80 18 96 C 19 99 20 100 20 100 C 20 100 21 99 22 96 C 26 80 26 50 20 30 Z" fill="url(#g7)"/>
-              <path class="v7-t v7-t2" d="M45 4 C 36 30 34 70 40 96 C 42 99 44 100 45 100 C 46 100 48 99 50 96 C 56 70 54 30 45 4 Z" fill="url(#g7)"/>
-              <path class="v7-t v7-t3" d="M70 22 C 62 50 60 84 66 96 C 68 99 69 100 70 100 C 71 100 72 99 74 96 C 80 84 78 50 70 22 Z" fill="url(#g7)"/>
-              <path class="v7-t v7-t4" d="M55 50 C 50 66 50 90 53 98 C 54 99 55 100 55 100 C 55 100 56 99 57 98 C 60 90 60 66 55 50 Z" fill="url(#g7)" opacity="0.85"/>
-            </svg>
-          </div>
-          <div class="v7-logs">
-            <div class="v7-log v7-log1"></div>
-            <div class="v7-log v7-log2"></div>
-            <div class="v7-log-glow" style="left: 30px; bottom: 6px; animation-delay: 0s;"></div>
-            <div class="v7-log-glow" style="left: 60px; bottom: 14px; animation-delay: 0.5s;"></div>
-            <div class="v7-log-glow" style="left: 80px; bottom: 8px; animation-delay: 0.9s;"></div>
-          </div>
-        </div>
-      </div>
-      <div class="label"><span class="num">07</span>Logs + Flame</div>
-      <div class="desc">Visible burning logs + flames above + glowing ember spots on logs. Real bonfire.</div>
-    </div>
-
-    <!-- V8 — THREE-TONGUE BONFIRE -->
-    <div class="card v8">
-      <div class="stage">
-        <svg class="v8-svg" viewBox="0 0 110 130">
-          <defs><linearGradient id="g8" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#fff5d6"/>
-            <stop offset="40%" stop-color="#ffba3a"/>
-            <stop offset="80%" stop-color="#ff5018"/>
-            <stop offset="100%" stop-color="#a81010"/>
-          </linearGradient></defs>
-          <path class="v8-t v8-t1" d="M30 30 C 18 60 16 100 24 124 C 26 128 28 130 30 130 C 32 130 34 128 36 124 C 44 100 42 60 30 30 Z" fill="url(#g8)"/>
-          <path class="v8-t v8-t2" d="M60 6 C 46 36 44 90 52 122 C 54 128 57 130 60 130 C 63 130 66 128 68 122 C 76 90 74 36 60 6 Z" fill="url(#g8)"/>
-          <path class="v8-t v8-t3" d="M86 24 C 76 50 74 96 82 124 C 84 128 85 130 86 130 C 87 130 88 128 90 124 C 98 96 96 50 86 24 Z" fill="url(#g8)"/>
-        </svg>
-      </div>
-      <div class="label"><span class="num">08</span>Three-Tongue</div>
-      <div class="desc">3 asymmetric flame tongues — small, big-center, mid-right. Side-view bonfire.</div>
-    </div>
-
-    <!-- V9 — WHITE-HOT CORE -->
-    <div class="card v9">
-      <div class="stage">
-        <svg class="v9-svg" viewBox="0 0 80 110">
-          <defs>
-            <linearGradient id="g9o" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#ff5060" stop-opacity="0.4"/>
-              <stop offset="50%" stop-color="#e8102a"/>
-              <stop offset="100%" stop-color="#601010"/>
-            </linearGradient>
-            <radialGradient id="g9c" cx="50%" cy="80%" r="50%">
-              <stop offset="0%" stop-color="#fff"/>
-              <stop offset="60%" stop-color="#ffd24d"/>
-              <stop offset="100%" stop-color="transparent"/>
             </radialGradient>
           </defs>
-          <path class="v9-outer" d="M40 8 C 24 24 14 50 14 80 C 14 100 24 108 40 108 C 56 108 66 100 66 80 C 66 50 56 24 40 8 Z" fill="url(#g9o)"/>
-          <ellipse class="v9-core" cx="40" cy="80" rx="14" ry="22" fill="url(#g9c)"/>
+          <path filter="url(#v11f)" d="M25 6 C 14 16 8 28 8 42 C 8 52 14 56 25 56 C 36 56 42 52 42 42 C 42 28 36 16 25 6 Z" fill="url(#v11g)"/>
         </svg>
-      </div>
-      <div class="label"><span class="num">09</span>White-hot Core</div>
-      <div class="desc">Big white-hot heart inside violently flickering red flame. Fire's epicentre.</div>
-    </div>
+      </div></div>
+      <div class="label"><span class="num">11</span>Turbulence Warp</div>
+      <div class="desc">SVG feTurbulence + animated noise. Body shape itself ripples organically.</div></div>
 
-    <!-- V10 — BURST CYCLE -->
-    <div class="card v10">
-      <div class="stage">
-        <svg class="v10-svg" viewBox="0 0 90 120">
-          <defs><linearGradient id="g10" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#fff5d6"/>
-            <stop offset="40%" stop-color="#ffba3a"/>
-            <stop offset="80%" stop-color="#ff5018"/>
+    <div class="card v12"><div class="stage"><div class="particles" data-count="14"></div>
+      <div class="flame-shape">
+        <svg viewBox="0 0 50 60">
+          <defs><radialGradient id="v12g" cx="50%" cy="80%" r="65%">
+            <stop offset="0%" stop-color="#fff8d6"/>
+            <stop offset="40%" stop-color="#ff9418"/>
             <stop offset="100%" stop-color="#a81010"/>
-          </linearGradient></defs>
-          <path class="v10-body" d="M45 8 C 28 24 14 54 14 88 C 14 110 26 118 45 118 C 64 118 76 110 76 88 C 76 54 62 24 45 8 Z" fill="url(#g10)"/>
+          </radialGradient></defs>
+          <path d="M25 6 C 14 16 8 28 8 42 C 8 52 14 56 25 56 C 36 56 42 52 42 42 C 42 28 36 16 25 6 Z" fill="url(#v12g)"/>
         </svg>
-      </div>
-      <div class="label"><span class="num">10</span>Burst Cycle</div>
-      <div class="desc">Slow 4s combustion cycle — surges bright then dims. Mimics real burn rhythm.</div>
-    </div>
+      </div></div>
+      <div class="label"><span class="num">12</span>Path Morph</div>
+      <div class="desc">Same blob shape continuously morphs between 3 subtle path variants. Liquid.</div></div>
 
-    <!-- V11 — WIND CURVED -->
-    <div class="card v11">
-      <div class="stage">
-        <div class="particles" id="v11p"></div>
-        <svg class="v11-svg" viewBox="0 0 110 110">
-          <defs><linearGradient id="g11" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#fff5d6"/>
-            <stop offset="40%" stop-color="#ffba3a"/>
-            <stop offset="80%" stop-color="#ff5018"/>
-            <stop offset="100%" stop-color="#a81010"/>
-          </linearGradient></defs>
-          <path class="v11-body" d="M45 8 C 30 22 18 48 18 80 C 18 100 28 108 45 108 C 62 108 72 100 72 80 C 72 48 60 22 45 8 Z" fill="url(#g11)"/>
-        </svg>
-      </div>
-      <div class="label"><span class="num">11</span>Wind Curved</div>
-      <div class="desc">Flame leaning under steady wind, particles trailing in same direction.</div>
-    </div>
+    <div class="card v13"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">13</span>Jitter + Breath</div>
+      <div class="desc">Fast 0.3s jitter (translate) layered on slow 2.4s breath (scale). Two motions at once.</div></div>
 
-    <!-- V12 — COAL BED HEAVY -->
-    <div class="card v12">
-      <div class="stage">
-        <div class="v12-stage">
-          <div class="v12-bed"></div>
-          <svg class="v12-svg" viewBox="0 0 70 80">
-            <defs><linearGradient id="g12" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#fff5d6"/>
-              <stop offset="40%" stop-color="#ffba3a"/>
-              <stop offset="80%" stop-color="#ff5018"/>
-              <stop offset="100%" stop-color="#a81010"/>
-            </linearGradient></defs>
-            <path class="v12-t v12-t1" d="M20 20 C 14 35 14 60 17 76 C 18 79 19 80 19 80 C 19 80 20 79 21 76 C 24 60 24 35 20 20 Z" fill="url(#g12)"/>
-            <path class="v12-t v12-t2" d="M38 6 C 30 25 30 56 34 76 C 36 79 37 80 38 80 C 39 80 40 79 42 76 C 46 56 46 25 38 6 Z" fill="url(#g12)"/>
-            <path class="v12-t v12-t3" d="M55 22 C 48 38 48 62 51 76 C 52 79 53 80 53 80 C 53 80 54 79 55 76 C 58 62 58 38 55 22 Z" fill="url(#g12)"/>
-          </svg>
-        </div>
-      </div>
-      <div class="label"><span class="num">12</span>Coal Bed Heavy</div>
-      <div class="desc">Dominant glowing coal bed + 3 small flickering flames above. Dying campfire.</div>
-    </div>
+    <div class="card v14"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">14</span>JS Random Pulse</div>
+      <div class="desc">JS triggers random surge events at irregular 0.6-2.4s intervals. Unpredictable.</div></div>
 
-    <!-- V13 — MULTI-SPAWN BASE -->
-    <div class="card v13">
-      <div class="stage">
-        <svg class="v13-svg" viewBox="0 0 130 130">
-          <defs><linearGradient id="g13" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#fff5d6"/>
-            <stop offset="40%" stop-color="#ffba3a"/>
-            <stop offset="80%" stop-color="#ff5018"/>
-            <stop offset="100%" stop-color="#a81010"/>
-          </linearGradient></defs>
-          <path class="v13-t v13-t1" d="M14 80 C 10 95 10 115 12 128 C 13 130 13 130 14 130 C 15 130 15 130 16 128 C 18 115 18 95 14 80 Z" fill="url(#g13)" opacity="0.85"/>
-          <path class="v13-t v13-t2" d="M30 50 C 24 70 24 105 27 126 C 28 129 30 130 30 130 C 30 130 32 129 33 126 C 36 105 36 70 30 50 Z" fill="url(#g13)"/>
-          <path class="v13-t v13-t3" d="M50 30 C 42 56 42 96 47 124 C 48 128 50 130 50 130 C 50 130 52 128 53 124 C 58 96 58 56 50 30 Z" fill="url(#g13)"/>
-          <path class="v13-t v13-t4" d="M68 14 C 58 40 56 88 64 122 C 66 128 68 130 68 130 C 68 130 70 128 72 122 C 80 88 78 40 68 14 Z" fill="url(#g13)"/>
-          <path class="v13-t v13-t5" d="M86 26 C 76 50 76 96 82 124 C 84 128 85 130 86 130 C 87 130 88 128 90 124 C 96 96 96 50 86 26 Z" fill="url(#g13)"/>
-          <path class="v13-t v13-t6" d="M102 44 C 96 64 96 100 99 126 C 100 129 101 130 102 130 C 103 130 104 129 105 126 C 108 100 108 64 102 44 Z" fill="url(#g13)"/>
-          <path class="v13-t v13-t7" d="M118 70 C 114 88 114 112 116 128 C 117 130 118 130 118 130 C 118 130 119 130 120 128 C 122 112 122 88 118 70 Z" fill="url(#g13)" opacity="0.85"/>
-        </svg>
-      </div>
-      <div class="label"><span class="num">13</span>Multi-Spawn Base</div>
-      <div class="desc">7 flame tongues at different x-positions on base, varied heights and lifecycles.</div>
-    </div>
+    <div class="card v15"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">15</span>Periodic Surge</div>
+      <div class="desc">Calm 90% of the time, then strong scale-up + brightness flash every 4s. Combustion.</div></div>
 
-    <!-- V14 — DRIPPING TONGUES -->
-    <div class="card v14">
-      <div class="stage">
-        <div class="v14-stage">
-          <svg class="v14-svg" viewBox="0 0 80 100">
-            <defs><linearGradient id="g14" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#fff5d6"/>
-              <stop offset="50%" stop-color="#ff8a1a"/>
-              <stop offset="100%" stop-color="#a81010"/>
-            </linearGradient></defs>
-            <path d="M40 12 C 26 26 16 50 16 76 C 16 92 24 98 40 98 C 56 98 64 92 64 76 C 64 50 54 26 40 12 Z" fill="url(#g14)" style="animation: tongue-life 1.6s infinite cubic-bezier(0.4,0,0.5,1); transform-origin: 50% 100%;"/>
-          </svg>
-          <div class="v14-drip" id="v14d"></div>
-        </div>
-      </div>
-      <div class="label"><span class="num">14</span>Dripping Fire</div>
-      <div class="desc">Main flame + small fire drops periodically falling from the body. Like molten flame.</div>
-    </div>
+    <div class="card v16"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">16</span>Alternating Lean</div>
+      <div class="desc">Leans hard left → centre stretch → leans hard right → repeat. 4-stop sway.</div></div>
 
-    <!-- V15 — COAL PULSE (mostly embers) -->
-    <div class="card v15">
-      <div class="stage">
-        <div class="v15-stage">
-          <div class="v15-bed-big"></div>
-          <svg class="v15-svg" viewBox="0 0 50 60">
-            <defs><linearGradient id="g15" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#fff5d6"/>
-              <stop offset="40%" stop-color="#ffba3a"/>
-              <stop offset="80%" stop-color="#ff5018"/>
-              <stop offset="100%" stop-color="#a81010"/>
-            </linearGradient></defs>
-            <path class="v15-t" d="M25 6 C 16 18 10 36 10 52 C 10 58 14 60 25 60 C 36 60 40 58 40 52 C 40 36 34 18 25 6 Z" fill="url(#g15)"/>
-          </svg>
-        </div>
-      </div>
-      <div class="label"><span class="num">15</span>Coal Pulse</div>
-      <div class="desc">Mostly glowing coal bed + one small persistent flame on top. Nearly out fire.</div>
-    </div>
+    <div class="card v17"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">17</span>Hyper-Noisy</div>
+      <div class="desc">11 irregular keyframes over 3.7s with combined skew/scale/translate. Flickers like real fire.</div></div>
 
-    <!-- V16 — FIRE TORNADO -->
-    <div class="card v16">
-      <div class="stage">
-        <svg class="v16-svg" viewBox="0 0 70 130">
-          <defs><linearGradient id="g16" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#fff5d6"/>
-            <stop offset="40%" stop-color="#ffba3a"/>
-            <stop offset="80%" stop-color="#ff5018"/>
-            <stop offset="100%" stop-color="#a81010"/>
-          </linearGradient></defs>
-          <path class="v16-coil" d="M35 4 C 25 16 14 40 18 70 C 22 100 30 128 35 128 C 40 128 48 100 52 70 C 56 40 45 16 35 4 Z" fill="url(#g16)"/>
-        </svg>
-      </div>
-      <div class="label"><span class="num">16</span>Fire Tornado</div>
-      <div class="desc">Tall vertical flame that twists and skews like a fire vortex. Vertical helix.</div>
-    </div>
+    <div class="card v18"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">18</span>Spring Bounce</div>
+      <div class="desc">Elastic cubic-bezier easing — bouncy overshoot at peaks. Cartoon-ish bounce.</div></div>
 
-    <!-- V17 — REALISTIC MULTI-LAYER (4 layers screen-blended) -->
-    <div class="card v17">
-      <div class="stage">
-        <svg class="v17-svg" viewBox="0 0 110 130">
-          <defs>
-            <radialGradient id="g17a" cx="50%" cy="100%" r="80%">
-              <stop offset="0%" stop-color="#fff5d6"/>
-              <stop offset="60%" stop-color="#ff8a1a"/>
-              <stop offset="100%" stop-color="#000"/>
-            </radialGradient>
-            <radialGradient id="g17b" cx="50%" cy="100%" r="80%">
-              <stop offset="0%" stop-color="#ffd24d"/>
-              <stop offset="60%" stop-color="#ff5018"/>
-              <stop offset="100%" stop-color="#000"/>
-            </radialGradient>
-          </defs>
-          <path class="v17-l v17-l1" d="M30 30 C 20 56 18 100 26 124 C 28 128 29 130 30 130 C 31 130 32 128 34 124 C 42 100 40 56 30 30 Z" fill="url(#g17a)"/>
-          <path class="v17-l v17-l2" d="M55 8 C 42 38 40 90 50 124 C 52 128 54 130 55 130 C 56 130 58 128 60 124 C 70 90 68 38 55 8 Z" fill="url(#g17b)"/>
-          <path class="v17-l v17-l3" d="M78 20 C 68 50 66 96 74 124 C 76 128 77 130 78 130 C 79 130 80 128 82 124 C 90 96 88 50 78 20 Z" fill="url(#g17a)"/>
-          <path class="v17-l v17-l4" d="M92 56 C 86 76 86 108 90 126 C 91 129 92 130 92 130 C 92 130 93 129 94 126 C 98 108 98 76 92 56 Z" fill="url(#g17b)"/>
-        </svg>
-      </div>
-      <div class="label"><span class="num">17</span>Multi-Layer Screen</div>
-      <div class="desc">4 flames overlapping with screen-blend mode. Like real fire shot from camera.</div>
-    </div>
+    <div class="card v19"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">19</span>Slow Sway + Crackle</div>
+      <div class="desc">3s smooth sway underneath + 0.2s crackle jitter on top. Two timescales mixed.</div></div>
 
-    <!-- V18 — JS PER-FRAME RANDOM PATH -->
-    <div class="card v18">
-      <div class="stage">
-        <svg class="v18-svg" viewBox="0 0 90 130" id="v18">
-          <defs><linearGradient id="g18" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#fff5d6"/>
-            <stop offset="40%" stop-color="#ffba3a"/>
-            <stop offset="80%" stop-color="#ff5018"/>
-            <stop offset="100%" stop-color="#a81010"/>
-          </linearGradient></defs>
-          <path id="v18p" d="M45 8 C 30 24 16 54 16 90 C 16 116 28 128 45 128 C 62 128 74 116 74 90 C 74 54 60 24 45 8 Z" fill="url(#g18)"/>
-        </svg>
-      </div>
-      <div class="label"><span class="num">18</span>Random Per-Frame</div>
-      <div class="desc">JS mutates the SVG path 8x per second with random control points. Truly chaotic.</div>
-    </div>
-
-    <!-- V19 — CRACKLING -->
-    <div class="card v19">
-      <div class="stage">
-        <div class="v19-stage">
-          <div class="particles" id="v19p"></div>
-          <svg class="v19-svg" viewBox="0 0 60 80">
-            <defs><linearGradient id="g19" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#fff5d6"/>
-              <stop offset="40%" stop-color="#ffba3a"/>
-              <stop offset="80%" stop-color="#ff5018"/>
-              <stop offset="100%" stop-color="#a81010"/>
-            </linearGradient></defs>
-            <path class="v19-t" d="M30 8 C 20 22 12 44 12 64 C 12 76 18 80 30 80 C 42 80 48 76 48 64 C 48 44 40 22 30 8 Z" fill="url(#g19)"/>
-          </svg>
-        </div>
-      </div>
-      <div class="label"><span class="num">19</span>Crackling</div>
-      <div class="desc">Steady small flame + dense crackling sparks shooting out continuously.</div>
-    </div>
-
-    <!-- V20 — PHOENIX CYCLE -->
-    <div class="card v20">
-      <div class="stage">
-        <div class="v20-stage">
-          <div class="particles" id="v20p"></div>
-          <svg class="v20-svg" viewBox="0 0 90 110">
-            <defs><linearGradient id="g20" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#fff5d6"/>
-              <stop offset="40%" stop-color="#ffba3a"/>
-              <stop offset="80%" stop-color="#ff5018"/>
-              <stop offset="100%" stop-color="#a81010"/>
-            </linearGradient></defs>
-            <path class="v20-body" d="M45 8 C 28 24 14 54 14 80 C 14 100 26 108 45 108 C 64 108 76 100 76 80 C 76 54 62 24 45 8 Z" fill="url(#g20)"/>
-          </svg>
-        </div>
-      </div>
-      <div class="label"><span class="num">20</span>Rebirth Cycle</div>
-      <div class="desc">Slow 4s cycle: flame dim → grows → erupts bright → dies → reborn. Spark burst.</div>
-    </div>
+    <div class="card v20"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">20</span>Combo + JS</div>
+      <div class="desc">2 stacked CSS animations (slow rotate+scale + fast translate) AND JS perturbation. Maximum life.</div></div>
 
   </div>
 
 <script>
-  // Particle utility
-  function spawnParticles(stage, opts) {
-    const count = opts.count || 14;
-    const anim = opts.anim || 'p-rise';
-    const dur = opts.dur || 2.2;
-    const spread = opts.spread || 26;
-    const cx = (stage.clientWidth || 200) / 2;
+  // Inject the same V13 chubby blob SVG into every empty .flame-shape
+  // (V11 and V12 already have custom inline SVGs and stay untouched).
+  const FLAME_SVG = function(idx) {
+    return `<svg viewBox="0 0 50 60">
+      <defs><radialGradient id="g${idx}" cx="50%" cy="80%" r="65%">
+        <stop offset="0%" stop-color="#fff8d6"/>
+        <stop offset="40%" stop-color="#ff9418"/>
+        <stop offset="100%" stop-color="#a81010"/>
+      </radialGradient></defs>
+      <path d="M25 6 C 14 16 8 28 8 42 C 8 52 14 56 25 56 C 36 56 42 52 42 42 C 42 28 36 16 25 6 Z" fill="url(#g${idx})"/>
+    </svg>`;
+  };
+  document.querySelectorAll('.flame-shape').forEach((el, i) => {
+    if (el.children.length === 0) el.innerHTML = FLAME_SVG(i);
+  });
+
+  // Generate identical particles in every .particles container
+  document.querySelectorAll('.particles').forEach(stage => {
+    const count = parseInt(stage.dataset.count) || 14;
+    const cx = 100; // half of stage width
     for (let i = 0; i < count; i++) {
       const p = document.createElement('div');
       p.className = 'particle';
-      const size = anim === 'p-spark' ? 1.5 + Math.random() * 1.5 : 2 + Math.random() * 3;
-      const x = cx - spread/2 + Math.random() * spread;
+      const size = 2 + Math.random() * 3;
+      const x = cx - 13 + Math.random() * 26;
       const dx = (Math.random() - 0.5) * 18;
       const dx2 = (Math.random() - 0.5) * 28;
-      const d = dur * (0.7 + Math.random() * 0.6);
-      const delay = -Math.random() * d;
-      p.style.cssText =
-        `width:${size}px; height:${size}px; left:${x}px;` +
-        `--dx:${dx}px; --dx2:${dx2}px;` +
-        `animation: ${anim} ${d}s ${delay}s infinite cubic-bezier(0.4,0,0.6,0.6);`;
-      stage.appendChild(p);
-    }
-  }
-
-  // V2 — procedural tongue spawn
-  (function() {
-    const stage = document.getElementById('v2');
-    if (!stage) return;
-    function spawn() {
-      const t = document.createElement('div');
-      t.className = 'v2-tongue';
-      const x = 6 + Math.random() * 80;
-      const w = 14 + Math.random() * 16;
-      const h = 35 + Math.random() * 50;
-      const d = 1.2 + Math.random() * 1.2;
-      t.style.cssText = `left:${x}px; width:${w}px; height:${h}px; animation: v2-spawn ${d}s ease-out forwards;`;
-      stage.appendChild(t);
-      setTimeout(() => t.remove(), d * 1000);
-    }
-    setInterval(spawn, 280);
-    for (let i = 0; i < 4; i++) setTimeout(spawn, i * 280);
-  })();
-
-  // V4 — same procedural spawn but denser + more random
-  (function() {
-    const stage = document.getElementById('v4');
-    if (!stage) return;
-    function spawn() {
-      const t = document.createElement('div');
-      t.className = 'v2-tongue';
-      const x = 6 + Math.random() * 90;
-      const w = 12 + Math.random() * 20;
-      const h = 30 + Math.random() * 70;
-      const d = 1.0 + Math.random() * 1.5;
-      t.style.cssText = `left:${x}px; width:${w}px; height:${h}px; animation: v2-spawn ${d}s ease-out forwards;`;
-      stage.appendChild(t);
-      setTimeout(() => t.remove(), d * 1000);
-    }
-    setInterval(spawn, 180);
-    for (let i = 0; i < 6; i++) setTimeout(spawn, i * 150);
-  })();
-
-  // V6 — mass particle fire (no silhouette)
-  (function() {
-    const stage = document.getElementById('v6');
-    if (!stage) return;
-    for (let i = 0; i < 80; i++) {
-      const p = document.createElement('div');
-      p.className = 'particle';
-      const size = 2 + Math.random() * 4;
-      const x = 8 + Math.random() * 90;
-      const dx = (Math.random() - 0.5) * 24;
-      const dx2 = (Math.random() - 0.5) * 36;
-      const d = 1.2 + Math.random() * 1.6;
+      const d = 2.2 * (0.7 + Math.random() * 0.6);
       const delay = -Math.random() * d;
       p.style.cssText =
         `width:${size}px; height:${size}px; left:${x}px;` +
@@ -720,77 +356,70 @@
         `animation: p-rise ${d}s ${delay}s infinite cubic-bezier(0.4,0,0.6,0.6);`;
       stage.appendChild(p);
     }
-  })();
+  });
 
-  // V11 — wind-trailing particles
+  // V6 — JS noise-driven RAF transform
   (function() {
-    const stage = document.getElementById('v11p');
-    if (!stage) return;
-    for (let i = 0; i < 14; i++) {
-      const p = document.createElement('div');
-      p.className = 'particle';
-      const size = 2 + Math.random() * 2;
-      const x = 70 + Math.random() * 30;
-      const dx = 25 + Math.random() * 20; // strong rightward drift
-      const dx2 = 45 + Math.random() * 25;
-      const d = 1.5 + Math.random() * 1.2;
-      const delay = -Math.random() * d;
-      p.style.cssText =
-        `width:${size}px; height:${size}px; left:${x}px;` +
-        `--dx:${dx}px; --dx2:${dx2}px;` +
-        `animation: p-rise ${d}s ${delay}s infinite cubic-bezier(0.4,0,0.6,0.6);`;
-      stage.appendChild(p);
+    const el = document.querySelector('.v6 .flame-shape');
+    if (!el) return;
+    let t = 0;
+    function noise(x) {
+      // Smooth pseudo-Perlin via summed sines at non-divisible periods
+      return Math.sin(x * 1.0) * 0.5 + Math.sin(x * 2.3) * 0.3 + Math.sin(x * 4.7) * 0.2;
     }
-  })();
-
-  // V14 — drip cycle
-  (function() {
-    const drip = document.getElementById('v14d');
-    if (!drip) return;
-    function cycle() {
-      const x = 25 + Math.random() * 30;
-      drip.style.left = x + 'px';
-      drip.style.bottom = '50px';
-      drip.style.animation = 'none';
-      void drip.offsetWidth;
-      drip.style.animation = 'drip-fall 1.4s ease-in';
+    function frame() {
+      t += 0.016;
+      const sk = noise(t * 1.2) * 4;
+      const sy = 1 + noise(t * 0.9 + 100) * 0.05;
+      const sx = 1 + noise(t * 1.1 + 50) * 0.04;
+      const ty = noise(t * 1.4 + 200) * 1.5;
+      el.style.transform = `skewX(${sk.toFixed(2)}deg) scaleY(${sy.toFixed(3)}) scaleX(${sx.toFixed(3)}) translateY(${ty.toFixed(2)}px)`;
+      requestAnimationFrame(frame);
     }
-    setInterval(cycle, 1500);
-    cycle();
+    requestAnimationFrame(frame);
   })();
 
-  // V18 — JS mutate path 8 times per second
+  // V14 — JS random pulse
   (function() {
-    const path = document.getElementById('v18p');
-    if (!path) return;
-    function rnd(a, b) { return a + Math.random() * (b - a); }
-    setInterval(() => {
-      const cx1l = rnd(14, 22), cy1l = rnd(20, 28);
-      const cx1r = rnd(68, 76), cy1r = rnd(20, 28);
-      const cx2l = rnd(8, 16),  cy2l = rnd(50, 60);
-      const cx2r = rnd(74, 82), cy2r = rnd(50, 60);
-      const cx3l = rnd(10, 20), cy3l = rnd(82, 92);
-      const cx3r = rnd(70, 80), cy3r = rnd(82, 92);
-      path.setAttribute('d',
-        `M45 8 C ${cx1l} ${cy1l} ${cx2l} ${cy2l} ${cx3l} 90 ` +
-        `C 16 116 28 128 45 128 ` +
-        `C 62 128 74 116 ${cx3r} 90 ` +
-        `C ${cx2r} ${cy2r} ${cx1r} ${cy1r} 45 8 Z`);
-    }, 130);
+    const el = document.querySelector('.v14 .flame-shape');
+    if (!el) return;
+    function pulse() {
+      const mag = 0.9 + Math.random() * 0.3; // 0.9 to 1.2
+      const sk = (Math.random() - 0.5) * 8;
+      el.style.transform = `scale(${mag.toFixed(2)}) skewX(${sk.toFixed(1)}deg)`;
+      setTimeout(() => {
+        el.style.transform = 'scale(1) skewX(0deg)';
+      }, 180);
+    }
+    function loop() {
+      pulse();
+      setTimeout(loop, 600 + Math.random() * 1800);
+    }
+    loop();
   })();
 
-  // V19 — crackling sparks
+  // V20 — JS RAF perturbation on top of CSS animations
   (function() {
-    const stage = document.getElementById('v19p');
-    if (!stage) return;
-    spawnParticles(stage, { count: 24, anim: 'p-spark', dur: 1.3, spread: 60 });
-  })();
-
-  // V20 — phoenix particles (burst on each cycle)
-  (function() {
-    const stage = document.getElementById('v20p');
-    if (!stage) return;
-    spawnParticles(stage, { count: 16, anim: 'p-rise', dur: 2, spread: 30 });
+    const el = document.querySelector('.v20 .flame-shape');
+    if (!el) return;
+    let t = 0;
+    function noise(x) {
+      return Math.sin(x * 1.0) * 0.5 + Math.sin(x * 2.7) * 0.3 + Math.sin(x * 5.1) * 0.2;
+    }
+    // Use a CSS variable so we layer with the existing keyframes
+    el.style.setProperty('--noise-x', '0px');
+    el.style.setProperty('--noise-y', '0px');
+    function frame() {
+      t += 0.016;
+      const x = (noise(t * 1.3) * 0.8).toFixed(2);
+      const y = (noise(t * 1.1 + 30) * 0.8).toFixed(2);
+      // Apply via translate property since CSS animation uses rotate/scale on a20a + translate on a20b
+      // To avoid conflict, we mutate the inner svg instead
+      const svg = el.querySelector('svg');
+      if (svg) svg.style.transform = `translate(${x}px, ${y}px)`;
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
   })();
 </script>
 
