@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Flame — 20 animation variants on the same shape</title>
+<title>Flame — emoji-style multi-tongue + animations</title>
 <style>
   :root {
     --bg: #0e0c12;
@@ -25,153 +25,44 @@
   }
   h1 { text-align: center; font-size: 22px; letter-spacing: 0.34em; color: var(--red); text-shadow: 0 0 18px var(--red); margin: 0 0 8px; font-weight: 700; }
   .sub { text-align: center; color: var(--t2); font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.18em; margin-bottom: 32px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; max-width: 1200px; margin: 0 auto; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; max-width: 900px; margin: 0 auto; }
   .card { background: var(--card); border: 1px solid var(--brd); border-radius: 12px; padding: 18px 14px 16px; text-align: center; transition: border-color 0.2s, transform 0.2s; }
   .card:hover { border-color: rgba(232,16,42,0.5); transform: translateY(-2px); }
-  .stage { height: 160px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 14px; padding-bottom: 6px; position: relative; overflow: visible; }
+  .stage { height: 180px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 14px; padding-bottom: 6px; position: relative; overflow: visible; }
   .label { font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 4px; }
   .num { color: var(--red); font-family: 'JetBrains Mono', monospace; margin-right: 8px; font-weight: 700; }
   .desc { font-size: 10.5px; color: var(--t3); line-height: 1.5; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em; text-transform: none; }
 
-  /* Particles — identical across all cards */
+  /* Particles (unchanged from prev page) */
   .particles { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
   .particle { position: absolute; border-radius: 50%; bottom: 8px; }
   @keyframes p-rise {
     0%   { transform: translate(0,0) scale(0.3); opacity: 0; background: #fff5b8; box-shadow: 0 0 4px #ffd24d; }
     15%  { opacity: 1; background: #ffd24d; box-shadow: 0 0 6px #ffae3a; }
-    50%  { transform: translate(var(--dx,0), -65px) scale(0.85); opacity: 0.75; background: #ff7e1a; }
-    100% { transform: translate(var(--dx2,0), -130px) scale(0.18); opacity: 0; background: #b81818; }
+    50%  { transform: translate(var(--dx,0), -75px) scale(0.85); opacity: 0.75; background: #ff7e1a; }
+    100% { transform: translate(var(--dx2,0), -150px) scale(0.18); opacity: 0; background: #b81818; }
   }
 
-  /* Flame container — identical width/height/filter across all cards.
-     The SVG inside is the same V13 chubby blob. ONLY the animation
-     applied to .flame-shape changes per variant. */
+  /* Multi-tongue flame container — same dimensions and base styling
+     across all variants. Only animation differs. */
   .flame-shape {
-    width: 60px;
-    height: 78px;
-    filter: drop-shadow(0 0 14px rgba(255,80,20,0.75));
+    width: 80px;
+    height: 100px;
+    filter: drop-shadow(0 0 14px rgba(255,80,20,0.65)) drop-shadow(0 0 28px rgba(232,16,42,0.3));
     transform-origin: 50% 95%;
     position: relative;
     z-index: 2;
   }
   .flame-shape svg { width: 100%; height: 100%; overflow: visible; }
 
-  /* ════════════════════════════════════════
-     20 ANIMATION VARIANTS — same shape, different motion
-     ════════════════════════════════════════ */
+  /* ════════ VARIANT ANIMATIONS ════════ */
 
-  /* 01 — Slow gentle breath */
-  .v1 .flame-shape { animation: a1 2.4s ease-in-out infinite; }
-  @keyframes a1 { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05) translateY(-1px); } }
+  /* 01 — JS noise (RAF) */
+  .v1 .flame-shape { /* JS handles transform */ }
 
-  /* 02 — Still air, barely moves */
-  .v2 .flame-shape { animation: a2 4.5s ease-in-out infinite; }
-  @keyframes a2 { 0%,100% { transform: skewX(0deg) scaleY(1); } 50% { transform: skewX(-1deg) scaleY(1.025); } }
-
-  /* 03 — Wood-fire dance (medium tempo + skew) */
-  .v3 .flame-shape { animation: a3 1.5s ease-in-out infinite; }
-  @keyframes a3 {
-    0%,100% { transform: skewX(0) scaleY(1) scaleX(1); }
-    33% { transform: skewX(-3deg) scaleY(1.06) scaleX(0.96); }
-    66% { transform: skewX(3deg) scaleY(1.04) scaleX(0.97); }
-  }
-
-  /* 04 — Strong gust (heavy slow sway) */
-  .v4 .flame-shape { animation: a4 3s ease-in-out infinite; }
-  @keyframes a4 { 0%,100% { transform: skewX(-7deg) scaleY(1); } 50% { transform: skewX(7deg) scaleY(1.04); } }
-
-  /* 05 — Frantic stepped flicker (the V13 baseline, but stepped) */
-  .v5 .flame-shape { animation: a5 0.42s steps(6) infinite; }
-  @keyframes a5 {
-    0% { transform: scaleY(1) skewX(0); }
-    16% { transform: scaleY(1.08) skewX(-2deg); }
-    32% { transform: scaleY(0.95) skewX(1deg); }
-    48% { transform: scaleY(1.05) skewX(2deg); }
-    66% { transform: scaleY(1.02) skewX(-1deg); }
-    84% { transform: scaleY(1.06) skewX(0); }
-    100% { transform: scaleY(1) skewX(0); }
-  }
-
-  /* 06 — JS noise-driven (RAF) — base styling, JS does the rest */
-  .v6 .flame-shape { /* JS sets transform per frame */ }
-
-  /* 07 — Asymmetric breath (left and right pump unequally) */
-  .v7 .flame-shape { animation: a7 2s ease-in-out infinite; }
-  @keyframes a7 {
-    0%,100% { transform: scale(1) skewX(0); }
-    30% { transform: scale(1.06) skewX(-3deg); }
-    70% { transform: scale(1.04) skewX(2deg); }
-  }
-
-  /* 08 — Three independent properties (translate / rotate / scale) at
-     non-divisible durations. They never sync. */
-  .v8 .flame-shape { animation: a8a 0.5s ease-in-out infinite, a8b 1.7s ease-in-out infinite, a8c 3.3s ease-in-out infinite; }
-  @keyframes a8a { 0%,100% { translate: 0 0; } 50% { translate: 0 -1px; } }
-  @keyframes a8b { 0%,100% { rotate: 0deg; } 50% { rotate: -2.5deg; } }
-  @keyframes a8c { 0%,100% { scale: 1; } 50% { scale: 1.06; } }
-
-  /* 09 — Heavy stack: many irregular keyframes packed in */
-  .v9 .flame-shape { animation: a9 2.6s cubic-bezier(0.4,0,0.5,1) infinite; }
-  @keyframes a9 {
-    0% { transform: scaleY(1) skewX(0) translateY(0); }
-    11% { transform: scaleY(1.06) skewX(-2.5deg) translateY(-1px); }
-    23% { transform: scaleY(1.02) skewX(1deg) translateY(0); }
-    37% { transform: scaleY(1.1) skewX(-3deg) translateY(-2px); }
-    49% { transform: scaleY(1.04) skewX(2deg) translateY(-1px); }
-    63% { transform: scaleY(0.96) skewX(0) translateY(0); }
-    78% { transform: scaleY(1.08) skewX(-1.5deg) translateY(-2px); }
-    91% { transform: scaleY(1.0) skewX(2deg) translateY(0); }
-    100% { transform: scaleY(1) skewX(0) translateY(0); }
-  }
-
-  /* 10 — Lifecycle: shrink → grow → shrink, the whole blob */
-  .v10 .flame-shape { animation: a10 2.6s ease-in-out infinite; transform-origin: 50% 100%; }
-  @keyframes a10 {
-    0%,100% { transform: scale(0.55) translateY(20px); opacity: 0.7; }
-    25% { transform: scale(1) translateY(0); opacity: 1; }
-    55% { transform: scale(1.06) translateY(-2px); opacity: 1; }
-    85% { transform: scale(0.85) translateY(-6px); opacity: 0.85; }
-  }
-
-  /* 11 — SVG turbulence warp — has its OWN SVG markup since it needs a filter */
-  .v11 .flame-shape { animation: none; filter: drop-shadow(0 0 14px rgba(255,80,20,0.75)); }
-
-  /* 12 — Path morph — has its OWN SVG markup, animates the d attribute */
-  .v12 .flame-shape svg path { animation: a12 2.4s ease-in-out infinite; }
-  @keyframes a12 {
-    0%,100% { d: path("M25 6 C 14 16 8 28 8 42 C 8 52 14 56 25 56 C 36 56 42 52 42 42 C 42 28 36 16 25 6 Z"); }
-    33% { d: path("M25 4 C 12 14 6 28 6 42 C 6 52 14 56 25 56 C 36 56 44 52 44 42 C 44 28 38 14 25 4 Z"); }
-    66% { d: path("M25 8 C 16 18 10 28 10 42 C 10 52 14 56 25 56 C 36 56 40 52 40 42 C 40 28 34 18 25 8 Z"); }
-  }
-
-  /* 13 — Fast jitter + slow breath stacked (separate transform props) */
-  .v13 .flame-shape { animation: a13a 0.3s ease-in-out infinite, a13b 2.4s ease-in-out infinite; }
-  @keyframes a13a { 0%,100% { translate: 0 0; } 50% { translate: 0.3px -0.5px; } }
-  @keyframes a13b { 0%,100% { scale: 1; } 50% { scale: 1.06; } }
-
-  /* 14 — JS random pulse — irregular surge intervals */
-  .v14 .flame-shape { transition: transform 0.15s ease-out; }
-
-  /* 15 — Periodic surge (mostly calm + strong burst every 4s) */
-  .v15 .flame-shape { animation: a15 4s ease-in-out infinite; }
-  @keyframes a15 {
-    0%,42%,100% { transform: scale(1) skewX(0); filter: drop-shadow(0 0 14px rgba(255,80,20,0.75)); }
-    50% { transform: scale(1.18) translateY(-3px); filter: drop-shadow(0 0 22px rgba(255,140,40,1)) drop-shadow(0 0 40px rgba(232,16,42,0.6)); }
-    62% { transform: scale(1.04); filter: drop-shadow(0 0 16px rgba(255,100,30,0.85)); }
-  }
-
-  /* 16 — Asymmetric alternating (left grow, right grow, alternating) */
-  .v16 .flame-shape { animation: a16 1.8s ease-in-out infinite; }
-  @keyframes a16 {
-    0%,100% { transform: skewX(0) scaleX(1) scaleY(1); }
-    25% { transform: skewX(-5deg) scaleX(0.9) scaleY(1.07); }
-    50% { transform: skewX(0) scaleX(1.05) scaleY(0.96); }
-    75% { transform: skewX(5deg) scaleX(0.9) scaleY(1.07); }
-  }
-
-  /* 17 — Hyper-noisy realistic (12 irregular keyframes) */
-  .v17 .flame-shape { animation: a17 3.7s cubic-bezier(0.45,0.05,0.55,0.95) infinite; }
-  @keyframes a17 {
+  /* 02 — Hyper-noisy 11-stop CSS keyframes */
+  .v2 .flame-shape { animation: a2 3.7s cubic-bezier(0.45,0.05,0.55,0.95) infinite; }
+  @keyframes a2 {
     0%   { transform: scaleY(1) skewX(0) translateY(0); }
     7%   { transform: scaleY(1.05) skewX(-2deg) translateY(-1px); }
     17%  { transform: scaleY(1.02) skewX(1deg) translateY(0); }
@@ -184,170 +75,168 @@
     91%  { transform: scaleY(1.02) skewX(1deg) translateY(0); }
     100% { transform: scaleY(1) skewX(0) translateY(0); }
   }
-
-  /* 18 — Spring/elastic easing (bouncy) */
-  .v18 .flame-shape { animation: a18 1.6s cubic-bezier(0.5, 1.6, 0.5, 1) infinite; transform-origin: 50% 100%; }
-  @keyframes a18 {
-    0%,100% { transform: scaleY(0.95); }
-    50% { transform: scaleY(1.12); }
+  /* Each layer also wiggles independently for extra life */
+  .v2 .layer-out  { animation: lay-a 1.7s ease-in-out infinite; transform-origin: 50% 100%; }
+  .v2 .layer-mid  { animation: lay-a 1.3s ease-in-out infinite reverse; transform-origin: 50% 95%; }
+  .v2 .layer-core { animation: lay-a 0.95s ease-in-out infinite; transform-origin: 50% 90%; }
+  @keyframes lay-a {
+    0%,100% { transform: scaleY(1) scaleX(1); }
+    50% { transform: scaleY(1.05) scaleX(0.96); }
   }
 
-  /* 19 — Smooth slow sway + crackle jitter on top */
-  .v19 .flame-shape { animation: a19a 3s ease-in-out infinite, a19b 0.2s steps(3) infinite; }
-  @keyframes a19a { 0%,100% { rotate: 0deg; } 50% { rotate: -3deg; } }
-  @keyframes a19b { 0%,100% { scale: 1 1; } 33% { scale: 1.02 0.99; } 66% { scale: 0.99 1.02; } }
+  /* 03 — JS RAF + stacked CSS combo (winner from previous round) */
+  .v3 .flame-shape { animation: a3a 2.4s ease-in-out infinite, a3b 0.4s ease-in-out infinite; }
+  @keyframes a3a { 0%,100% { rotate: 0deg; scale: 1; } 50% { rotate: -2deg; scale: 1.06; } }
+  @keyframes a3b { 0%,100% { translate: 0 0; } 50% { translate: 0.4px -0.6px; } }
+  /* Layers also dance */
+  .v3 .layer-out  { animation: lay-a 1.5s ease-in-out infinite; transform-origin: 50% 100%; }
+  .v3 .layer-mid  { animation: lay-a 1.05s ease-in-out infinite reverse; transform-origin: 50% 95%; }
+  .v3 .layer-core { animation: lay-a 0.7s ease-in-out infinite; transform-origin: 50% 90%; }
 
-  /* 20 — Ultimate combo: layered animations + JS RAF perturbation */
-  .v20 .flame-shape { animation: a20a 2.4s ease-in-out infinite, a20b 0.4s ease-in-out infinite; }
-  @keyframes a20a { 0%,100% { rotate: 0deg; scale: 1; } 50% { rotate: -2deg; scale: 1.06; } }
-  @keyframes a20b { 0%,100% { translate: 0 0; } 50% { translate: 0.4px -0.6px; } }
+  /* 04 — Three independent properties at non-divisible speeds */
+  .v4 .flame-shape { animation: a4a 0.5s ease-in-out infinite, a4b 1.7s ease-in-out infinite, a4c 3.3s ease-in-out infinite; }
+  @keyframes a4a { 0%,100% { translate: 0 0; } 50% { translate: 0 -1px; } }
+  @keyframes a4b { 0%,100% { rotate: 0deg; } 50% { rotate: -2.5deg; } }
+  @keyframes a4c { 0%,100% { scale: 1; } 50% { scale: 1.07; } }
+  /* Layers desync further */
+  .v4 .layer-out  { animation: lay-a 2.1s ease-in-out infinite; transform-origin: 50% 100%; }
+  .v4 .layer-mid  { animation: lay-a 1.4s ease-in-out infinite reverse; transform-origin: 50% 95%; }
+  .v4 .layer-core { animation: lay-a 0.9s ease-in-out infinite; transform-origin: 50% 90%; }
+
+  /* 05 — SVG turbulence warp (whole multi-tongue body warps) */
+  .v5 .flame-shape svg { filter: url(#turb-filter); }
+  /* Subtle whole-body sway on top of the turbulence */
+  .v5 .flame-shape { animation: a5 3s ease-in-out infinite; }
+  @keyframes a5 { 0%,100% { transform: skewX(0) scaleY(1); } 50% { transform: skewX(-2deg) scaleY(1.04); } }
+
+  /* 06 — Wood-fire dance, layered */
+  .v6 .flame-shape { animation: a6 1.6s ease-in-out infinite; }
+  @keyframes a6 {
+    0%,100% { transform: skewX(0) scaleY(1) scaleX(1); }
+    33% { transform: skewX(-3deg) scaleY(1.06) scaleX(0.96); }
+    66% { transform: skewX(3deg) scaleY(1.04) scaleX(0.97); }
+  }
+  .v6 .layer-out  { animation: lay-a 1.4s ease-in-out infinite; transform-origin: 50% 100%; }
+  .v6 .layer-mid  { animation: lay-a 1.0s ease-in-out infinite reverse; transform-origin: 50% 95%; }
+  .v6 .layer-core { animation: lay-a 0.65s ease-in-out infinite; transform-origin: 50% 90%; }
 
 </style>
 </head>
 <body>
-  <h1>FLAME — 20 ANIMATION VARIANTS</h1>
-  <div class="sub">Same chubby blob + particles. Only the flame's motion differs.</div>
+  <h1>EMOJI-STYLE FLAME</h1>
+  <div class="sub">Multi-tongue 3-layer silhouette + same particles. 6 animation variants.</div>
+
+  <!-- Hidden SVG defs holding the turbulence filter (used by V5) -->
+  <svg width="0" height="0" style="position:absolute;">
+    <defs>
+      <filter id="turb-filter" x="-30%" y="-30%" width="160%" height="160%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.018 0.05" numOctaves="2" seed="3">
+          <animate attributeName="baseFrequency" dur="6s" values="0.018 0.05; 0.035 0.08; 0.018 0.05" repeatCount="indefinite"/>
+        </feTurbulence>
+        <feDisplacementMap in="SourceGraphic" scale="6"/>
+      </filter>
+    </defs>
+  </svg>
 
   <div class="grid">
+    <div class="card v1"><div class="stage"><div class="particles"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">01</span>JS Noise RAF</div>
+      <div class="desc">requestAnimationFrame + Perlin-style summed sines. Each layer also dances on own beat. Most organic, never repeats.</div></div>
 
-    <div class="card v1"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
-      <div class="label"><span class="num">01</span>Slow Breath</div>
-      <div class="desc">Just gentle scale 1 → 1.05 over 2.4s. Calm, candle on still air.</div></div>
+    <div class="card v2"><div class="stage"><div class="particles"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">02</span>Hyper-Noisy CSS</div>
+      <div class="desc">11 irregular keyframes packed into 3.7s + each layer wiggles independently. Pure CSS, very alive.</div></div>
 
-    <div class="card v2"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
-      <div class="label"><span class="num">02</span>Still Air</div>
-      <div class="desc">Barely moves. 4.5s cycle, ±1deg skew, minimal scale. Meditative.</div></div>
+    <div class="card v3"><div class="stage"><div class="particles"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">03</span>Combo (best of)</div>
+      <div class="desc">Slow rotate+scale (2.4s) + fast jitter (0.4s) + per-layer dance. Winner from previous round.</div></div>
 
-    <div class="card v3"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
-      <div class="label"><span class="num">03</span>Wood Dance</div>
-      <div class="desc">Medium tempo (1.5s) with skew + scale. Real wood-fire vibe.</div></div>
+    <div class="card v4"><div class="stage"><div class="particles"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">04</span>3-Speed Independent</div>
+      <div class="desc">Translate (0.5s), rotate (1.7s), scale (3.3s) all independent. Layers also desync. Never syncs.</div></div>
 
-    <div class="card v4"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
-      <div class="label"><span class="num">04</span>Strong Gust</div>
-      <div class="desc">Heavy slow ±7° sway over 3s. Outdoors fire in the wind.</div></div>
+    <div class="card v5"><div class="stage"><div class="particles"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">05</span>Turbulence Warp</div>
+      <div class="desc">SVG feTurbulence + animated noise warps the whole multi-tongue silhouette. Most physical.</div></div>
 
-    <div class="card v5"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
-      <div class="label"><span class="num">05</span>Stepped Flicker</div>
-      <div class="desc">Frantic 0.42s with steps(6) — twitchy not smooth. Stepped digital feel.</div></div>
-
-    <div class="card v6"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
-      <div class="label"><span class="num">06</span>JS Noise (RAF)</div>
-      <div class="desc">requestAnimationFrame applies smooth Perlin-style random transforms. Truly organic.</div></div>
-
-    <div class="card v7"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
-      <div class="label"><span class="num">07</span>Asymmetric Breath</div>
-      <div class="desc">Left and right pump on different schedules. Slightly off-balance, alive.</div></div>
-
-    <div class="card v8"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
-      <div class="label"><span class="num">08</span>3-Speed Independent</div>
-      <div class="desc">Translate (0.5s) + rotate (1.7s) + scale (3.3s). Never syncs — never repeats.</div></div>
-
-    <div class="card v9"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
-      <div class="label"><span class="num">09</span>Packed Irregular</div>
-      <div class="desc">9 irregular keyframes (11%, 23%, 37%, ...) crammed into 2.6s. Random-feeling flicker.</div></div>
-
-    <div class="card v10"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
-      <div class="label"><span class="num">10</span>Full Lifecycle</div>
-      <div class="desc">Whole blob shrinks to 0.55, grows back to 1.06, dies again. Mimics burn cycle.</div></div>
-
-    <div class="card v11"><div class="stage"><div class="particles" data-count="14"></div>
-      <div class="flame-shape">
-        <svg viewBox="0 0 50 60">
-          <defs>
-            <filter id="v11f" x="-30%" y="-30%" width="160%" height="160%">
-              <feTurbulence type="fractalNoise" baseFrequency="0.018 0.05" numOctaves="2" seed="3">
-                <animate attributeName="baseFrequency" dur="6s" values="0.018 0.05; 0.035 0.08; 0.018 0.05" repeatCount="indefinite"/>
-              </feTurbulence>
-              <feDisplacementMap in="SourceGraphic" scale="6"/>
-            </filter>
-            <radialGradient id="v11g" cx="50%" cy="80%" r="65%">
-              <stop offset="0%" stop-color="#fff8d6"/>
-              <stop offset="40%" stop-color="#ff9418"/>
-              <stop offset="100%" stop-color="#a81010"/>
-            </radialGradient>
-          </defs>
-          <path filter="url(#v11f)" d="M25 6 C 14 16 8 28 8 42 C 8 52 14 56 25 56 C 36 56 42 52 42 42 C 42 28 36 16 25 6 Z" fill="url(#v11g)"/>
-        </svg>
-      </div></div>
-      <div class="label"><span class="num">11</span>Turbulence Warp</div>
-      <div class="desc">SVG feTurbulence + animated noise. Body shape itself ripples organically.</div></div>
-
-    <div class="card v12"><div class="stage"><div class="particles" data-count="14"></div>
-      <div class="flame-shape">
-        <svg viewBox="0 0 50 60">
-          <defs><radialGradient id="v12g" cx="50%" cy="80%" r="65%">
-            <stop offset="0%" stop-color="#fff8d6"/>
-            <stop offset="40%" stop-color="#ff9418"/>
-            <stop offset="100%" stop-color="#a81010"/>
-          </radialGradient></defs>
-          <path d="M25 6 C 14 16 8 28 8 42 C 8 52 14 56 25 56 C 36 56 42 52 42 42 C 42 28 36 16 25 6 Z" fill="url(#v12g)"/>
-        </svg>
-      </div></div>
-      <div class="label"><span class="num">12</span>Path Morph</div>
-      <div class="desc">Same blob shape continuously morphs between 3 subtle path variants. Liquid.</div></div>
-
-    <div class="card v13"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
-      <div class="label"><span class="num">13</span>Jitter + Breath</div>
-      <div class="desc">Fast 0.3s jitter (translate) layered on slow 2.4s breath (scale). Two motions at once.</div></div>
-
-    <div class="card v14"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
-      <div class="label"><span class="num">14</span>JS Random Pulse</div>
-      <div class="desc">JS triggers random surge events at irregular 0.6-2.4s intervals. Unpredictable.</div></div>
-
-    <div class="card v15"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
-      <div class="label"><span class="num">15</span>Periodic Surge</div>
-      <div class="desc">Calm 90% of the time, then strong scale-up + brightness flash every 4s. Combustion.</div></div>
-
-    <div class="card v16"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
-      <div class="label"><span class="num">16</span>Alternating Lean</div>
-      <div class="desc">Leans hard left → centre stretch → leans hard right → repeat. 4-stop sway.</div></div>
-
-    <div class="card v17"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
-      <div class="label"><span class="num">17</span>Hyper-Noisy</div>
-      <div class="desc">11 irregular keyframes over 3.7s with combined skew/scale/translate. Flickers like real fire.</div></div>
-
-    <div class="card v18"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
-      <div class="label"><span class="num">18</span>Spring Bounce</div>
-      <div class="desc">Elastic cubic-bezier easing — bouncy overshoot at peaks. Cartoon-ish bounce.</div></div>
-
-    <div class="card v19"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
-      <div class="label"><span class="num">19</span>Slow Sway + Crackle</div>
-      <div class="desc">3s smooth sway underneath + 0.2s crackle jitter on top. Two timescales mixed.</div></div>
-
-    <div class="card v20"><div class="stage"><div class="particles" data-count="14"></div><div class="flame-shape"></div></div>
-      <div class="label"><span class="num">20</span>Combo + JS</div>
-      <div class="desc">2 stacked CSS animations (slow rotate+scale + fast translate) AND JS perturbation. Maximum life.</div></div>
-
+    <div class="card v6"><div class="stage"><div class="particles"></div><div class="flame-shape"></div></div>
+      <div class="label"><span class="num">06</span>Wood Dance</div>
+      <div class="desc">Medium 1.6s body sway + fast layer dances. Cozy bonfire tempo, balanced.</div></div>
   </div>
 
 <script>
-  // Inject the same V13 chubby blob SVG into every empty .flame-shape
-  // (V11 and V12 already have custom inline SVGs and stay untouched).
-  const FLAME_SVG = function(idx) {
-    return `<svg viewBox="0 0 50 60">
-      <defs><radialGradient id="g${idx}" cx="50%" cy="80%" r="65%">
-        <stop offset="0%" stop-color="#fff8d6"/>
-        <stop offset="40%" stop-color="#ff9418"/>
-        <stop offset="100%" stop-color="#a81010"/>
-      </radialGradient></defs>
-      <path d="M25 6 C 14 16 8 28 8 42 C 8 52 14 56 25 56 C 36 56 42 52 42 42 C 42 28 36 16 25 6 Z" fill="url(#g${idx})"/>
-    </svg>`;
-  };
+  // ════════ MULTI-TONGUE 3-LAYER SVG TEMPLATE ════════
+  // Outer red — silhouette with 3 distinct tongues (tall left, mid centre, small right notch)
+  // Middle orange — smaller, 2-peak version
+  // Inner yellow core — single teardrop, sits low
+  const FLAME_SVG = (idx) => `
+    <svg viewBox="0 0 70 100">
+      <defs>
+        <linearGradient id="gout-${idx}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ff5060"/>
+          <stop offset="60%" stop-color="#e8102a"/>
+          <stop offset="100%" stop-color="#a00808"/>
+        </linearGradient>
+        <linearGradient id="gmid-${idx}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffae3a"/>
+          <stop offset="100%" stop-color="#ff5018"/>
+        </linearGradient>
+        <linearGradient id="gcore-${idx}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#fff5b8"/>
+          <stop offset="100%" stop-color="#ffd24d"/>
+        </linearGradient>
+      </defs>
+      <!-- Outer red (multi-tongue silhouette) -->
+      <path class="layer-out"
+        d="M 32 96
+           C 12 95, 4 78, 6 60
+           C 8 38, 14 16, 22 4
+           C 24 2, 26 4, 26 8
+           C 26 22, 26 32, 30 34
+           C 33 35, 36 26, 39 18
+           C 42 12, 46 10, 48 14
+           C 49 22, 47 30, 45 34
+           C 45 40, 49 42, 52 39
+           C 55 36, 58 28, 60 26
+           C 64 30, 66 50, 64 70
+           C 60 90, 50 96, 32 96 Z"
+        fill="url(#gout-${idx})"/>
+      <!-- Middle orange (smaller, 2-peak) -->
+      <path class="layer-mid"
+        d="M 32 90
+           C 18 88, 12 75, 14 58
+           C 16 42, 22 24, 28 18
+           C 30 18, 30 28, 32 34
+           C 34 36, 37 30, 40 26
+           C 43 24, 46 28, 46 34
+           C 46 42, 50 52, 50 60
+           C 52 78, 46 90, 32 90 Z"
+        fill="url(#gmid-${idx})"/>
+      <!-- Inner yellow core (single teardrop) -->
+      <path class="layer-core"
+        d="M 32 86
+           C 22 84, 20 70, 24 58
+           C 27 48, 30 42, 32 40
+           C 34 42, 38 50, 40 60
+           C 42 72, 40 84, 32 86 Z"
+        fill="url(#gcore-${idx})"/>
+    </svg>
+  `;
+
   document.querySelectorAll('.flame-shape').forEach((el, i) => {
-    if (el.children.length === 0) el.innerHTML = FLAME_SVG(i);
+    el.innerHTML = FLAME_SVG(i);
   });
 
-  // Generate identical particles in every .particles container
+  // Particles — same as prev
   document.querySelectorAll('.particles').forEach(stage => {
-    const count = parseInt(stage.dataset.count) || 14;
-    const cx = 100; // half of stage width
-    for (let i = 0; i < count; i++) {
+    const cx = 130;
+    for (let i = 0; i < 16; i++) {
       const p = document.createElement('div');
       p.className = 'particle';
       const size = 2 + Math.random() * 3;
-      const x = cx - 13 + Math.random() * 26;
-      const dx = (Math.random() - 0.5) * 18;
-      const dx2 = (Math.random() - 0.5) * 28;
+      const x = cx - 18 + Math.random() * 36;
+      const dx = (Math.random() - 0.5) * 22;
+      const dx2 = (Math.random() - 0.5) * 32;
       const d = 2.2 * (0.7 + Math.random() * 0.6);
       const delay = -Math.random() * d;
       p.style.cssText =
@@ -358,65 +247,27 @@
     }
   });
 
-  // V6 — JS noise-driven RAF transform
+  // V1 — JS noise on body + on each layer
   (function() {
-    const el = document.querySelector('.v6 .flame-shape');
-    if (!el) return;
+    const card = document.querySelector('.v1 .flame-shape');
+    if (!card) return;
+    const layerOut = card.querySelector('.layer-out');
+    const layerMid = card.querySelector('.layer-mid');
+    const layerCore = card.querySelector('.layer-core');
     let t = 0;
-    function noise(x) {
-      // Smooth pseudo-Perlin via summed sines at non-divisible periods
-      return Math.sin(x * 1.0) * 0.5 + Math.sin(x * 2.3) * 0.3 + Math.sin(x * 4.7) * 0.2;
-    }
+    const noise = (x) => Math.sin(x * 1.0) * 0.5 + Math.sin(x * 2.3) * 0.3 + Math.sin(x * 4.7) * 0.2;
     function frame() {
       t += 0.016;
+      // Whole flame
       const sk = noise(t * 1.2) * 4;
       const sy = 1 + noise(t * 0.9 + 100) * 0.05;
       const sx = 1 + noise(t * 1.1 + 50) * 0.04;
       const ty = noise(t * 1.4 + 200) * 1.5;
-      el.style.transform = `skewX(${sk.toFixed(2)}deg) scaleY(${sy.toFixed(3)}) scaleX(${sx.toFixed(3)}) translateY(${ty.toFixed(2)}px)`;
-      requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame);
-  })();
-
-  // V14 — JS random pulse
-  (function() {
-    const el = document.querySelector('.v14 .flame-shape');
-    if (!el) return;
-    function pulse() {
-      const mag = 0.9 + Math.random() * 0.3; // 0.9 to 1.2
-      const sk = (Math.random() - 0.5) * 8;
-      el.style.transform = `scale(${mag.toFixed(2)}) skewX(${sk.toFixed(1)}deg)`;
-      setTimeout(() => {
-        el.style.transform = 'scale(1) skewX(0deg)';
-      }, 180);
-    }
-    function loop() {
-      pulse();
-      setTimeout(loop, 600 + Math.random() * 1800);
-    }
-    loop();
-  })();
-
-  // V20 — JS RAF perturbation on top of CSS animations
-  (function() {
-    const el = document.querySelector('.v20 .flame-shape');
-    if (!el) return;
-    let t = 0;
-    function noise(x) {
-      return Math.sin(x * 1.0) * 0.5 + Math.sin(x * 2.7) * 0.3 + Math.sin(x * 5.1) * 0.2;
-    }
-    // Use a CSS variable so we layer with the existing keyframes
-    el.style.setProperty('--noise-x', '0px');
-    el.style.setProperty('--noise-y', '0px');
-    function frame() {
-      t += 0.016;
-      const x = (noise(t * 1.3) * 0.8).toFixed(2);
-      const y = (noise(t * 1.1 + 30) * 0.8).toFixed(2);
-      // Apply via translate property since CSS animation uses rotate/scale on a20a + translate on a20b
-      // To avoid conflict, we mutate the inner svg instead
-      const svg = el.querySelector('svg');
-      if (svg) svg.style.transform = `translate(${x}px, ${y}px)`;
+      card.style.transform = `skewX(${sk.toFixed(2)}deg) scaleY(${sy.toFixed(3)}) scaleX(${sx.toFixed(3)}) translateY(${ty.toFixed(2)}px)`;
+      // Each layer with its own noise offsets
+      if (layerOut)  layerOut.style.transform  = `scaleY(${(1 + noise(t * 1.1 + 10) * 0.04).toFixed(3)}) skewX(${(noise(t * 1.5 + 20) * 2).toFixed(2)}deg)`;
+      if (layerMid)  layerMid.style.transform  = `scaleY(${(1 + noise(t * 1.7 + 30) * 0.06).toFixed(3)}) skewX(${(noise(t * 2.1 + 40) * 3).toFixed(2)}deg)`;
+      if (layerCore) layerCore.style.transform = `scaleY(${(1 + noise(t * 2.3 + 50) * 0.08).toFixed(3)}) skewX(${(noise(t * 2.7 + 60) * 4).toFixed(2)}deg)`;
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
