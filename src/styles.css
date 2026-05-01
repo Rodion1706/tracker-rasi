@@ -1885,27 +1885,25 @@ body::after {
   100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--angle)) translateX(58px) scale(0.4); }
 }
 
-/* ════════ STREAK FLAME (TikTok-style) ════════ */
-/* Appears next to Streak number when streak >= 3 days. Five tiers — all
-   vivid (no gray cold tier any more). White-yellow core always glows
-   inside, so the flame looks alive even at 3 days. */
+/* ════════ STREAK FLAME (V3 — multi-tongue + JS path morph) ════════ */
+/* Inline next to the streak number. JS animates the silhouette path
+   via summed-sine noise on upper-half control points, while the base
+   waypoints stay locked. Particles rise from below + small detached
+   tongues spawn off the top. Tier color drives gradient stops in JS
+   and halo color via CSS color property below. */
 .flame {
   display: inline-flex;
   align-items: flex-end;
   margin-left: 10px;
-  width: 30px;
-  height: 34px;
+  width: 38px;
+  height: 52px;
   vertical-align: baseline;
   position: relative;
-  transform-origin: 50% 95%;
 }
-/* Pulsing halo via pseudo-element so it doesn't fight the tier-specific
-   filter drop-shadow on the .flame node. currentColor picks up tier
-   color so each tier gets a matching aura. */
 .flame::after {
   content: '';
   position: absolute;
-  left: -8px; right: -8px; top: -3px; bottom: 0;
+  left: -10px; right: -10px; top: -2px; bottom: -2px;
   background: radial-gradient(ellipse at 50% 78%, currentColor 0%, transparent 65%);
   opacity: 0.35;
   z-index: -1;
@@ -1914,111 +1912,46 @@ body::after {
   border-radius: 50%;
 }
 .flame svg { width: 100%; height: 100%; display: block; overflow: visible; position: relative; z-index: 1; }
-/* Three layers, three durations with no common divisor — the combined
-   motion never lines up the same way twice, so it reads organic. */
-.flame .flame-outer    { transform-origin: 50% 95%;  animation: flameSwayOuter 4.3s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite; }
-.flame .flame-mid      { transform-origin: 50% 92%;  animation: flameSwayMid 3.7s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite; }
-.flame .flame-core     { transform-origin: 50% 88%;  animation: flameSwayCore 2.9s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite; }
-.flame .flame-tip      { transform-origin: 50% 100%; animation: flameSwayMid 3.1s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite reverse; }
-/* Side tongues — fast independent licks. Different durations from the
-   body so they appear to flutter on their own beat. */
-.flame .flame-tongue-l { transform-origin: 30% 100%; animation: flameTongue 2.3s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite; }
-.flame .flame-tongue-r { transform-origin: 70% 100%; animation: flameTongue 1.9s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite reverse; }
-.flame .flame-spark {
-  transform-origin: center;
-  opacity: 0;
-}
-.flame .flame-spark-1 { animation: flameSpark 3.1s ease-out infinite; animation-delay: 0s; }
-.flame .flame-spark-2 { animation: flameSpark 3.7s ease-out infinite; animation-delay: 1.2s; }
-.flame .flame-spark-3 { animation: flameSpark 4.3s ease-out infinite; animation-delay: 2.4s; }
 
-/* Tier 1 — bright golden orange (3-9 days) */
-.flame-t1 {
-  color: #ff9933;
-  filter: drop-shadow(0 0 5px rgba(255, 153, 51, 0.75)) drop-shadow(0 0 10px rgba(255, 153, 51, 0.4));
+/* Procedural particles rising behind the flame */
+.flame .fl-particles { position: absolute; inset: 0; pointer-events: none; overflow: visible; z-index: 0; }
+.flame .fl-particle  { position: absolute; border-radius: 50%; bottom: 4px; }
+@keyframes fl-rise {
+  0%   { transform: translate(0,0) scale(0.3); opacity: 0; background: #fff5b8; box-shadow: 0 0 3px #ffd24d; }
+  15%  { opacity: 1; background: #ffd24d; box-shadow: 0 0 4px #ffae3a; }
+  50%  { transform: translate(var(--dx,0), -28px) scale(0.85); opacity: 0.7; background: #ff7e1a; }
+  100% { transform: translate(var(--dx2,0), -54px) scale(0.18); opacity: 0; background: #b81818; }
 }
-/* Tier 2 — deep orange (10-19 days) */
-.flame-t2 {
-  color: #ff6b1f;
-  filter: drop-shadow(0 0 6px rgba(255, 107, 31, 0.8)) drop-shadow(0 0 12px rgba(255, 107, 31, 0.45));
+
+/* Detached tongues spawning above the flame body */
+.flame .fl-tongues { position: absolute; left: 50%; top: -16px; transform: translateX(-50%); width: 30px; height: 22px; pointer-events: none; z-index: 2; }
+.flame .fl-tongue  { position: absolute; left: 50%; bottom: 0; transform-origin: 50% 100%; filter: drop-shadow(0 0 3px rgba(255,80,20,0.7)); pointer-events: none; }
+@keyframes fl-tongue-rise {
+  0%   { transform: translate(-50%, 0) scale(0.4, 0.2); opacity: 0; }
+  15%  { transform: translate(calc(-50% + var(--tx1,0)), -3px) scale(1, 1); opacity: 1; }
+  50%  { transform: translate(calc(-50% + var(--tx2,0)), -14px) scale(0.85, 0.9); opacity: 0.8; }
+  80%  { transform: translate(calc(-50% + var(--tx3,0)), -22px) scale(0.5, 0.7); opacity: 0.45; }
+  100% { transform: translate(calc(-50% + var(--tx4,0)), -30px) scale(0.2, 0.4); opacity: 0; }
 }
-/* Tier 3 — orange-red (20-34 days) */
-.flame-t3 {
-  color: #ff3d2d;
-  filter: drop-shadow(0 0 7px rgba(255, 61, 45, 0.85)) drop-shadow(0 0 14px rgba(255, 61, 45, 0.5));
-}
-/* Tier 4 — crimson (35-49 days) */
-.flame-t4 {
-  color: #e62816;
-  filter: drop-shadow(0 0 9px rgba(230, 40, 22, 0.9)) drop-shadow(0 0 18px rgba(230, 40, 22, 0.55));
-}
-/* Tier 5 — inferno brand red (50+ days) */
+
+/* Tier glow halos — color drives the ::after aura via currentColor. */
+.flame-t1 { color: #ff9933; filter: drop-shadow(0 0 5px rgba(255,153,51,0.7))  drop-shadow(0 0 10px rgba(255,153,51,0.35)); }
+.flame-t2 { color: #ff6b1f; filter: drop-shadow(0 0 6px rgba(255,107,31,0.75)) drop-shadow(0 0 13px rgba(255,107,31,0.4));  }
+.flame-t3 { color: #ff3d2d; filter: drop-shadow(0 0 7px rgba(255,61,45,0.8))   drop-shadow(0 0 16px rgba(255,61,45,0.45));  }
+.flame-t4 { color: #e62816; filter: drop-shadow(0 0 9px rgba(230,40,22,0.85))  drop-shadow(0 0 20px rgba(230,40,22,0.5));   }
 .flame-t5 {
   color: var(--red);
-  filter: drop-shadow(0 0 10px var(--red)) drop-shadow(0 0 20px rgba(232, 16, 42, 0.7));
-  animation: flameFlicker 2.0s ease-in-out infinite, flameInferno 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px var(--red)) drop-shadow(0 0 22px rgba(232,16,42,0.7));
+  animation: flameInferno 3s ease-in-out infinite;
 }
 
 @keyframes flameHaloBreath {
   0%, 100% { opacity: 0.28; transform: scale(0.92); }
   50%      { opacity: 0.55; transform: scale(1.14); }
 }
-/* Big amplitude irregular keyframes — flame must visibly breathe and
-   sway, not just glow. Each layer has a different pattern so they
-   never sync into a perceptible loop. */
-@keyframes flameSwayOuter {
-  0%   { transform: translateY(0)    skewX(0deg)    scaleY(1)    scaleX(1); }
-  9%   { transform: translateY(-2px) skewX(-3deg)   scaleY(1.10) scaleX(0.92); }
-  21%  { transform: translateY(-1px) skewX(1deg)    scaleY(1.04) scaleX(1.05); }
-  34%  { transform: translateY(-3px) skewX(-4deg)   scaleY(1.16) scaleX(0.88); }
-  47%  { transform: translateY(-1px) skewX(4deg)    scaleY(1.06) scaleX(1.07); }
-  58%  { transform: translateY(0)    skewX(-1.5deg) scaleY(0.93) scaleX(1.04); }
-  71%  { transform: translateY(-3px) skewX(2deg)    scaleY(1.12) scaleX(0.91); }
-  83%  { transform: translateY(-1px) skewX(3deg)    scaleY(1.0)  scaleX(1.06); }
-  93%  { transform: translateY(-2px) skewX(-2deg)   scaleY(1.07) scaleX(0.95); }
-  100% { transform: translateY(0)    skewX(0deg)    scaleY(1)    scaleX(1); }
-}
-@keyframes flameSwayMid {
-  0%   { transform: translateY(0)    skewX(0deg)    scaleY(1)    scaleX(1); }
-  11%  { transform: translateY(-2px) skewX(4deg)    scaleY(1.13) scaleX(0.88); }
-  23%  { transform: translateY(-3px) skewX(0deg)    scaleY(1.05) scaleX(1.06); }
-  37%  { transform: translateY(-1px) skewX(-4deg)   scaleY(1.18) scaleX(0.86); }
-  49%  { transform: translateY(-2px) skewX(2deg)    scaleY(0.92) scaleX(1.07); }
-  62%  { transform: translateY(-3px) skewX(-2deg)   scaleY(1.11) scaleX(0.92); }
-  74%  { transform: translateY(0)    skewX(4deg)    scaleY(1.02) scaleX(0.93); }
-  87%  { transform: translateY(-2px) skewX(0deg)    scaleY(1.09) scaleX(1.04); }
-  100% { transform: translateY(0)    skewX(0deg)    scaleY(1)    scaleX(1); }
-}
-@keyframes flameSwayCore {
-  0%   { transform: translateY(0)    scaleY(1)    scaleX(1); }
-  13%  { transform: translateY(-1px) scaleY(1.20) scaleX(0.88); }
-  28%  { transform: translateY(-2px) scaleY(0.90) scaleX(1.10); }
-  41%  { transform: translateY(0)    scaleY(1.10) scaleX(0.94); }
-  56%  { transform: translateY(-2px) scaleY(1.25) scaleX(0.85); }
-  69%  { transform: translateY(0)    scaleY(0.88) scaleX(1.12); }
-  82%  { transform: translateY(-1px) scaleY(1.15) scaleX(0.92); }
-  100% { transform: translateY(0)    scaleY(1)    scaleX(1); }
-}
-@keyframes flameSpark {
-  0%   { opacity: 0;   transform: translateY(0)    translateX(0)    scale(0); }
-  15%  { opacity: 0.95; transform: translateY(-0.5px) translateX(0)  scale(1); }
-  45%  { opacity: 0.55; transform: translateY(-4px) translateX(-1px) scale(0.7); }
-  100% { opacity: 0;   transform: translateY(-10px) translateX(0.5px) scale(0.2); }
-}
-/* Side tongue flutter — visible scaleY breath plus a fade-out so the
-   tongue licks up, briefly disappears, and re-emerges. Keeps it
-   alive-looking instead of just oscillating in place. */
-@keyframes flameTongue {
-  0%   { opacity: 0.6; transform: scaleY(0.7) scaleX(0.95) translateY(2px); }
-  20%  { opacity: 1;   transform: scaleY(1.15) scaleX(0.9)  translateY(-1px); }
-  35%  { opacity: 0.9; transform: scaleY(1.3)  scaleX(0.85) translateY(-2px); }
-  55%  { opacity: 0.7; transform: scaleY(1.0)  scaleX(1.1)  translateY(0); }
-  75%  { opacity: 0.4; transform: scaleY(0.6)  scaleX(1.15) translateY(2px); }
-  100% { opacity: 0.6; transform: scaleY(0.7)  scaleX(0.95) translateY(2px); }
-}
 @keyframes flameInferno {
-  0%, 100% { filter: drop-shadow(0 0 10px var(--red)) drop-shadow(0 0 20px rgba(232, 16, 42, 0.7)); }
-  50% { filter: drop-shadow(0 0 14px var(--red-b)) drop-shadow(0 0 30px rgba(232, 16, 42, 0.9)) drop-shadow(0 0 8px var(--red)); }
+  0%, 100% { filter: drop-shadow(0 0 10px var(--red)) drop-shadow(0 0 22px rgba(232,16,42,0.7)); }
+  50%      { filter: drop-shadow(0 0 14px var(--red-b,#ff5060)) drop-shadow(0 0 32px rgba(232,16,42,0.9)) drop-shadow(0 0 8px var(--red)); }
 }
 .sc-value.plain { color: var(--t1); text-shadow: 0 0 10px rgba(232, 16, 42, 0.3); }
 .sc-value.done-all { color: var(--red); text-shadow: 0 0 16px var(--red), 0 0 32px rgba(232, 16, 42, 0.5); }

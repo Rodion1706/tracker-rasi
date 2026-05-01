@@ -2,100 +2,150 @@
 // - Streak / Done — big gradient cards
 // - Best / Week — smaller summary strip (tick-style to match YearStrip)
 
+import { useEffect, useRef } from "react";
 import Odometer from "./Odometer";
 import { activeHabitsOn } from "../gamification";
 
 // Streak tier → flame appearance. Returns null for < 3 days (no flame).
 function streakFlameTier(n) {
   if (n < 3) return null;
-  if (n < 10) return { cls: "t1", label: "cold" };       // gray
-  if (n < 20) return { cls: "t2", label: "warm" };       // warm gray
-  if (n < 35) return { cls: "t3", label: "hot" };        // amber
-  if (n < 50) return { cls: "t4", label: "burning" };    // deep red
-  return { cls: "t5", label: "inferno" };                // full red + halo
+  if (n < 10) return { cls: "t1", label: "cold" };
+  if (n < 20) return { cls: "t2", label: "warm" };
+  if (n < 35) return { cls: "t3", label: "hot" };
+  if (n < 50) return { cls: "t4", label: "burning" };
+  return { cls: "t5", label: "inferno" };
 }
 
+// Per-tier radial gradient stops (inner → mid → outer).
+// Yellow-friendly low tiers, deeper red as streak grows.
+const TIER_STOPS = {
+  t1: ["#fff8d6", "#ffae3a", "#ff7018"], // golden orange (3-9d)
+  t2: ["#fff5d6", "#ff8a18", "#d04010"], // amber (10-19d)
+  t3: ["#fff5d6", "#ff7018", "#b01010"], // red-orange (20-34d)
+  t4: ["#fff8a0", "#ff4818", "#80060a"], // crimson (35-49d)
+  t5: ["#ffffff", "#ff5060", "#e8102a"], // brand-red inferno (50+)
+};
+
+// V3 flame: multi-tongue silhouette with JS Perlin-like path morph
+// (summed-sine noise on top control points). Base waypoints stay
+// fixed so the body reads as unified while the peaks live freely.
+// Particles rise from below and small detached tongues float off
+// the top — both procedural via JS.
 function Flame({ tier }) {
-  // Chubby teardrop body + two side tongues that lick independently —
-  // gives the multi-flame "languages" feel of a real fire instead of a
-  // single rounded blob. Core gradient warmed toward orange (less
-  // banana-yellow) so it matches the tracker's red brand palette.
+  const stops = TIER_STOPS[tier.cls] || TIER_STOPS.t1;
   const gid = `fg-${tier.cls}`;
-  const cid = `fc-${tier.cls}`;
+  const pathRef = useRef(null);
+  const particlesRef = useRef(null);
+  const tonguesRef = useRef(null);
+
+  // Path morph via summed-sine noise on the upper-half control points.
+  // Base path: M 35 96 C 10 95, 4 78, 4 60 C 6 36, lcx lcy, lx ly C 22 14, 24 22, 28 lvy C 32 18, 34 8, cx_ cy C 36 8, 38 18, 42 rvy C 46 22, rcx rcy, rx ry C 66 36, 60 95, 35 96 Z
+  useEffect(() => {
+    const path = pathRef.current;
+    if (!path) return;
+    let t = 0, raf;
+    const noise = (x) => Math.sin(x * 1.0) * 0.5 + Math.sin(x * 2.3) * 0.3 + Math.sin(x * 4.7) * 0.2;
+    const FREQ = 1.5, AMP = 7, PEAK = 2.2;
+    function frame() {
+      t += 0.016;
+      const n = (seed) => noise(t * FREQ + seed) * AMP;
+      const lx  = 16 + n(10);
+      const ly  = 8  + n(20) * PEAK;
+      const lvy = 28 + n(25) * 1.3;
+      const cx_ = 35 + n(30) * 0.7;
+      const cy  = 4  + n(40) * PEAK;
+      const rvy = 28 + n(50) * 1.3;
+      const rx  = 54 + n(60);
+      const ry  = 8  + n(70) * PEAK;
+      const lcx = 12 + n(80) * 0.4;
+      const lcy = 16 + n(90) * 0.6;
+      const rcx = 48 + n(100) * 0.4;
+      const rcy = 14 + n(110) * 0.6;
+      path.setAttribute("d",
+        `M 35 96 C 10 95, 4 78, 4 60 C 6 36, ${lcx.toFixed(2)} ${lcy.toFixed(2)}, ${lx.toFixed(2)} ${ly.toFixed(2)} ` +
+        `C 22 14, 24 22, 28 ${lvy.toFixed(2)} C 32 18, 34 8, ${cx_.toFixed(2)} ${cy.toFixed(2)} ` +
+        `C 36 8, 38 18, 42 ${rvy.toFixed(2)} C 46 22, ${rcx.toFixed(2)} ${rcy.toFixed(2)}, ${rx.toFixed(2)} ${ry.toFixed(2)} ` +
+        `C 66 36, 60 95, 35 96 Z`);
+      raf = requestAnimationFrame(frame);
+    }
+    raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  // Procedural particles + rising tongues
+  useEffect(() => {
+    const pStage = particlesRef.current;
+    const tStage = tonguesRef.current;
+
+    // Static rising particles — generated once, loop via CSS animation
+    if (pStage && pStage.children.length === 0) {
+      for (let i = 0; i < 8; i++) {
+        const p = document.createElement("div");
+        p.className = "fl-particle";
+        const size = 1.4 + Math.random() * 1.4;
+        const x = -8 + Math.random() * 16; // px relative to centre
+        const dx = (Math.random() - 0.5) * 8;
+        const dx2 = (Math.random() - 0.5) * 12;
+        const dur = 1.6 + Math.random() * 0.8;
+        const delay = -Math.random() * dur;
+        p.style.cssText =
+          `width:${size}px; height:${size}px; left:calc(50% + ${x}px);` +
+          `--dx:${dx}px; --dx2:${dx2}px;` +
+          `animation: fl-rise ${dur}s ${delay}s infinite cubic-bezier(0.4,0,0.6,0.6);`;
+        pStage.appendChild(p);
+      }
+    }
+
+    // Detached rising tongues — spawn loop
+    let timeoutId;
+    const TONGUE_PATHS = [
+      "M 8 0 C 5 5 2 10 2 16 C 2 22 5 24 8 24 C 11 24 14 22 14 16 C 14 10 11 5 8 0 Z",
+      "M 8 2 C 4 6 2 12 4 18 C 5 22 7 24 8 24 C 9 24 11 22 12 18 C 14 12 12 6 8 2 Z",
+      "M 8 1 C 4 8 2 14 4 19 C 6 23 8 24 8 24 C 8 24 10 23 12 19 C 14 14 12 8 8 1 Z",
+    ];
+    function spawnTongue() {
+      if (!tStage) return;
+      const el = document.createElement("div");
+      el.className = "fl-tongue";
+      const w = 6 + Math.random() * 3;
+      const h = 9 + Math.random() * 5;
+      const dur = 1.4 + Math.random() * 0.8;
+      const tx1 = (Math.random() - 0.5) * 3;
+      const tx2 = tx1 + (Math.random() - 0.5) * 5;
+      const tx3 = tx2 + (Math.random() - 0.5) * 6;
+      const tx4 = tx3 + (Math.random() - 0.5) * 7;
+      const path = TONGUE_PATHS[Math.floor(Math.random() * TONGUE_PATHS.length)];
+      const c = Math.random();
+      const fillColor = c < 0.5 ? stops[1] : (c < 0.85 ? stops[2] : stops[0]);
+      el.innerHTML = `<svg viewBox="0 0 16 24" width="${w}" height="${h}"><path d="${path}" fill="${fillColor}"/></svg>`;
+      el.style.cssText =
+        `--tx1:${tx1}px; --tx2:${tx2}px; --tx3:${tx3}px; --tx4:${tx4}px;` +
+        `animation: fl-tongue-rise ${dur}s ease-out forwards;`;
+      tStage.appendChild(el);
+      setTimeout(() => el.remove(), dur * 1000);
+    }
+    function loop() {
+      spawnTongue();
+      timeoutId = setTimeout(loop, 700 + Math.random() * 700);
+    }
+    timeoutId = setTimeout(loop, Math.random() * 600);
+    return () => clearTimeout(timeoutId);
+  }, [tier.cls]);
+
   return (
     <div className={`flame flame-${tier.cls}`} aria-hidden>
-      <svg viewBox="0 0 30 34" fill="none">
+      <div className="fl-particles" ref={particlesRef}></div>
+      <div className="fl-tongues" ref={tonguesRef}></div>
+      <svg viewBox="0 0 70 100" fill="none">
         <defs>
-          <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"  stopColor="currentColor" stopOpacity="0.6" />
-            <stop offset="40%" stopColor="currentColor" stopOpacity="1" />
-            <stop offset="100%" stopColor="currentColor" stopOpacity="1" />
-          </linearGradient>
-          <radialGradient id={cid} cx="50%" cy="76%" r="58%">
-            <stop offset="0%"  stopColor="#fff5d6" stopOpacity="1" />
-            <stop offset="45%" stopColor="#ffb84d" stopOpacity="0.95" />
-            <stop offset="100%" stopColor="#ff5e1a" stopOpacity="0" />
+          <radialGradient id={gid} cx="50%" cy="78%" r="62%">
+            <stop offset="0%" stopColor={stops[0]} />
+            <stop offset="40%" stopColor={stops[1]} />
+            <stop offset="100%" stopColor={stops[2]} />
           </radialGradient>
         </defs>
-
-        {/* Side tongue — left, slim, licks above the shoulder */}
-        <path
-          className="flame-tongue-l"
-          d="M9 8
-             C 7.5 10.5 6.5 13 7 15.5
-             C 7.4 17 8.4 17.5 9.2 17.5
-             C 10.2 17.5 11 16.8 11.4 15.5
-             C 11.6 13 11 10.5 9 8 Z"
-          fill="currentColor"
-          opacity="0.85"
-        />
-        {/* Side tongue — right, slimmer, licks shorter */}
-        <path
-          className="flame-tongue-r"
-          d="M21 6
-             C 19.5 8.5 18.8 11 19.2 13.5
-             C 19.5 14.8 20.4 15.3 21.1 15.3
-             C 22 15.3 22.7 14.7 23 13.5
-             C 23.4 11 23 8.5 21 6 Z"
-          fill="currentColor"
-          opacity="0.92"
-        />
-
-        {/* Layer 1 — main body, chubby teardrop with wide bulb at base */}
-        <path
-          className="flame-outer"
-          d="M15 2.5
-             C 13.2 4.5 12.4 7 12.4 10
-             C 11.6 13 7.5 15 5 19
-             C 2.5 23 2.5 27.5 5.5 30
-             C 8.5 32 11.5 32.5 15 32.5
-             C 18.5 32.5 21.5 32 24.5 30
-             C 27.5 27.5 27.5 23 25 19
-             C 22.5 15 18.4 13 17.6 10
-             C 17.6 7 16.8 4.5 15 2.5 Z"
-          fill={`url(#${gid})`}
-        />
-        {/* Layer 2 — translucent inner shell */}
-        <path
-          className="flame-mid"
-          d="M15 8.5
-             C 13.5 11 11 14 10 18
-             C 9 22 9.5 26 11.5 28.5
-             C 13 30 14 30.5 15 30.5
-             C 16 30.5 17 30 18.5 28.5
-             C 20.5 26 21 22 20 18
-             C 19 14 16.5 11 15 8.5 Z"
-          fill="#fff5d4"
-          opacity="0.42"
-        />
-        {/* Core — bright warm heart */}
-        <ellipse className="flame-core" cx="15" cy="24" rx="5.2" ry="6.6" fill={`url(#${cid})`} />
-        {/* Tip — sliver at upper core */}
-        <path className="flame-tip" d="M15 12 C 14.3 15 14.3 19 15 21 C 15.7 19 15.7 15 15 12 Z" fill="#fff5d6" opacity="0.85" />
-        {/* Sparks at irregular cycles */}
-        <circle className="flame-spark flame-spark-1" cx="15"   cy="2.5" r="1"   fill="#fff0b0" />
-        <circle className="flame-spark flame-spark-2" cx="11.5" cy="4"   r="0.7" fill="#fff0b0" />
-        <circle className="flame-spark flame-spark-3" cx="18.5" cy="5"   r="0.6" fill="#fff0b0" />
+        <path ref={pathRef} fill={`url(#${gid})`}
+          d="M 35 96 C 10 95, 4 78, 4 60 C 6 36, 12 16, 16 8 C 22 14, 24 22, 28 28 C 32 18, 34 8, 35 4 C 36 8, 38 18, 42 28 C 46 22, 48 14, 54 8 C 66 36, 60 95, 35 96 Z"/>
       </svg>
     </div>
   );
