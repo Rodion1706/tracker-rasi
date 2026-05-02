@@ -179,20 +179,20 @@ function AccessDenied({ email, onRetry }) {
         onClick={onRetry}
         style={{
           padding: "12px 30px",
-          background: "rgba(232, 16, 42, 0.1)",
+          background: "rgba(var(--accent-rgb), 0.1)",
           color: "var(--red)",
           borderRadius: 10,
           cursor: "pointer",
           fontSize: 11,
           fontWeight: 700,
           letterSpacing: "0.2em",
-          border: "1px solid rgba(232, 16, 42, 0.4)",
+          border: "1px solid rgba(var(--accent-rgb), 0.4)",
           fontFamily: "'Cinzel', serif",
           textTransform: "uppercase",
           transition: "all 0.2s",
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = "rgba(232, 16, 42, 0.2)"; e.currentTarget.style.boxShadow = "0 0 24px rgba(232, 16, 42, 0.35)"; }}
-        onMouseLeave={e => { e.currentTarget.style.background = "rgba(232, 16, 42, 0.1)"; e.currentTarget.style.boxShadow = "none"; }}
+        onMouseEnter={e => { e.currentTarget.style.background = "rgba(var(--accent-rgb), 0.2)"; e.currentTarget.style.boxShadow = "0 0 24px rgba(var(--accent-rgb), 0.35)"; }}
+        onMouseLeave={e => { e.currentTarget.style.background = "rgba(var(--accent-rgb), 0.1)"; e.currentTarget.style.boxShadow = "none"; }}
       >
         TRY ANOTHER ACCOUNT
       </div>

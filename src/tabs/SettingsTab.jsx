@@ -401,7 +401,7 @@ friday | ${sampleTag3} | Third task`;
         )}
         <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
           <div onClick={doPreview} className="add-btn">PREVIEW</div>
-          {preview && <div onClick={doImport} className="add-btn" style={{ background: "rgba(232, 16, 42, 0.2)", color: "var(--red)", borderColor: "rgba(232, 16, 42, 0.5)" }}>IMPORT {preview.total}</div>}
+          {preview && <div onClick={doImport} className="add-btn" style={{ background: "rgba(var(--accent-rgb), 0.2)", color: "var(--red)", borderColor: "rgba(var(--accent-rgb), 0.5)" }}>IMPORT {preview.total}</div>}
           {(text || preview) && <div onClick={() => { setText(""); setPreview(null); setError(""); }} style={{ padding: "11px 16px", color: "var(--t3)", cursor: "pointer", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", fontFamily: "'Cinzel', serif" }}>CLEAR</div>}
         </div>
       </div>
@@ -420,7 +420,7 @@ friday | ${sampleTag3} | Third task`;
                 const tagObj = p.tag ? findTag(p.tag, tags) : null;
                 const pillColor = tagObj ? tagObj.color : null;
                 return (
-                  <div key={i} style={{ fontSize: 12, color: "var(--t2)", padding: "4px 0 4px 14px", borderLeft: "1px solid rgba(232, 16, 42, 0.25)", marginLeft: 4, display: "flex", gap: 8, alignItems: "center" }}>
+                  <div key={i} style={{ fontSize: 12, color: "var(--t2)", padding: "4px 0 4px 14px", borderLeft: "1px solid rgba(var(--accent-rgb), 0.25)", marginLeft: 4, display: "flex", gap: 8, alignItems: "center" }}>
                     {p.tag && <span className="row-tag" style={Object.assign({ fontSize: 8, padding: "2px 7px" }, tagPillStyle(pillColor))}>{p.tag}</span>}
                     <span>{p.text}</span>
                   </div>
@@ -908,7 +908,7 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
         </div>
         <span style={{ fontSize: 11, color: "var(--red)", fontWeight: 700, letterSpacing: "0.18em", fontFamily: "'Cinzel', serif", textShadow: "0 0 6px var(--red)" }}>DOWNLOAD</span>
       </div>
-      <div style={{ marginTop: 14, padding: "14px 18px", borderLeft: "3px solid var(--red)", background: "rgba(232, 16, 42, 0.04)", borderRadius: "0 10px 10px 0" }}>
+      <div style={{ marginTop: 14, padding: "14px 18px", borderLeft: "3px solid var(--red)", background: "rgba(var(--accent-rgb), 0.04)", borderRadius: "0 10px 10px 0" }}>
         <div style={{ fontSize: 11, color: "var(--t3)", lineHeight: 1.7 }}>
           Changes to habits apply to future days. Past data stays intact.
         </div>

@@ -113,8 +113,8 @@ export default function GoalsTab({ goals, setGoals }) {
               <div onClick={() => startAdd(q)} style={{
                 fontSize: 10, color: "var(--red)", cursor: "pointer",
                 letterSpacing: "0.18em", fontWeight: 700, fontFamily: "'Cinzel', serif",
-                padding: "4px 8px", borderRadius: 5, border: "1px solid rgba(232,16,42,0.3)",
-                background: "rgba(232,16,42,0.08)", textShadow: "0 0 6px var(--red)",
+                padding: "4px 8px", borderRadius: 5, border: "1px solid rgba(var(--accent-rgb),0.3)",
+                background: "rgba(var(--accent-rgb),0.08)", textShadow: "0 0 6px var(--red)",
               }}>+ ADD</div>
             </div>
 

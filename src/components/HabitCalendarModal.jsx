@@ -107,7 +107,7 @@ export default function HabitCalendarModal({ habit, days, today, onClose }) {
                   : hasData && !future ? "#1a1520" : "var(--item)",
                 border: isToday ? "2px solid var(--red)" : "1px solid var(--brd)",
                 opacity: future ? 0.3 : 1,
-                boxShadow: done ? "0 0 10px rgba(232, 16, 42, 0.4)" : "none",
+                boxShadow: done ? "0 0 10px rgba(var(--accent-rgb), 0.4)" : "none",
               }}>
                 <div style={{
                   fontSize: 12,
@@ -120,7 +120,7 @@ export default function HabitCalendarModal({ habit, days, today, onClose }) {
           })}
         </div>
 
-        <div style={{ marginTop: 16, padding: 12, borderLeft: "2px solid rgba(232, 16, 42, 0.3)", fontSize: 11, color: "var(--t3)", lineHeight: 1.6, background: "rgba(232, 16, 42, 0.03)" }}>
+        <div style={{ marginTop: 16, padding: 12, borderLeft: "2px solid rgba(var(--accent-rgb), 0.3)", fontSize: 11, color: "var(--t3)", lineHeight: 1.6, background: "rgba(var(--accent-rgb), 0.03)" }}>
           Red = held · Dark = tracked but missed · Gray = no data
         </div>
       </div>

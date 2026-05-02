@@ -46,7 +46,7 @@ export default function WeekTab({ days, habits, today, dayOff, setDayOff, setTab
               style={{
                 borderColor: isToday ? "var(--red)" : "var(--brd)",
                 background: pf ? "linear-gradient(90deg, rgba(28, 10, 16, 0.7), var(--item))" : "var(--item)",
-                boxShadow: pf ? "0 0 18px rgba(232, 16, 42, 0.18)" : "none",
+                boxShadow: pf ? "0 0 18px rgba(var(--accent-rgb), 0.18)" : "none",
                 opacity: future ? 0.5 : 1,
               }}
               onClick={() => { setDayOff(dayDiff(day, today)); setTab("day"); }}

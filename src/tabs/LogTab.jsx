@@ -94,7 +94,7 @@ export default function LogTab({ logs, setLogs, today }) {
               padding: "12px 0", textAlign: "center",
               color: "var(--red)", fontSize: 11, cursor: "pointer",
               letterSpacing: "0.28em", fontWeight: 700, fontFamily: "'Cinzel', serif",
-              textShadow: "0 0 8px rgba(232, 16, 42, 0.4)",
+              textShadow: "0 0 8px rgba(var(--accent-rgb), 0.4)",
             }}
           >
             ◆ {hasContent ? "EDIT" : "WRITE"} {isCurrentWk ? "THIS WEEK" : "THIS LOG"} ◆
