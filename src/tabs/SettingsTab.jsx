@@ -450,7 +450,7 @@ function TabVisibilityToggle({ id, label, sub, visibility, setVisibility }) {
 }
 
 const THEME_OPTIONS = [
-  { id: "command",    label: "Command Center", sub: "Default — dark + brand red." },
+  { id: "command",    label: "Rasi Red",       sub: "Default — dark + brand red." },
   { id: "seal-day",   label: "Seal Night",     sub: "Calm slate dark + warm peach accent. Easy on eyes at night." },
   { id: "seal-night", label: "Seal Day",       sub: "Solarized Light — warm cream + muted blue accent. Mono." },
 ];
