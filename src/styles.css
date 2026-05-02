@@ -578,7 +578,6 @@ body::after {
   left: 0; top: 0; bottom: 0;
   width: 3px;
   background: linear-gradient(180deg, var(--red), var(--red-b));
-  box-shadow: 0 0 8px var(--red);
 }
 .sc-label {
   font-family: 'Cinzel', serif;
