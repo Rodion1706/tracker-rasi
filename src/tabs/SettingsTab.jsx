@@ -395,7 +395,7 @@ friday | ${sampleTag3} | Third task`;
           Dates: <span style={{ color: "var(--t1)", fontFamily: "'JetBrains Mono', monospace" }}>YYYY-MM-DD, today, tomorrow, monday..sunday</span>.
         </div>
         <textarea value={text} onChange={e => { setText(e.target.value); setPreview(null); setError(""); }} rows={8} placeholder={exampleText}
-          style={{ width: "100%", background: "rgba(0,0,0,0.4)", border: "1px solid var(--brd)", borderRadius: 8, color: "var(--t1)", fontSize: 12, outline: "none", padding: 12, resize: "vertical", boxSizing: "border-box", fontFamily: "'JetBrains Mono', monospace", lineHeight: 1.55 }} />
+          style={{ width: "100%", background: "var(--item)", border: "1px solid var(--brd)", borderRadius: 8, color: "var(--t1)", fontSize: 12, outline: "none", padding: 12, resize: "vertical", boxSizing: "border-box", fontFamily: "'JetBrains Mono', monospace", lineHeight: 1.55 }} />
         {error && (
           <div style={{ marginTop: 10, padding: 10, background: "rgba(204, 51, 51, 0.15)", border: "1px solid rgba(204, 51, 51, 0.4)", borderRadius: 8, color: "#ff6070", fontSize: 11, whiteSpace: "pre-wrap", fontFamily: "'JetBrains Mono', monospace" }}>{error}</div>
         )}
@@ -451,8 +451,8 @@ function TabVisibilityToggle({ id, label, sub, visibility, setVisibility }) {
 
 const THEME_OPTIONS = [
   { id: "command",    label: "Command Center", sub: "Default — dark + brand red." },
-  { id: "seal-day",   label: "Seal Day",       sub: "Light off-white + green accent. Clean daytime." },
-  { id: "seal-night", label: "Seal Night",     sub: "Warm cream + blue accent. Evening reading lamp." },
+  { id: "seal-day",   label: "Seal Night",     sub: "Calm slate dark + warm peach accent. Easy on eyes at night." },
+  { id: "seal-night", label: "Seal Day",       sub: "Solarized Light — warm cream + muted blue accent. Mono." },
 ];
 
 function ThemePicker({ theme, setTheme }) {
@@ -769,8 +769,10 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
                   style={{
                     width: 28, height: 28, borderRadius: 14, cursor: "pointer",
                     background: c,
-                    border: tagEColor === c ? "2px solid var(--t1)" : "2px solid transparent",
-                    boxShadow: tagEColor === c ? `0 0 10px ${c}` : "none",
+                    border: "2px solid transparent",
+                    outline: tagEColor === c ? "2px solid var(--red)" : "none",
+                    outlineOffset: 2,
+                    boxShadow: tagEColor === c ? `0 0 6px ${c}` : "none",
                   }}
                 />
               ))}
@@ -816,8 +818,10 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
               style={{
                 width: 28, height: 28, borderRadius: 14, cursor: "pointer",
                 background: c,
-                border: newTagColor === c ? "2px solid var(--t1)" : "2px solid transparent",
-                boxShadow: newTagColor === c ? `0 0 10px ${c}` : "none",
+                border: "2px solid transparent",
+                outline: newTagColor === c ? "2px solid var(--red)" : "none",
+                outlineOffset: 2,
+                boxShadow: newTagColor === c ? `0 0 6px ${c}` : "none",
               }}
             />
           ))}

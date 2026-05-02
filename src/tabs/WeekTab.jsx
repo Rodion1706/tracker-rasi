@@ -13,7 +13,7 @@ export default function WeekTab({ days, habits, today, dayOff, setDayOff, setTab
       <div style={{
         fontSize: 11, letterSpacing: "0.26em", color: "var(--red)",
         marginBottom: 14, fontWeight: 700, fontFamily: "'Cinzel', serif",
-        textTransform: "uppercase", textShadow: "0 0 8px var(--red)",
+        textTransform: "uppercase",
       }}>
         Week of {niceDate(weekDays[0])}
       </div>
@@ -44,9 +44,8 @@ export default function WeekTab({ days, habits, today, dayOff, setDayOff, setTab
               key={day}
               className="wk-row"
               style={{
-                borderColor: isToday ? "var(--red)" : "var(--brd)",
-                background: pf ? "linear-gradient(90deg, rgba(28, 10, 16, 0.7), var(--item))" : "var(--item)",
-                boxShadow: pf ? "0 0 18px rgba(var(--accent-rgb), 0.18)" : "none",
+                borderColor: isToday ? "var(--red)" : pf ? "rgba(var(--accent-rgb), 0.4)" : "var(--brd)",
+                background: pf ? "linear-gradient(90deg, rgba(var(--accent-rgb), 0.08), var(--item))" : "var(--item)",
                 opacity: future ? 0.5 : 1,
               }}
               onClick={() => { setDayOff(dayDiff(day, today)); setTab("day"); }}
@@ -55,7 +54,6 @@ export default function WeekTab({ days, habits, today, dayOff, setDayOff, setTab
                 <div className="wk-row-name" style={{ color: isToday ? "var(--red)" : "var(--t3)" }}>{dayName}</div>
                 <div className="wk-row-num" style={{
                   color: isToday ? "var(--red)" : pf ? "var(--red)" : "var(--t1)",
-                  textShadow: isToday || pf ? "0 0 8px var(--red)" : "none",
                 }}>{dayNum}</div>
               </div>
 

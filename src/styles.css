@@ -32,36 +32,84 @@
   /* Tag colors live in data.tags now — applied via inline styles. */
 
   --overdue: #9a2030;
+
+  /* Glass surfaces — used to lift panels above page bg.
+     Per-theme so the same `var(--glass)` reads dark on Command and
+     near-card on light themes (no more black grey panels on cream). */
+  --glass: rgba(16, 8, 18, 0.55);
+  --glass-soft: rgba(14, 8, 16, 0.5);
+  --glass-firm: rgba(20, 14, 22, 0.6);
+  --glass-deep: rgba(20, 12, 20, 0.8);
+  --glass-deeper: rgba(10, 8, 12, 0.9);
+  --glass-modal-a: rgba(28, 10, 16, 0.96);
+  --glass-modal-b: rgba(20, 14, 22, 0.96);
+
+  /* Bar/track tones — used for inactive segments + progress backings */
+  --bar-track: rgba(42, 36, 48, 0.4);
+  --bar-track-firm: rgba(42, 36, 48, 0.8);
+  --bar-track-future: rgba(42, 36, 48, 0.35);
+
+  /* Strong/mute text overrides — these were hardcoded white/grey for
+     Command's dark bg. Light themes remap to their --t1/--t2 so text
+     stays readable on a light glass surface. */
+  --t-strong: #fff;
+  --t-mute: #9c9ca2;
+  --t-mute-2: #a8a8ae;
+  --t-soft: #ccc;
 }
 
-/* === SEAL DAY (GitHub Light — clean off-white + green accent) === */
+/* === SEAL DAY → Theme 28 "CALM SLATE DARK"
+   Dark slate bg + warm peach accent. Inter sans-serif. Round
+   checkboxes. Boss locked this exact spec from theme-variants.html. */
 [data-theme="seal-day"] {
-  --bg: #f6f8fa;
-  --card: #ffffff;
-  --item: #ffffff;
-  --item-on: #ddf4e4;
-  --brd: #d0d7de;
-  --brd-on: #2da44e;
-  --t1: #1f2328;
-  --t2: #656d76;
-  --t3: #8c959f;
-  --red: #2da44e;
-  --red-b: #46c061;
-  --red-d: #1a7f37;
-  --accent-rgb: 45, 164, 78;
-  --pink: #2da44e;
-  --pink-b: #46c061;
-  --pink-d: #1a7f37;
-  --overdue: #cf222e;
+  --bg: #1e2228;
+  --card: #2a2f37;
+  --item: #2a2f37;
+  --item-on: #383d46;
+  --brd: #363c46;
+  --brd-on: #f5b876;
+  --t1: #e5e1d6;
+  --t2: #a0a4ad;
+  --t3: #5e636e;
+  --red: #f5b876;
+  --red-b: #f7c98e;
+  --red-d: #d99c5e;
+  --accent-rgb: 245, 184, 118;
+  --pink: #f5b876;
+  --pink-b: #f7c98e;
+  --pink-d: #d99c5e;
+  --overdue: #ef5350;
+
+  /* Slate glass — slightly lighter than bg for subtle lift, no transparency
+     theatrics. Match the card token so panels read as solid surfaces. */
+  --glass: #2a2f37;
+  --glass-soft: #2a2f37;
+  --glass-firm: #363c46;
+  --glass-deep: #2a2f37;
+  --glass-deeper: #1e2228;
+  --glass-modal-a: #2a2f37;
+  --glass-modal-b: #1e2228;
+
+  --bar-track: rgba(255, 255, 255, 0.06);
+  --bar-track-firm: rgba(255, 255, 255, 0.12);
+  --bar-track-future: rgba(255, 255, 255, 0.04);
+
+  /* --t-strong inherited from :root (#fff) — used on peach-bg elements */
+  --t-mute: var(--t2);
+  --t-mute-2: var(--t2);
+  --t-soft: var(--t1);
 }
 
-/* === SEAL NIGHT (Solarized Light — warm cream + blue accent) === */
+/* === SEAL NIGHT → Theme 11 "SOLARIZED LIGHT"
+   Famous ergonomic palette — warm cream + muted blue accent, mono
+   font, square checkboxes. Boss locked this exact spec from
+   theme-variants.html. */
 [data-theme="seal-night"] {
   --bg: #fdf6e3;
   --card: #eee8d5;
   --item: #eee8d5;
   --item-on: #e1dab5;
-  --brd: #ddd6c1;
+  --brd: #eee8d5;
   --brd-on: #268bd2;
   --t1: #586e75;
   --t2: #839496;
@@ -74,6 +122,30 @@
   --pink-b: #5ba6de;
   --pink-d: #1d6fa8;
   --overdue: #dc322f;
+
+  /* Theme 11 spec sets --brd equal to card #eee8d5, but in the full
+     app context that makes every input/row border invisible against
+     the cream card surface. Bump to a darker hairline so divisions
+     read clearly while keeping the warm Solarized palette. */
+  --brd: #d6cfae;
+
+  /* Solid cream surfaces — Theme 11 uses card color directly, no glass */
+  --glass: #eee8d5;
+  --glass-soft: #eee8d5;
+  --glass-firm: #eee8d5;
+  --glass-deep: #eee8d5;
+  --glass-deeper: #fdf6e3;
+  --glass-modal-a: #fdf6e3;
+  --glass-modal-b: #eee8d5;
+
+  --bar-track: rgba(88, 110, 117, 0.15);
+  --bar-track-firm: rgba(88, 110, 117, 0.28);
+  --bar-track-future: rgba(88, 110, 117, 0.1);
+
+  /* --t-strong inherited from :root (#fff) — used on blue-bg elements */
+  --t-mute: var(--t2);
+  --t-mute-2: var(--t2);
+  --t-soft: var(--t1);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -131,7 +203,7 @@ body::after {
 @keyframes rotater { to { transform: rotate(-360deg); } }
 @keyframes pulse {
   0%, 100% { filter: drop-shadow(0 0 10px rgba(var(--accent-rgb), 0.7)); opacity: 0.92; }
-  50% { filter: drop-shadow(0 0 18px rgba(var(--accent-rgb), 0.9)) drop-shadow(0 0 32px rgba(122, 10, 21, 0.5)); opacity: 1; }
+  50% { filter: drop-shadow(0 0 18px rgba(var(--accent-rgb), 0.9)) drop-shadow(0 0 32px rgba(var(--accent-rgb), 0.35)); opacity: 1; }
 }
 @keyframes pulseSmall { 0%, 100% { opacity: 0.9; } 50% { opacity: 1; } }
 @keyframes fill {
@@ -195,7 +267,7 @@ body::after {
   letter-spacing: 0.12em;
   color: var(--red);
   line-height: 1;
-  text-shadow: 0 0 16px rgba(var(--accent-rgb), 0.7), 0 0 32px rgba(122, 10, 21, 0.5);
+  text-shadow: 0 0 16px rgba(var(--accent-rgb), 0.7), 0 0 32px rgba(var(--accent-rgb), 0.35);
   animation: pulse 3s infinite;
 }
 .brand-sub {
@@ -203,7 +275,7 @@ body::after {
   font-weight: 500;
   font-size: 12px;
   letter-spacing: 0.28em;
-  color: #9c9ca2;
+  color: var(--t-mute);
   text-transform: uppercase;
   margin-top: 8px;
 }
@@ -217,7 +289,7 @@ body::after {
 .date-sub {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  color: #9c9ca2;
+  color: var(--t-mute);
   letter-spacing: 0.18em;
   margin-top: 6px;
   font-weight: 500;
@@ -258,7 +330,7 @@ body::after {
 .tabs {
   display: flex;
   padding: 5px;
-  background: rgba(16, 8, 18, 0.6);
+  background: var(--glass);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(var(--accent-rgb), 0.25);
@@ -277,7 +349,7 @@ body::after {
   font-weight: 500;
   font-size: 12px;
   letter-spacing: 0.2em;
-  color: #9c9ca2;
+  color: var(--t-mute);
   cursor: pointer;
   border-radius: 40px;
   transition: all 0.3s;
@@ -285,14 +357,11 @@ body::after {
   user-select: none;
   white-space: nowrap;
 }
-.tab:hover { color: #ccc; transform: translateY(-1px); }
+.tab:hover { color: var(--t-soft); transform: translateY(-1px); }
 .tab:active { transform: scale(0.96); }
 .tab.active {
   color: #fff;
-  background: linear-gradient(135deg, var(--red-b), var(--red), var(--red-d));
-  background-size: 200% 200%;
-  box-shadow: 0 4px 20px rgba(var(--accent-rgb), 0.5), 0 0 24px rgba(var(--accent-rgb), 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  animation: tabGradient 5s ease-in-out infinite;
+  background: var(--red);
 }
 @keyframes tabGradient {
   0%, 100% { background-position: 0% 50%; }
@@ -306,7 +375,7 @@ body::after {
   gap: 28px;
   align-items: center;
   padding: 16px 22px;
-  background: rgba(16, 8, 18, 0.5);
+  background: var(--glass-soft);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(var(--accent-rgb), 0.22);
@@ -329,7 +398,7 @@ body::after {
   font-family: 'Oswald', sans-serif;
   font-weight: 700;
   font-size: 34px;
-  color: #fff;
+  color: var(--t1);
   line-height: 1;
   display: flex;
   align-items: baseline;
@@ -343,7 +412,7 @@ body::after {
 .ys-w .of {
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
-  color: #9c9ca2;
+  color: var(--t-mute);
   font-weight: 500;
   letter-spacing: 0.12em;
   margin-left: 8px;
@@ -406,7 +475,7 @@ body::after {
   justify-content: space-between;
   font-family: 'Oswald', sans-serif;
   font-size: 10px;
-  color: #a8a8ae;
+  color: var(--t-mute-2);
   letter-spacing: 0.14em;
   font-weight: 600;
   pointer-events: none;
@@ -474,14 +543,14 @@ body::after {
 }
 
 /* ════════ MONAD ════════ */
-.monad { position: relative; flex-shrink: 0; }
+.monad { position: relative; flex-shrink: 0; color: var(--red); }
 .monad-rotate { position: absolute; inset: 0; animation: rotate 80s linear infinite, monadBreathe 4.5s ease-in-out infinite; transform-origin: center; }
 .monad-core { position: absolute; inset: 0; animation: pulse 4s infinite; }
 .monad-ring { position: absolute; inset: -16px; animation: rotater 28s linear infinite; opacity: 0.5; }
 
 @keyframes monadBreathe {
   0%, 100% { filter: drop-shadow(0 0 10px rgba(var(--accent-rgb), 0.7)); }
-  50% { filter: drop-shadow(0 0 20px rgba(var(--accent-rgb), 0.95)) drop-shadow(0 0 36px rgba(122, 10, 21, 0.55)); }
+  50% { filter: drop-shadow(0 0 20px rgba(var(--accent-rgb), 0.95)) drop-shadow(0 0 36px rgba(var(--accent-rgb), 0.4)); }
 }
 
 /* ════════ STAT CARDS ════════ */
@@ -493,7 +562,7 @@ body::after {
 }
 .stat-card {
   padding: 14px 16px;
-  background: linear-gradient(135deg, rgba(30, 10, 16, 0.5), rgba(24, 22, 28, 0.55));
+  background: linear-gradient(135deg, var(--glass-soft), var(--card));
   border: 1px solid rgba(var(--accent-rgb), 0.22);
   border-radius: 12px;
   transition: all 0.3s;
@@ -515,7 +584,7 @@ body::after {
   font-family: 'Cinzel', serif;
   font-size: 11px;
   letter-spacing: 0.22em;
-  color: #a8a8ae;
+  color: var(--t-mute-2);
   font-weight: 600;
   text-transform: uppercase;
   margin-bottom: 8px;
@@ -548,7 +617,7 @@ body::after {
 /* ════════ LEVEL BAR ════════ */
 .level-bar {
   padding: 12px 16px;
-  background: rgba(14, 8, 16, 0.5);
+  background: var(--glass-soft);
   border: 1px solid rgba(var(--accent-rgb), 0.22);
   border-radius: 10px;
   margin-top: 10px;
@@ -574,7 +643,7 @@ body::after {
   font-family: 'Cinzel', serif;
   font-size: 13px;
   letter-spacing: 0.26em;
-  color: #fff;
+  color: var(--t1);
   font-weight: 600;
   text-transform: uppercase;
   text-shadow: 0 0 10px rgba(var(--accent-rgb), 0.4);
@@ -585,14 +654,14 @@ body::after {
 .level-bar-xp {
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
-  color: #a8a8ae;
+  color: var(--t-mute-2);
   letter-spacing: 0.1em;
   font-weight: 500;
   white-space: nowrap;
 }
 .level-bar-track {
   height: 6px;
-  background: rgba(42, 36, 48, 0.4);
+  background: var(--bar-track);
   border-radius: 4px;
   overflow: hidden;
   position: relative;
@@ -663,7 +732,7 @@ body::after {
   font-size: 11px;
   letter-spacing: 0.32em;
   font-weight: 700;
-  color: #fff;
+  color: var(--t-strong);
   text-align: center;
   text-transform: uppercase;
   text-shadow: 0 0 10px var(--red), 0 0 18px rgba(255, 215, 0, 0.6);
@@ -725,7 +794,7 @@ body::after {
   gap: 10px;
   padding: 8px 14px;
   border-radius: 8px;
-  background: rgba(20, 14, 22, 0.6);
+  background: var(--glass-firm);
   border: 1px solid var(--brd);
   font-family: 'Cinzel', serif;
   font-size: 10px;
@@ -741,7 +810,7 @@ body::after {
   color: var(--t1);
 }
 .hard-day.on .hard-day-toggle {
-  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.18), rgba(122, 10, 21, 0.14));
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.18), rgba(var(--accent-rgb), 0.08));
   border-color: var(--red);
   color: var(--red-b);
   box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.25);
@@ -770,7 +839,7 @@ body::after {
 
 /* ════════ BADGE WALL ════════ */
 .badge-wall {
-  background: rgba(14, 8, 16, 0.5);
+  background: var(--glass-soft);
   border: 1px solid rgba(var(--accent-rgb), 0.22);
   border-radius: 12px;
   padding: 16px 18px;
@@ -883,7 +952,7 @@ body::after {
   align-items: center;
   gap: 14px;
   padding: 14px 18px;
-  background: rgba(14, 8, 16, 0.5);
+  background: var(--glass-soft);
   border: 1px solid var(--brd);
   border-radius: 10px;
   margin-bottom: 14px;
@@ -895,7 +964,7 @@ body::after {
 .sound-toggle-sw {
   width: 44px;
   height: 22px;
-  background: rgba(42, 36, 48, 0.8);
+  background: var(--bar-track-firm);
   border-radius: 14px;
   position: relative;
   transition: background 0.25s;
@@ -941,7 +1010,7 @@ body::after {
 .notify-times {
   margin-top: 8px;
   padding: 14px 16px;
-  background: rgba(14, 8, 16, 0.5);
+  background: var(--glass-soft);
   border: 1px solid var(--brd);
   border-radius: 10px;
 }
@@ -980,7 +1049,7 @@ body::after {
   margin-top: 6px;
   padding: 10px 14px;
   background: linear-gradient(135deg, var(--red-d), var(--red));
-  color: #fff;
+  color: var(--t-strong);
   border-radius: 6px;
   text-align: center;
   cursor: pointer;
@@ -1022,7 +1091,7 @@ body::after {
 /* ════════ KEYBOARD HINT ════════ */
 .kbd-hint {
   padding: 14px 18px;
-  background: rgba(14, 8, 16, 0.5);
+  background: var(--glass-soft);
   border: 1px solid var(--brd);
   border-radius: 10px;
   margin-bottom: 22px;
@@ -1127,7 +1196,7 @@ body::after {
   font-weight: 700;
   font-size: clamp(120px, 28vw, 280px);
   line-height: 1;
-  color: #fff;
+  color: var(--t-strong);
   text-shadow: 0 0 40px var(--red), 0 0 80px rgba(var(--accent-rgb), 0.8), 0 0 120px rgba(var(--accent-rgb), 0.5);
   animation: tierupBig 1.4s cubic-bezier(0.2, 1.6, 0.4, 1) both 0.4s;
   letter-spacing: 0.02em;
@@ -1136,7 +1205,7 @@ body::after {
   font-family: 'Cinzel', serif;
   font-size: 16px;
   letter-spacing: 0.36em;
-  color: #fff;
+  color: var(--t-strong);
   font-weight: 700;
   text-transform: uppercase;
   text-shadow: 0 0 16px var(--red);
@@ -1217,7 +1286,7 @@ body::after {
 }
 .flex-stat {
   padding: 16px 18px;
-  background: linear-gradient(135deg, rgba(20, 12, 20, 0.7), rgba(14, 8, 16, 0.6));
+  background: linear-gradient(135deg, var(--glass-firm), var(--glass));
   border: 1px solid rgba(var(--accent-rgb), 0.22);
   border-radius: 12px;
   position: relative;
@@ -1242,7 +1311,7 @@ body::after {
   font-family: 'Cinzel', serif;
   font-size: 10px;
   letter-spacing: 0.22em;
-  color: #a8a8ae;
+  color: var(--t-mute-2);
   font-weight: 600;
   text-transform: uppercase;
   margin-bottom: 8px;
@@ -1277,7 +1346,7 @@ body::after {
 
 .stats-rate {
   padding: 18px 20px;
-  background: linear-gradient(135deg, rgba(20, 12, 20, 0.7), rgba(14, 8, 16, 0.6));
+  background: linear-gradient(135deg, var(--glass-firm), var(--glass));
   border: 1px solid rgba(var(--accent-rgb), 0.22);
   border-radius: 12px;
   margin-bottom: 22px;
@@ -1294,7 +1363,7 @@ body::after {
 }
 .stats-rate-track {
   height: 10px;
-  background: rgba(42, 36, 48, 0.5);
+  background: var(--bar-track);
   border-radius: 5px;
   overflow: hidden;
   position: relative;
@@ -1358,7 +1427,7 @@ body::after {
 
 .banner-editor {
   padding: 16px 18px;
-  background: rgba(14, 8, 16, 0.5);
+  background: var(--glass-soft);
   border: 1px solid var(--brd);
   border-radius: 10px;
   margin-bottom: 22px;
@@ -1452,7 +1521,7 @@ body::after {
 .banner-editor-addbtn {
   padding: 8px 14px;
   background: linear-gradient(135deg, var(--red), var(--red-d));
-  color: #fff;
+  color: var(--t-strong);
   border-radius: 6px;
   cursor: pointer;
   font-family: 'Cinzel', serif;
@@ -1484,7 +1553,7 @@ body::after {
 .task-roll-badge.tier-4 { background: rgba(var(--accent-rgb), 0.2); color: var(--red-b); border-color: var(--red); box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.4); }
 .task-roll-badge.tier-5 {
   background: rgba(var(--accent-rgb), 0.28);
-  color: #fff;
+  color: var(--t-strong);
   border-color: var(--red);
   box-shadow: 0 0 12px var(--red), inset 0 0 6px rgba(var(--accent-rgb), 0.4);
   animation: rollPulse 1.5s ease-in-out infinite;
@@ -1512,7 +1581,7 @@ body::after {
   left: 50%;
   transform: translateX(-50%);
   z-index: 9997;
-  background: linear-gradient(135deg, rgba(28, 10, 16, 0.96), rgba(20, 14, 22, 0.96));
+  background: linear-gradient(135deg, var(--glass-modal-a), var(--glass-modal-b));
   border: 1px solid var(--red);
   border-radius: 12px;
   padding: 14px 22px;
@@ -1681,7 +1750,7 @@ body::after {
   align-items: center;
   gap: 14px;
   padding: 14px 18px 14px 14px;
-  background: linear-gradient(135deg, rgba(28, 10, 16, 0.96), rgba(20, 14, 22, 0.96));
+  background: linear-gradient(135deg, var(--glass-modal-a), var(--glass-modal-b));
   border: 1px solid var(--red);
   border-radius: 12px;
   min-width: 280px;
@@ -1723,7 +1792,7 @@ body::after {
   font-family: 'Cinzel', serif;
   font-size: 14px;
   letter-spacing: 0.22em;
-  color: #fff;
+  color: var(--t-strong);
   font-weight: 700;
   text-transform: uppercase;
   text-shadow: 0 0 10px var(--red);
@@ -1797,7 +1866,7 @@ body::after {
   font-weight: 700;
   font-size: clamp(38px, 11vw, 80px);
   letter-spacing: 0.22em;
-  color: #fff;
+  color: var(--t-strong);
   text-shadow:
     0 0 18px var(--red),
     0 0 36px var(--red-b),
@@ -2013,7 +2082,7 @@ body::after {
 .sc-value .unit {
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
-  color: #9c9ca2;
+  color: var(--t-mute);
   font-weight: 500;
   margin-left: 4px;
   text-shadow: none;
@@ -2035,7 +2104,7 @@ body::after {
   justify-content: space-between;
   align-items: center;
 }
-.ss-label { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.22em; color: #a8a8ae; font-weight: 600; text-transform: uppercase; }
+.ss-label { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.22em; color: var(--t-mute-2); font-weight: 600; text-transform: uppercase; }
 .ss-value { font-family: 'Oswald', sans-serif; font-size: 14px; font-weight: 700; color: var(--t1); }
 .ss-value.r { color: var(--red); text-shadow: 0 0 8px rgba(var(--accent-rgb), 0.7); }
 
@@ -2058,7 +2127,7 @@ body::after {
   background: linear-gradient(180deg, var(--red-b), var(--red));
   animation: currentPulse 2s infinite, tickIn 0.35s cubic-bezier(0.4, 1.4, 0.3, 1) both;
 }
-.ws-tick.future { background: rgba(42, 36, 48, 0.35); }
+.ws-tick.future { background: var(--bar-track-future); }
 
 /* Week big strip on WeekTab */
 .wbs {
@@ -2067,7 +2136,7 @@ body::after {
   gap: 24px;
   align-items: center;
   padding: 16px 22px;
-  background: rgba(16, 8, 18, 0.5);
+  background: var(--glass-soft);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(var(--accent-rgb), 0.22);
@@ -2091,7 +2160,7 @@ body::after {
   font-weight: 700;
   font-size: 20px;
   letter-spacing: 0.16em;
-  color: #fff;
+  color: var(--t-strong);
   text-shadow: 0 0 14px var(--red);
   text-transform: uppercase;
 }
@@ -2143,11 +2212,11 @@ body::after {
   animation: currentPulse 2s infinite, tickIn 0.45s cubic-bezier(0.4, 1.4, 0.3, 1) both;
   box-shadow: 0 0 14px var(--red), 0 0 28px var(--red-b);
 }
-.wbs-tick.future { background: rgba(42, 36, 48, 0.35); opacity: 0.6; }
+.wbs-tick.future { background: var(--bar-track-future); opacity: 0.6; }
 .wbs-day-name {
   font-family: 'Oswald', sans-serif;
   font-size: 10px;
-  color: #a8a8ae;
+  color: var(--t-mute-2);
   letter-spacing: 0.14em;
   font-weight: 600;
 }
@@ -2254,7 +2323,7 @@ body::after {
   gap: 18px;
   align-items: center;
   padding: 18px 22px;
-  background: rgba(16, 8, 18, 0.5);
+  background: var(--glass-soft);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(var(--accent-rgb), 0.22);
@@ -2277,7 +2346,7 @@ body::after {
   font-weight: 700;
   font-size: 26px;
   letter-spacing: 0.18em;
-  color: #fff;
+  color: var(--t-strong);
   text-shadow: 0 0 14px var(--red);
   text-transform: uppercase;
   line-height: 1;
@@ -2295,7 +2364,7 @@ body::after {
 
 /* ════════ BRUTE CARD — for log/goals panels ════════ */
 .brute {
-  background: linear-gradient(180deg, rgba(20, 12, 20, 0.8), rgba(10, 8, 12, 0.9));
+  background: linear-gradient(180deg, var(--glass-deep), var(--glass-deeper));
   border: 1px solid rgba(var(--accent-rgb), 0.22);
   border-radius: 14px;
   padding: 20px 22px;
@@ -2365,7 +2434,7 @@ body::after {
 }
 .goal-row:hover { border-color: var(--red-b); box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.15); }
 .goal-row.complete {
-  background: linear-gradient(90deg, rgba(28, 10, 16, 0.7), var(--item));
+  background: linear-gradient(90deg, var(--glass-firm), var(--item));
   border-color: var(--brd-on);
 }
 .goal-row.complete::before {
@@ -2423,7 +2492,7 @@ body::after {
   font-weight: 700;
   font-size: 15px;
   letter-spacing: 0.32em;
-  color: #fff;
+  color: var(--t-strong);
   text-shadow: 0 0 10px var(--red);
   text-transform: uppercase;
 }
@@ -2500,9 +2569,9 @@ body::after {
 }
 .month-cell-num, .month-cell-pct, .month-cell-future-dot { position: relative; z-index: 1; }
 .month-cell:hover { border-color: var(--red); transform: scale(1.08) rotate(-1deg); z-index: 2; box-shadow: 0 0 18px rgba(var(--accent-rgb), 0.4); }
-.month-cell.partial { background: #18121c; }
+.month-cell.partial { background: var(--item); }
 .month-cell.perfect {
-  background: linear-gradient(135deg, #2a1020, #1e0a10);
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.18), var(--item));
   box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.3);
 }
 .month-cell.today { border-color: var(--red); border-width: 2px; box-shadow: 0 0 10px var(--red); }
@@ -2511,7 +2580,7 @@ body::after {
   font-size: 13px;
   font-family: 'Oswald', sans-serif;
   font-weight: 500;
-  color: #3a3440;
+  color: var(--t3);
 }
 .month-cell.partial .month-cell-num { color: var(--t2); }
 .month-cell.perfect .month-cell-num, .month-cell.today .month-cell-num { color: var(--red); font-weight: 700; }
@@ -2535,7 +2604,7 @@ body::after {
   margin-top: 22px;
   padding: 18px 20px;
   border-radius: 12px;
-  background: linear-gradient(180deg, rgba(20, 12, 20, 0.8), rgba(10, 8, 12, 0.9));
+  background: linear-gradient(180deg, var(--glass-deep), var(--glass-deeper));
   border: 1px solid rgba(var(--accent-rgb), 0.22);
   border-left: 3px solid var(--red);
   position: relative;
@@ -2609,14 +2678,14 @@ body::after {
   font-family: 'Cinzel', serif;
   font-size: 11px;
   letter-spacing: 0.26em;
-  color: #a8a8ae;
+  color: var(--t-mute-2);
   font-weight: 600;
   text-transform: uppercase;
 }
 .section-bar { width: 16px; height: 2px; background: var(--red); border-radius: 1px; box-shadow: 0 0 6px var(--red); }
 .section-label { color: var(--red-b); text-shadow: 0 0 6px var(--red); }
 .section-line { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.25), transparent); }
-.section-count { color: #9c9ca2; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; font-weight: 600; }
+.section-count { color: var(--t-mute); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; font-weight: 600; }
 
 /* overdue variant — dim red */
 .section.overdue .section-bar { background: var(--overdue); box-shadow: 0 0 6px var(--overdue); }
@@ -2713,7 +2782,7 @@ body::after {
 
 /* ════════ PANELS (tasks + habits) ════════ */
 .panel {
-  background: rgba(14, 8, 16, 0.5);
+  background: var(--glass-soft);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(var(--accent-rgb), 0.22);
@@ -2746,7 +2815,7 @@ body::after {
   box-shadow: 0 0 10px var(--red);
   animation: pulseSmall 2s infinite;
 }
-.panel-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a8a8ae; letter-spacing: 0.14em; font-weight: 500; }
+.panel-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--t-mute-2); letter-spacing: 0.14em; font-weight: 500; }
 
 /* ════════ TASK ROW ════════ */
 .task-row {
@@ -2805,7 +2874,7 @@ body::after {
   letter-spacing: 0.14em;
   padding: 3px 9px;
   border-radius: 20px;
-  color: #fff;
+  color: var(--t-strong);
   font-weight: 600;
   flex-shrink: 0;
   background: linear-gradient(90deg, var(--red-d), var(--red));
@@ -2814,7 +2883,7 @@ body::after {
 .task-tag:hover, .row-tag:hover { transform: scale(1.08) rotate(-2deg); filter: brightness(1.18); }
 /* Per-tag colors are applied inline from data.tags. */
 
-.task-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a8a8ae; font-weight: 600; flex-shrink: 0; letter-spacing: 0.06em; }
+.task-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--t-mute-2); font-weight: 600; flex-shrink: 0; letter-spacing: 0.06em; }
 .task-streak { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 14px; color: var(--red-b); text-shadow: 0 0 8px var(--red); flex-shrink: 0; }
 .task-delete {
   font-size: 18px;
@@ -2890,7 +2959,7 @@ body::after {
 .add-form {
   margin-top: 14px;
   padding: 18px 20px;
-  background: linear-gradient(180deg, rgba(20, 12, 20, 0.7), rgba(10, 8, 12, 0.85));
+  background: linear-gradient(180deg, var(--glass-firm), var(--glass-deeper));
   border: 1px solid rgba(var(--accent-rgb), 0.22);
   border-radius: 14px;
   position: relative;
@@ -2916,7 +2985,7 @@ body::after {
 .add-row { display: flex; gap: 8px; }
 .add-input {
   flex: 1;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--item);
   border: 1px solid var(--brd);
   border-radius: 8px;
   color: var(--t1);
@@ -2928,32 +2997,31 @@ body::after {
 }
 .add-input:focus {
   border-color: var(--red);
-  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.25), inset 0 0 8px rgba(var(--accent-rgb), 0.08);
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--item-on);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15) !important;
 }
 .add-input::placeholder { color: var(--t3); }
 .add-btn {
   padding: 13px 22px;
-  background: linear-gradient(135deg, var(--red), var(--red-d));
+  background: var(--red);
   color: #fff;
   border-radius: 8px;
   cursor: pointer;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.18em;
-  border: 1px solid rgba(var(--accent-rgb), 0.6);
+  border: 1px solid var(--red);
   display: flex;
   align-items: center;
   transition: all 0.2s;
   user-select: none;
   font-family: 'Cinzel', serif;
-  box-shadow: 0 2px 10px rgba(var(--accent-rgb), 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 .add-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 18px rgba(var(--accent-rgb), 0.55), 0 0 22px rgba(var(--accent-rgb), 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: var(--red-d);
+  border-color: var(--red-d);
 }
-.add-btn:active { transform: translateY(1px) scale(0.97); animation: ripple 0.5s ease-out; }
+.add-btn:active { transform: scale(0.97); }
 
 .chip-row { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
 .chip {
@@ -2961,7 +3029,7 @@ body::after {
   font-size: 10px;
   border-radius: 6px;
   cursor: pointer;
-  background: rgba(20, 14, 22, 0.6);
+  background: var(--glass-firm);
   color: var(--t3);
   border: 1px solid var(--brd);
   font-weight: 700;
@@ -2974,7 +3042,7 @@ body::after {
 .chip:hover { color: var(--t1); border-color: rgba(var(--accent-rgb), 0.4); transform: translateY(-1px); }
 .chip:active { animation: chipBounce 0.22s ease-out; }
 .chip.active {
-  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.22), rgba(122, 10, 21, 0.22));
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.22), rgba(var(--accent-rgb), 0.1));
   color: var(--red);
   border-color: rgba(var(--accent-rgb), 0.6);
   box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.25);
@@ -3016,7 +3084,7 @@ body::after {
   border-left: 3px solid var(--red);
   border-radius: 0 12px 12px 0;
   margin-top: 24px;
-  background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.06), rgba(20, 12, 20, 0.5) 50%, rgba(10, 8, 12, 0.3));
+  background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.06), var(--glass-soft) 50%, var(--glass));
   box-shadow: -4px 0 12px rgba(var(--accent-rgb), 0.15);
 }
 .quote::before {
@@ -3047,7 +3115,7 @@ body::after {
   margin-top: 18px;
   padding: 18px;
   border-radius: 12px;
-  background: linear-gradient(135deg, rgba(28, 10, 16, 0.8), rgba(24, 22, 28, 0.8));
+  background: linear-gradient(135deg, var(--glass-deep), var(--card));
   border: 1px solid var(--brd-on);
 }
 .clean-day-text {
@@ -3221,7 +3289,7 @@ body::after {
   letter-spacing: 0.14em;
   padding: 3px 9px;
   border-radius: 20px;
-  color: #fff;
+  color: var(--t-strong);
   font-weight: 600;
   flex-shrink: 0;
   background: linear-gradient(90deg, var(--red-d), var(--red));
@@ -3230,7 +3298,7 @@ body::after {
 /* Per-tag colors are applied inline from data.tags. */
 .row-tag.orphan { background: linear-gradient(90deg, #4a4a4a, #6e6e6e); box-shadow: 0 0 8px rgba(120, 120, 120, 0.3); opacity: 0.7; }
 
-.row-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a8a8ae; font-weight: 600; flex-shrink: 0; letter-spacing: 0.06em; }
+.row-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--t-mute-2); font-weight: 600; flex-shrink: 0; letter-spacing: 0.06em; }
 .row-delete {
   font-size: 18px;
   color: var(--t3);
@@ -3505,7 +3573,7 @@ body::after {
   background: linear-gradient(135deg, var(--red-b), var(--red), var(--red-d));
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--t-strong);
   cursor: pointer;
   box-shadow: 0 8px 24px rgba(var(--accent-rgb), 0.55), 0 0 32px rgba(var(--accent-rgb), 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -3589,7 +3657,7 @@ body::after {
 .habit-edit-done-btn {
   padding: 7px 18px;
   background: var(--red);
-  color: #fff;
+  color: var(--t-strong);
   font-family: 'Cinzel', serif;
   font-size: 11px;
   font-weight: 700;
@@ -3653,4 +3721,261 @@ body::after {
   font-family: 'JetBrains Mono', monospace;
   letter-spacing: 0.04em;
   line-height: 1.45;
+}
+
+/* ════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES — strip Command Center's red-glow
+   theatrics. The dark theme leans on text-shadow + drop-shadow
+   + ambient body stripes to make red text "burn" on near-black
+   bg. On a light bg those same effects smear and kill contrast.
+   ════════════════════════════════════════════════════════ */
+
+/* GLOBAL minimalism kill-switch — applies to ALL themes.
+
+   Boss switched the design intent from "burning Command Center" to
+   minimalism: no text glow, no drop-shadow halos, no ambient bg
+   stripes, no colored box-shadow blooms. Themes should communicate
+   via color, weight, and contrast — not bloom.
+
+   This block uses high-specificity blanket overrides with
+   !important. That is the correct tool here: the file has 180+
+   text-shadow / drop-shadow / box-shadow declarations from the old
+   theatrical design and surgically untangling each is fragile. The
+   kill-switch lets new minimalism override the old layered design
+   in one place. */
+
+/* 1. ALL text-shadow off, every theme. */
+* {
+  text-shadow: none !important;
+}
+
+/* 2. Drop-shadow halos on the Monad + brand SVGs — gone. */
+.monad-rotate,
+.monad-core,
+.monad-ring {
+  filter: none !important;
+}
+
+/* 3. Ambient body stripes + flow wash — gone. The page is calm now. */
+body::before,
+body::after {
+  display: none !important;
+}
+
+/* 4. Brand Monad pulse animation — gone. */
+.brand-katakana {
+  animation: none !important;
+}
+
+/* 5. Active tab — single subtle lift, no colored glow on either theme.
+      The accent gradient on the pill itself communicates state. */
+.tab.active {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12) !important;
+  animation: none !important;
+}
+
+/* 6. Top strip — keep the gradient line, drop the colored glow. */
+.top-strip {
+  box-shadow: none !important;
+}
+
+/* 7. Stat cards, level bar, year strip — replace colored box-shadows
+      with subtle structural lift. Hover stays subtle. */
+.stat-card,
+.level-bar,
+.ys,
+.wk-row,
+.month-cell,
+.add-btn,
+.add-input:focus,
+.ys-tick.past,
+.ys-tick.current,
+.wk-tick.done,
+.level-bar-fill,
+.fab,
+.tag-pill,
+.row.done,
+.badge.on,
+.badge.on:hover,
+.notify-test,
+.check-radial,
+.check-radial.done,
+.check-diamond,
+.check-diamond.done {
+  box-shadow: none !important;
+}
+.stat-card:hover,
+.wk-row:hover,
+.month-cell:hover,
+.fab:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* 8. Kill colored shadow / drop-shadow keyframe animations. The
+      box-shadow declarations above stop static glows; these stop
+      animated ones from re-applying every frame. */
+.ys-tick.current,
+.level-bar.claimable,
+.tag-pill.tagPulse,
+.row.fresh-check,
+.row.flash {
+  animation: none !important;
+}
+
+/* 8. Light-theme-only adjustments: enforce theme-token text on tabs
+      and a real border on glass surfaces (the ambient shadow that
+      separated them on dark is gone everywhere now). */
+[data-theme="seal-day"] .tab:not(.active),
+[data-theme="seal-night"] .tab:not(.active) {
+  color: var(--t2);
+}
+[data-theme="seal-day"] .tab:not(.active):hover,
+[data-theme="seal-night"] .tab:not(.active):hover {
+  color: var(--t1);
+}
+[data-theme="seal-day"] .tabs,
+[data-theme="seal-day"] .ys,
+[data-theme="seal-night"] .tabs,
+[data-theme="seal-night"] .ys {
+  border-color: var(--brd);
+}
+[data-theme="seal-day"] .top-strip,
+[data-theme="seal-night"] .top-strip {
+  opacity: 0.7;
+}
+
+/* ════════════════════════════════════════════════════════
+   THEME 11 (Solarized Light) + THEME 28 (Calm Slate Dark)
+   Locked spec from theme-variants.html — fonts, checkbox shapes,
+   chip styling. Boss picked these directions; everything below
+   enforces 1-to-1 fidelity to the variants page renders.
+   ════════════════════════════════════════════════════════ */
+
+/* --- THEME 11 SOLARIZED LIGHT (seal-night) ---
+   Spec: --font: 'JetBrains Mono', Menlo, monospace; --check-rad: 2px.
+   The whole interface should read as monospaced. Override the
+   font globally for the theme + reshape both task and habit checks
+   to small-radius squares. */
+[data-theme="seal-night"],
+[data-theme="seal-night"] .brand-katakana,
+[data-theme="seal-night"] .brand-sub,
+[data-theme="seal-night"] .tab,
+[data-theme="seal-night"] .ys-w,
+[data-theme="seal-night"] .ys-sub,
+[data-theme="seal-night"] .level-bar-name,
+[data-theme="seal-night"] .level-bar-n,
+[data-theme="seal-night"] .level-bar-xp,
+[data-theme="seal-night"] .add-btn,
+[data-theme="seal-night"] .sc-label,
+[data-theme="seal-night"] .sc-value,
+[data-theme="seal-night"] .ss-label,
+[data-theme="seal-night"] .ss-value,
+[data-theme="seal-night"] .wk-row-name,
+[data-theme="seal-night"] .wk-row-num,
+[data-theme="seal-night"] .wk-row-pct,
+[data-theme="seal-night"] .row-text,
+[data-theme="seal-night"] .row-time,
+[data-theme="seal-night"] .row-streak,
+[data-theme="seal-night"] .chip,
+[data-theme="seal-night"] .section-label,
+[data-theme="seal-night"] .section-count,
+[data-theme="seal-night"] .hard-day-toggle,
+[data-theme="seal-night"] .month-cell-num,
+[data-theme="seal-night"] .month-cell-pct,
+[data-theme="seal-night"] .panel-meta,
+[data-theme="seal-night"] .badge-name,
+[data-theme="seal-night"] .badge-desc,
+[data-theme="seal-night"] .add-input,
+[data-theme="seal-night"] .date-main,
+[data-theme="seal-night"] .date-sub,
+[data-theme="seal-night"] .day-nav-label,
+[data-theme="seal-night"] input,
+[data-theme="seal-night"] textarea,
+[data-theme="seal-night"] button {
+  font-family: 'JetBrains Mono', Menlo, 'Courier New', monospace !important;
+}
+
+/* Solarized: square checks with small 2px radius */
+[data-theme="seal-night"] .check-radial {
+  border-radius: 2px;
+}
+[data-theme="seal-night"] .check-diamond {
+  clip-path: none;
+  border-radius: 2px;
+  transform: none;
+}
+[data-theme="seal-night"] .check-diamond:active {
+  transform: scale(0.9);
+}
+
+/* --- THEME 28 CALM SLATE DARK (seal-day) ---
+   Spec: --font: Inter, system-ui, sans-serif; --check-rad: 50%.
+   Inter is the global default body font, so no font override
+   needed. Checks already 50% on .check-radial; override .check-diamond
+   to a circle. */
+[data-theme="seal-day"] .check-diamond {
+  clip-path: none;
+  border-radius: 50%;
+  transform: none;
+}
+[data-theme="seal-day"] .check-diamond:active {
+  transform: scale(0.9);
+}
+
+/* Both light/non-Command themes: kill the inherited Cinzel/Noto
+   serif theatricality on tab labels and brand. They were heavy-letter-spaced
+   serifs designed for the dark Command identity; on Theme 11 + 28
+   we want plain readable type. */
+[data-theme="seal-day"] .tab,
+[data-theme="seal-night"] .tab {
+  letter-spacing: 0.16em;
+  font-weight: 600;
+}
+[data-theme="seal-day"] .brand-katakana,
+[data-theme="seal-night"] .brand-katakana {
+  letter-spacing: 0.02em;
+  font-weight: 700;
+  font-size: 28px;
+}
+
+/* Theme 28 Calm Slate Dark: Inter sans-serif for everything,
+   including the brand. Override the Noto Serif JP brand font. */
+[data-theme="seal-day"] .brand-katakana {
+  font-family: Inter, system-ui, sans-serif !important;
+}
+
+/* Theme 28 also wants the Cinzel/Oswald headers to settle into
+   Inter — same family across the whole interface. */
+[data-theme="seal-day"] .brand-sub,
+[data-theme="seal-day"] .tab,
+[data-theme="seal-day"] .ys-w,
+[data-theme="seal-day"] .ys-sub,
+[data-theme="seal-day"] .level-bar-name,
+[data-theme="seal-day"] .level-bar-n,
+[data-theme="seal-day"] .level-bar-xp,
+[data-theme="seal-day"] .add-btn,
+[data-theme="seal-day"] .sc-label,
+[data-theme="seal-day"] .sc-value,
+[data-theme="seal-day"] .ss-label,
+[data-theme="seal-day"] .ss-value,
+[data-theme="seal-day"] .wk-row-name,
+[data-theme="seal-day"] .wk-row-num,
+[data-theme="seal-day"] .wk-row-pct,
+[data-theme="seal-day"] .row-text,
+[data-theme="seal-day"] .row-time,
+[data-theme="seal-day"] .row-streak,
+[data-theme="seal-day"] .chip,
+[data-theme="seal-day"] .section-label,
+[data-theme="seal-day"] .section-count,
+[data-theme="seal-day"] .hard-day-toggle,
+[data-theme="seal-day"] .month-cell-num,
+[data-theme="seal-day"] .month-cell-pct,
+[data-theme="seal-day"] .panel-meta,
+[data-theme="seal-day"] .badge-name,
+[data-theme="seal-day"] .badge-desc,
+[data-theme="seal-day"] .add-input,
+[data-theme="seal-day"] .date-main,
+[data-theme="seal-day"] .date-sub,
+[data-theme="seal-day"] .day-nav-label {
+  font-family: Inter, system-ui, sans-serif !important;
 }
