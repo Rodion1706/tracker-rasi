@@ -466,7 +466,7 @@ function Tracker({ uid }) {
         {/* Header */}
         <div className="top-header">
           <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-            <div className="brand-katakana">Seal</div>
+            <div className="brand-katakana">{(data.theme || "command").startsWith("seal") ? "Seal" : "ロディオン"}</div>
             <div className="brand-sub">Command · Center</div>
           </div>
           <div style={{ textAlign: "right" }}>

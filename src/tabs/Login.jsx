@@ -18,7 +18,7 @@ export default function Login({ onLogin, busy }) {
         <Monad size={160} />
       </div>
 
-      <div className="brand-katakana" style={{ fontSize: 38, marginBottom: 14 }}>Seal</div>
+      <div className="brand-katakana" style={{ fontSize: 38, marginBottom: 14 }}>ロディオン</div>
       <div className="brand-sub" style={{ fontSize: 12, marginBottom: 48, textAlign: "center" }}>Command · Center</div>
 
       <div
