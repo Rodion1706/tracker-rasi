@@ -449,7 +449,38 @@ function TabVisibilityToggle({ id, label, sub, visibility, setVisibility }) {
   );
 }
 
-export default function SettingsTab({ habits, setHabits, recurring, setRecurring, tags, setTags, renameTag, deleteTag, countTagUsage, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, claimNextLevel, bannerPhrases, setBannerPhrases, hardModeOn, setHardModeOn, strictStreak, setStrictStreak, tabVisibility, setTabVisibility, jumpToDay }) {
+const THEME_OPTIONS = [
+  { id: "command",    label: "Command Center", sub: "Default — dark + brand red." },
+  { id: "seal-day",   label: "Seal Day",       sub: "Light off-white + green accent. Clean daytime." },
+  { id: "seal-night", label: "Seal Night",     sub: "Warm cream + blue accent. Evening reading lamp." },
+];
+
+function ThemePicker({ theme, setTheme }) {
+  return (
+    <div className="theme-picker">
+      {THEME_OPTIONS.map(opt => {
+        const active = theme === opt.id;
+        return (
+          <div
+            key={opt.id}
+            className={`theme-opt ${active ? "active" : ""}`}
+            onClick={() => setTheme(opt.id)}
+          >
+            <div className={`theme-radio ${active ? "on" : ""}`}>
+              <div className="theme-radio-dot" />
+            </div>
+            <div>
+              <div className="theme-opt-label">{opt.label}</div>
+              <div className="theme-opt-sub">{opt.sub}</div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function SettingsTab({ habits, setHabits, recurring, setRecurring, tags, setTags, renameTag, deleteTag, countTagUsage, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, claimNextLevel, bannerPhrases, setBannerPhrases, hardModeOn, setHardModeOn, strictStreak, setStrictStreak, tabVisibility, setTabVisibility, theme, setTheme, jumpToDay }) {
   const [newH, setNewH] = useState("");
   const [newHS, setNewHS] = useState("");
   const [eId, setEId] = useState(null);
@@ -608,8 +639,13 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
     <div>
       <TabHeader title="Settings" subtitle={`${habits.filter(h => !h.archivedAt).length} habits · ${recurring.length} recurring`} />
 
+      {/* Theme picker — switches the whole UI palette */}
+      <SectionHeader label="THEME" />
+      <ThemePicker theme={theme} setTheme={setTheme} />
+
       {/* Tab visibility — Day / Month / Log / Settings always show.
           Week / Stats / Goals are opt-in, hidden by default. */}
+      <div style={{ marginTop: 22 }} />
       <SectionHeader label="TABS" />
       <TabVisibilityToggle
         id="week" label="WEEK"

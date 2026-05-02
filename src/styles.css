@@ -6,6 +6,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Noto+Serif+JP:wght@500;700&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
+  /* === COMMAND CENTER (default dark-red theme) === */
   /* Palette (aligned with config.js C) */
   --bg: #0c0b10;
   --card: #18161c;
@@ -28,6 +29,46 @@
   /* Tag colors live in data.tags now — applied via inline styles. */
 
   --overdue: #9a2030;
+}
+
+/* === SEAL DAY (GitHub Light — clean off-white + green accent) === */
+[data-theme="seal-day"] {
+  --bg: #f6f8fa;
+  --card: #ffffff;
+  --item: #ffffff;
+  --item-on: #ddf4e4;
+  --brd: #d0d7de;
+  --brd-on: #2da44e;
+  --t1: #1f2328;
+  --t2: #656d76;
+  --t3: #8c959f;
+  --red: #2da44e;
+  --red-b: #46c061;
+  --red-d: #1a7f37;
+  --pink: #2da44e;
+  --pink-b: #46c061;
+  --pink-d: #1a7f37;
+  --overdue: #cf222e;
+}
+
+/* === SEAL NIGHT (Solarized Light — warm cream + blue accent) === */
+[data-theme="seal-night"] {
+  --bg: #fdf6e3;
+  --card: #eee8d5;
+  --item: #eee8d5;
+  --item-on: #e1dab5;
+  --brd: #ddd6c1;
+  --brd-on: #268bd2;
+  --t1: #586e75;
+  --t2: #839496;
+  --t3: #93a1a1;
+  --red: #268bd2;
+  --red-b: #5ba6de;
+  --red-d: #1d6fa8;
+  --pink: #268bd2;
+  --pink-b: #5ba6de;
+  --pink-d: #1d6fa8;
+  --overdue: #dc322f;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -3557,4 +3598,54 @@ body::after {
 .habit-edit-done-btn:hover {
   transform: scale(1.04);
   box-shadow: 0 0 18px rgba(232, 16, 42, 0.5);
+}
+
+/* ══════ THEME PICKER (Settings → THEME) ══════ */
+.theme-picker { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.theme-opt {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  background: var(--card);
+  border: 1px solid var(--brd);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s, background 0.2s;
+}
+.theme-opt:hover { border-color: var(--red); }
+.theme-opt.active { border-color: var(--red); box-shadow: 0 0 16px rgba(232, 16, 42, 0.18); }
+.theme-radio {
+  width: 18px; height: 18px;
+  border: 1.5px solid var(--brd);
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+  transition: border-color 0.2s;
+}
+.theme-radio.on { border-color: var(--red); }
+.theme-radio-dot {
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--red);
+  transform: scale(0);
+  transition: transform 0.18s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.theme-radio.on .theme-radio-dot { transform: scale(1); }
+.theme-opt-label {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--t1);
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+.theme-opt-sub {
+  font-size: 10.5px;
+  color: var(--t3);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.04em;
+  line-height: 1.45;
 }

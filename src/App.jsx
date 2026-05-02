@@ -242,6 +242,18 @@ function Tracker({ uid }) {
     scheduleReminders().catch(() => {});
   }, []);
 
+  // Apply theme (Command Center / Seal Day / Seal Night) to <html>.
+  // CSS variables on [data-theme="..."] override the :root defaults.
+  // Default = "command" (no attribute set, falls back to :root).
+  useEffect(() => {
+    const theme = data.theme || "command";
+    if (theme === "command") {
+      document.documentElement.removeAttribute("data-theme");
+    } else {
+      document.documentElement.setAttribute("data-theme", theme);
+    }
+  }, [data.theme]);
+
   const today = argDate(0);
   const habits = data.habits || DEF_HABITS;
   const goals = data.goals || DEF_GOALS;
@@ -454,7 +466,7 @@ function Tracker({ uid }) {
         {/* Header */}
         <div className="top-header">
           <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-            <div className="brand-katakana">ロディオン</div>
+            <div className="brand-katakana">Seal</div>
             <div className="brand-sub">Command · Center</div>
           </div>
           <div style={{ textAlign: "right" }}>
@@ -537,6 +549,8 @@ function Tracker({ uid }) {
             setStrictStreak={v => save(Object.assign({}, data, { strictStreak: v }))}
             tabVisibility={tabVisibility}
             setTabVisibility={v => save(Object.assign({}, data, { tabVisibility: v }))}
+            theme={data.theme || "command"}
+            setTheme={v => save(Object.assign({}, data, { theme: v }))}
             jumpToDay={dateKey => {
               const offset = Math.round(
                 (new Date(dateKey + "T12:00:00") - new Date(today + "T12:00:00")) / 86400000
