@@ -12,7 +12,7 @@ import SectionHeader from "../components/SectionHeader";
 
 const EMPTY_LOG = { lesson: "", change: "" };
 
-export default function LogTab({ logs, setLogs, today }) {
+export default function LogTab({ logs, setLogs, today, monadImage }) {
   const currentWk = getWeekId(today);
   const [viewWk, setViewWk] = useState(currentWk);
   const stored = logs[viewWk] || {};
@@ -48,6 +48,7 @@ export default function LogTab({ logs, setLogs, today }) {
       <TabHeader
         title={isCurrentWk ? "Weekly Log" : "Log · " + wk}
         subtitle={isCurrentWk ? wk : "viewing past week"}
+        monadImage={monadImage}
       />
 
       {!isCurrentWk && (

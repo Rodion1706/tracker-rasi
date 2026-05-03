@@ -27,6 +27,7 @@ function ChartIcon() {
 export default function DayTab({
   days, habits, today, dayOff, setDayOff,
   setDay, getDayData, streak, bestStreak, hardInStreak, recurring, openHabitModal,
+  monadImage,
   levelInfo, badgeInfo, claimNextLevel,
   celebratedThresholds, markThresholdCelebrated,
   bannerPhrases, tags,
@@ -54,14 +55,21 @@ export default function DayTab({
 
   function applyRecurring() {
     if (recNotAdded.length === 0) return;
-    const newTasks = tasks.concat(recNotAdded.map(r => ({
-      id: Date.now() + "-" + r.id,
-      text: r.text,
-      done: false,
-      tag: r.tag || "",
-      recId: r.id,
-    })));
-    setDay(viewDay, Object.assign({}, dd, { tasks: newTasks }));
+    setDay(viewDay, current => {
+      const currentTasks = current.tasks || [];
+      const missing = recToday.filter(r => !currentTasks.some(t => t.recId === r.id));
+      if (missing.length === 0) return current;
+      return Object.assign({}, current, {
+        checks: current.checks || {},
+        tasks: currentTasks.concat(missing.map(r => ({
+          id: Date.now() + "-" + r.id,
+          text: r.text,
+          done: false,
+          tag: r.tag || "",
+          recId: r.id,
+        }))),
+      });
+    });
   }
   useEffect(() => {
     if (isToday && recNotAdded.length > 0) applyRecurring();
@@ -69,31 +77,40 @@ export default function DayTab({
   }, [viewDay]);
 
   function toggleCheck(id) {
-    const nc = Object.assign({}, ch);
-    nc[id] = !nc[id];
-    setDay(viewDay, Object.assign({}, dd, { checks: nc }));
+    setDay(viewDay, current => {
+      const nc = Object.assign({}, current.checks || {});
+      nc[id] = !nc[id];
+      return Object.assign({}, current, { checks: nc, tasks: current.tasks || [] });
+    });
   }
   function toggleTask(id) {
-    setDay(viewDay, Object.assign({}, dd, {
-      tasks: tasks.map(t => t.id === id ? Object.assign({}, t, { done: !t.done }) : t),
+    setDay(viewDay, current => Object.assign({}, current, {
+      checks: current.checks || {},
+      tasks: (current.tasks || []).map(t => t.id === id ? Object.assign({}, t, { done: !t.done }) : t),
     }));
   }
   function delTask(id) {
-    setDay(viewDay, Object.assign({}, dd, { tasks: tasks.filter(t => t.id !== id) }));
+    setDay(viewDay, current => Object.assign({}, current, {
+      checks: current.checks || {},
+      tasks: (current.tasks || []).filter(t => t.id !== id),
+    }));
   }
   function saveEdit(id) {
     if (!ev.trim()) return;
-    setDay(viewDay, Object.assign({}, dd, {
-      tasks: tasks.map(t => t.id === id ? Object.assign({}, t, { text: ev.trim() }) : t),
+    setDay(viewDay, current => Object.assign({}, current, {
+      checks: current.checks || {},
+      tasks: (current.tasks || []).map(t => t.id === id ? Object.assign({}, t, { text: ev.trim() }) : t),
     }));
     setEid(null);
   }
   function addTask() {
     if (!nt.trim()) return;
     const target = tgt === "this" ? viewDay : tgt === "next" ? argDate(dayOff + 1) : pk || viewDay;
-    const td = getDayData(target);
-    const newT = (td.tasks || []).concat([{ id: Date.now() + "", text: nt.trim(), done: false, tag }]);
-    setDay(target, Object.assign({}, td, { tasks: newT }));
+    const text = nt.trim();
+    setDay(target, current => Object.assign({}, current, {
+      checks: current.checks || {},
+      tasks: (current.tasks || []).concat([{ id: Date.now() + "", text, done: false, tag }]),
+    }));
     setNt("");
     setSpk(false);
   }
@@ -201,7 +218,7 @@ export default function DayTab({
 
       {/* Hero: Monad + stats */}
       <div className="day-hero">
-        <Monad size={150} />
+        <Monad size={150} config={monadImage} />
         <div className="day-hero-stats">
           <div className="stats-grid">
             <BigStat
@@ -315,6 +332,9 @@ export default function DayTab({
         {filteredTasks.map(t => {
           const rc = t.rollCount || 0;
           const rcTier = rc === 0 ? 0 : Math.min(rc, 5);
+          const rollLabel = rc === 1
+            ? (t.rolledFromYesterday || !t.rolledFromDate ? "rolled from yesterday" : `rolled from ${niceDate(t.rolledFromDate)}`)
+            : rc < 5 ? `procrastinating · ${rc} rolls` : `PROCRASTINATING · ${rc} rolls`;
           return (
             <div key={t.id} className={`row ${t.done ? "done" : ""} ${rcTier > 0 ? `row-roll-${rcTier}` : ""}`}
               onClick={() => toggleTask(t.id)}>
@@ -337,9 +357,7 @@ export default function DayTab({
                 )}
                 {rc > 0 && !t.done && (
                   <div className="row-sub row-roll-sub">
-                    {rc === 1 ? "rolled from yesterday" :
-                      rc < 5 ? `procrastinating · ${rc} rolls` :
-                      `PROCRASTINATING · ${rc} rolls`}
+                    {rollLabel}
                   </div>
                 )}
               </div>

@@ -2,7 +2,7 @@ import { MONTHS, WDAYS, monthDays, monStart, dayDiff } from "../config";
 import TabHeader from "../components/TabHeader";
 import { activeHabitsOn, isDayClean } from "../gamification";
 
-export default function MonthTab({ days, habits, today, mOff, setMOff, setDayOff, setTab }) {
+export default function MonthTab({ days, habits, today, mOff, setMOff, setDayOff, setTab, monadImage }) {
   const now = new Date();
   const vm = new Date(now.getFullYear(), now.getMonth() + mOff, 1);
   const mDays = monthDays(vm.getFullYear(), vm.getMonth());
@@ -21,6 +21,7 @@ export default function MonthTab({ days, habits, today, mOff, setMOff, setDayOff
       <TabHeader
         title={`${MONTHS[vm.getMonth()]} ${vm.getFullYear()}`}
         subtitle={`Month view · ${perf}/${past.length} clean days`}
+        monadImage={monadImage}
       />
 
       <div className="month-nav">

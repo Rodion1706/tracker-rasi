@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { db, auth, provider, doc, getDoc, setDoc, signInWithPopup, signOut, onAuthStateChanged } from "./firebase";
 import { DEF_HABITS, DEF_GOALS, DEF_TAGS, argDate, niceDate } from "./config";
 import { isDayClean, getLevel, getDisplayLevel, applyGamificationUpdates, BADGES } from "./gamification";
@@ -8,6 +8,8 @@ import { scheduleReminders } from "./notifications";
 /* ══════ ACCESS CONTROL ══════ */
 // Only these emails can sign in. Add more if needed.
 const ALLOWED_EMAILS = ["radzivonlavyshwork@gmail.com", "dmytro.merzliakov@gmail.com"];
+const LOCAL_PREVIEW_UID = "__local_preview__";
+const LOCAL_PREVIEW_STORAGE_KEY = "command-center-local-preview";
 
 import PillTabs from "./components/PillTabs";
 import YearStrip from "./components/YearStrip";
@@ -36,10 +38,15 @@ function useAuth() {
     if (u && !ALLOWED_EMAILS.includes((u.email || "").toLowerCase())) {
       setDenied(u.email || "unknown");
       setUser(null);
+      setL(false);
       try { await signOut(auth); } catch (e) { /* no-op */ }
-    } else {
+      return;
+    }
+    if (u) {
       setDenied(null);
       setUser(u);
+    } else {
+      setUser(null);
     }
     setL(false);
   }), []);
@@ -49,8 +56,20 @@ function useAuth() {
 function useData(uid) {
   const [d, setD] = useState({ days: {}, habits: null, recurring: [], goals: DEF_GOALS, logs: {} });
   const [ld, setLd] = useState(true);
+  const dataRef = useRef(d);
+  useEffect(() => {
+    dataRef.current = d;
+  }, [d]);
   useEffect(() => {
     if (!uid) return;
+    if (uid === LOCAL_PREVIEW_UID) {
+      try {
+        const stored = JSON.parse(localStorage.getItem(LOCAL_PREVIEW_STORAGE_KEY) || "null");
+        if (stored) setD(prev => Object.assign({}, prev, stored));
+      } catch (e) { /* no-op */ }
+      setLd(false);
+      return;
+    }
     (async () => {
       try {
         const s = await getDoc(doc(db, "users", uid));
@@ -59,8 +78,15 @@ function useData(uid) {
       setLd(false);
     })();
   }, [uid]);
-  function save(nd) {
+  function save(next) {
+    const nd = typeof next === "function" ? next(dataRef.current) : next;
+    if (nd === dataRef.current) return;
+    dataRef.current = nd;
     setD(nd);
+    if (uid === LOCAL_PREVIEW_UID) {
+      try { localStorage.setItem(LOCAL_PREVIEW_STORAGE_KEY, JSON.stringify(nd)); } catch (e) { /* no-op */ }
+      return;
+    }
     if (uid) setDoc(doc(db, "users", uid), nd, { merge: true }).catch(() => {});
   }
   return { data: d, loading: ld, save };
@@ -113,10 +139,27 @@ function useKeyboardShortcuts(setTab, setDayOff, tab, visibleIds) {
 export default function App() {
   const { user, loading: authLd, denied, clearDenied } = useAuth();
   const [busy, setBusy] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [localPreview, setLocalPreview] = useState(false);
+  const canLocalPreview = import.meta.env.DEV && ["localhost", "127.0.0.1"].includes(window.location.hostname);
 
   async function login() {
     setBusy(true);
-    try { await signInWithPopup(auth, provider); } catch (e) { /* no-op */ }
+    setLoginError("");
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (e) {
+      const code = e && e.code ? e.code : "";
+      if (code === "auth/popup-closed-by-user") {
+        setLoginError("Google window closed before sign-in finished.");
+      } else if (code === "auth/popup-blocked") {
+        setLoginError("Popup was blocked. Allow popups for this tracker and try again.");
+      } else if (code === "auth/unauthorized-domain") {
+        setLoginError("This domain is not allowed in Firebase Auth settings.");
+      } else {
+        setLoginError("Sign-in failed. Try again or use the allowed Google account.");
+      }
+    }
     setBusy(false);
   }
 
@@ -129,8 +172,9 @@ export default function App() {
       </div>
     );
   }
-  if (denied) return <AccessDenied email={denied} onRetry={clearDenied} />;
-  if (!user) return <Login onLogin={login} busy={busy} />;
+  if (denied) return <AccessDenied email={denied} onRetry={() => { clearDenied(); setLoginError(""); }} />;
+  if (localPreview) return <Tracker uid={LOCAL_PREVIEW_UID} />;
+  if (!user) return <Login onLogin={login} busy={busy} error={loginError} canLocalPreview={canLocalPreview} onLocalPreview={() => { setLoginError(""); setLocalPreview(true); }} />;
   return <Tracker uid={user.uid} />;
 }
 
@@ -261,6 +305,7 @@ function Tracker({ uid }) {
   const tags = data.tags || DEF_TAGS;
   const days = data.days || {};
   const logs = data.logs || {};
+  const monadImage = data.monadImage || { variant: "original" };
 
   function setHabits(h) { save(Object.assign({}, data, { habits: h })); }
   function setGoals(g) { save(Object.assign({}, data, { goals: g })); }
@@ -334,15 +379,23 @@ function Tracker({ uid }) {
     return n;
   }
   function setDay(key, val) {
-    const nd = Object.assign({}, data);
-    nd.days = Object.assign({}, nd.days);
-    nd.days[key] = val;
-    save(nd);
+    save(prev => {
+      const prevDays = prev.days || {};
+      const prevDay = prevDays[key] || { checks: {}, tasks: [] };
+      const nextDay = typeof val === "function" ? val(prevDay) : val;
+      if (nextDay === prevDay) return prev;
+      const nd = Object.assign({}, prev);
+      nd.days = Object.assign({}, prevDays);
+      nd.days[key] = nextDay;
+      return nd;
+    });
   }
   function bulkSetDays(updates) {
-    const nd = Object.assign({}, data);
-    nd.days = Object.assign({}, nd.days, updates);
-    save(nd);
+    save(prev => {
+      const nd = Object.assign({}, prev);
+      nd.days = Object.assign({}, prev.days || {}, updates);
+      return nd;
+    });
   }
 
   function getDayData(key) {
@@ -422,17 +475,23 @@ function Tracker({ uid }) {
     if (next) save(next);
   }, [days, habits, loading]);
 
-  // Auto-rollover unchecked tasks from yesterday → today (one-shot per
-  // calendar day). Tracked via data._lastRolloverDay so it never repeats.
+  // Auto-rollover unchecked tasks from previous unprocessed days → today.
+  // Tracked via data._lastRolloverDay plus per-task rolledOver guards.
   const [rolloverInfo, setRolloverInfo] = useState(null);
   useEffect(() => {
     if (loading) return;
-    if (data._lastRolloverDay === today) return;
-    const result = applyRollover(data);
-    const stamped = Object.assign({}, result ? result.nextData : data, { _lastRolloverDay: today });
-    save(stamped);
-    if (result && (result.rolled > 0 || result.dropped.length > 0)) {
-      setRolloverInfo({ rolled: result.rolled, dropped: result.dropped });
+    let info = null;
+    save(current => {
+      const result = applyRollover(current);
+      if (!result) {
+        if (current._lastRolloverDay === today) return current;
+        return Object.assign({}, current, { _lastRolloverDay: today });
+      }
+      info = { rolled: result.rolled, dropped: result.dropped };
+      return Object.assign({}, result.nextData, { _lastRolloverDay: today });
+    });
+    if (info && (info.rolled > 0 || info.dropped.length > 0)) {
+      setRolloverInfo(info);
       const t = setTimeout(() => setRolloverInfo(null), 7000);
       return () => clearTimeout(t);
     }
@@ -497,6 +556,7 @@ function Tracker({ uid }) {
             setDay={setDay} getDayData={getDayData}
             streak={streak} bestStreak={bestStreak} hardInStreak={hardInStreak}
             recurring={recurring} tags={tags}
+            monadImage={monadImage}
             openHabitModal={h => setHabitModal(h)}
             levelInfo={levelInfo} badgeInfo={badgeInfo}
             claimNextLevel={claimNextLevel}
@@ -519,6 +579,7 @@ function Tracker({ uid }) {
             days={days} habits={habits} today={today}
             mOff={mOff} setMOff={setMOff}
             setDayOff={setDayOff} setTab={setTab}
+            monadImage={monadImage}
           />
         )}
         {tab === "stats" && (
@@ -527,10 +588,11 @@ function Tracker({ uid }) {
             levelInfo={levelInfo} badgeInfo={badgeInfo}
             streak={streak}
             claimNextLevel={claimNextLevel}
+            monadImage={monadImage}
           />
         )}
-        {tab === "log" && <LogTab logs={logs} setLogs={setLogs} today={today} />}
-        {tab === "goals" && <GoalsTab goals={goals} setGoals={setGoals} />}
+        {tab === "log" && <LogTab logs={logs} setLogs={setLogs} today={today} monadImage={monadImage} />}
+        {tab === "goals" && <GoalsTab goals={goals} setGoals={setGoals} monadImage={monadImage} />}
         {tab === "settings" && (
           <SettingsTab
             habits={habits} setHabits={setHabits}
@@ -551,6 +613,8 @@ function Tracker({ uid }) {
             setTabVisibility={v => save(Object.assign({}, data, { tabVisibility: v }))}
             theme={data.theme || "command"}
             setTheme={v => save(Object.assign({}, data, { theme: v }))}
+            monadImage={monadImage}
+            setMonadImage={v => save(Object.assign({}, data, { monadImage: v }))}
             jumpToDay={dateKey => {
               const offset = Math.round(
                 (new Date(dateKey + "T12:00:00") - new Date(today + "T12:00:00")) / 86400000

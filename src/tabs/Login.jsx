@@ -1,6 +1,6 @@
 import Monad from "../components/Monad";
 
-export default function Login({ onLogin, busy }) {
+export default function Login({ onLogin, busy, error, canLocalPreview, onLocalPreview }) {
   return (
     <div style={{
       background: "var(--bg)",
@@ -44,6 +44,42 @@ export default function Login({ onLogin, busy }) {
       >
         {busy ? "CONNECTING..." : "SIGN IN WITH GOOGLE"}
       </div>
+      {error && (
+        <div style={{
+          maxWidth: 360,
+          marginTop: 18,
+          color: "var(--red-b)",
+          fontSize: 10,
+          lineHeight: 1.5,
+          letterSpacing: "0.12em",
+          textAlign: "center",
+          fontFamily: "'JetBrains Mono', monospace",
+          textTransform: "uppercase",
+        }}>
+          {error}
+        </div>
+      )}
+      {canLocalPreview && (
+        <div
+          onClick={onLocalPreview}
+          style={{
+            marginTop: error ? 16 : 22,
+            padding: "11px 24px",
+            color: "var(--t2)",
+            border: "1px dashed rgba(232, 16, 42, 0.35)",
+            borderRadius: 10,
+            cursor: "pointer",
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: "0.18em",
+            fontFamily: "'Cinzel', serif",
+            textTransform: "uppercase",
+            background: "rgba(232, 16, 42, 0.05)",
+          }}
+        >
+          LOCAL PREVIEW WITHOUT GOOGLE
+        </div>
+      )}
     </div>
   );
 }

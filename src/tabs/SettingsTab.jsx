@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DndContext, PointerSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -7,6 +7,7 @@ import TabHeader from "../components/TabHeader";
 import SectionHeader from "../components/SectionHeader";
 import BadgeWall from "../components/BadgeWall";
 import LevelBar from "../components/LevelBar";
+import Monad, { MONAD_PRESETS } from "../components/Monad";
 import SearchBox from "../components/SearchBox";
 import NotificationSettings from "../components/NotificationSettings";
 import { isSoundOn, setSoundOn, playTick, SOUND_PACKS, getSoundPack, setSoundPack } from "../sound";
@@ -166,6 +167,175 @@ function SortableHabitList({ habits, setHabits, eId, eT, eS, setEId, setET, setE
   );
 }
 
+
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+function mixColor(a, b, t) {
+  return [
+    Math.round(a[0] + (b[0] - a[0]) * t),
+    Math.round(a[1] + (b[1] - a[1]) * t),
+    Math.round(a[2] + (b[2] - a[2]) * t),
+  ];
+}
+
+async function styleMonadPng(file) {
+  if (!file || file.type !== "image/png") {
+    throw new Error("PNG ONLY");
+  }
+  if (file.size > 6 * 1024 * 1024) {
+    throw new Error("PNG TOO LARGE");
+  }
+
+  const raw = await readFileAsDataURL(file);
+  const img = await loadImage(raw);
+  const maxSides = [620, 480, 360];
+
+  for (const maxSide of maxSides) {
+    const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+
+    const frame = ctx.getImageData(0, 0, w, h);
+    const px = frame.data;
+    let transparent = 0;
+    for (let i = 3; i < px.length; i += 4) {
+      if (px[i] < 18) transparent++;
+    }
+    const isCutout = transparent / (px.length / 4) > 0.16;
+    const deep = [48, 14, 24];
+    const mid = [174, 91, 53];
+    const hot = [255, 196, 113];
+
+    for (let i = 0; i < px.length; i += 4) {
+      const alpha = px[i + 3];
+      if (alpha < 8) continue;
+      if (isCutout) {
+        px[i] = hot[0];
+        px[i + 1] = hot[1];
+        px[i + 2] = hot[2];
+        px[i + 3] = Math.min(255, Math.round(alpha * 1.08));
+        continue;
+      }
+
+      const lum = (px[i] * 0.2126 + px[i + 1] * 0.7152 + px[i + 2] * 0.0722) / 255;
+      const c = lum < 0.56
+        ? mixColor(deep, mid, lum / 0.56)
+        : mixColor(mid, hot, (lum - 0.56) / 0.44);
+      px[i] = c[0];
+      px[i + 1] = c[1];
+      px[i + 2] = c[2];
+      px[i + 3] = Math.min(255, Math.round(alpha * 0.9));
+    }
+
+    ctx.putImageData(frame, 0, 0);
+    const styled = canvas.toDataURL("image/png");
+    if (Math.ceil(styled.length * 0.75) < 760 * 1024) return styled;
+  }
+
+  throw new Error("PNG TOO DETAILED");
+}
+
+function MonadPicker({ monadImage, setMonadImage }) {
+  const inputRef = useRef(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  if (!setMonadImage) return null;
+
+  const currentRaw = monadImage && monadImage.variant ? monadImage : { variant: "original" };
+  const current = Object.assign({}, currentRaw, {
+    variant: currentRaw.variant === "monas" ? "original" : currentRaw.variant,
+  });
+
+  function pick(id) {
+    setError("");
+    setMonadImage(Object.assign({}, current, { variant: id }));
+  }
+
+  async function upload(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    setBusy(true);
+    setError("");
+    try {
+      const customSrc = await styleMonadPng(file);
+      setMonadImage({
+        variant: "custom",
+        customSrc,
+        customName: file.name,
+        customAt: argDate(0),
+      });
+    } catch (err) {
+      setError(err && err.message ? err.message : "UPLOAD FAILED");
+    }
+    setBusy(false);
+  }
+
+  function clearCustom() {
+    setError("");
+    setMonadImage({ variant: "original" });
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
+  return (
+    <div className="monad-picker">
+      <div className="monad-picker-preview">
+        <Monad size={92} config={current} />
+      </div>
+      <div className="monad-picker-body">
+        <div className="monad-picker-label">MONAD IMAGE</div>
+        <div className="monad-picker-grid">
+          {MONAD_PRESETS.map(p => (
+            <button
+              key={p.id}
+              type="button"
+              className={`monad-preset ${current.variant === p.id ? "active" : ""}`}
+              onClick={() => pick(p.id)}
+            >
+              {p.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            className={`monad-preset custom ${current.variant === "custom" ? "active" : ""}`}
+            onClick={() => inputRef.current && inputRef.current.click()}
+          >
+            {busy ? "STYLING..." : "CUSTOM PNG"}
+          </button>
+        </div>
+        <input ref={inputRef} type="file" accept="image/png" onChange={upload} style={{ display: "none" }} />
+        <div className="monad-picker-meta">
+          {current.variant === "custom" && current.customName ? current.customName : "auto-styled to tracker palette"}
+          {current.customSrc && <span onClick={clearCustom}>RESET</span>}
+        </div>
+        {error && <div className="monad-picker-error">{error}</div>}
+      </div>
+    </div>
+  );
+}
 
 function HardModeToggle({ on, setOn }) {
   if (!setOn) return null;
@@ -480,7 +650,7 @@ function ThemePicker({ theme, setTheme }) {
   );
 }
 
-export default function SettingsTab({ habits, setHabits, recurring, setRecurring, tags, setTags, renameTag, deleteTag, countTagUsage, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, claimNextLevel, bannerPhrases, setBannerPhrases, hardModeOn, setHardModeOn, strictStreak, setStrictStreak, tabVisibility, setTabVisibility, theme, setTheme, jumpToDay }) {
+export default function SettingsTab({ habits, setHabits, recurring, setRecurring, tags, setTags, renameTag, deleteTag, countTagUsage, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, claimNextLevel, bannerPhrases, setBannerPhrases, hardModeOn, setHardModeOn, strictStreak, setStrictStreak, tabVisibility, setTabVisibility, theme, setTheme, monadImage, setMonadImage, jumpToDay }) {
   const [newH, setNewH] = useState("");
   const [newHS, setNewHS] = useState("");
   const [eId, setEId] = useState(null);
@@ -637,7 +807,7 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
 
   return (
     <div>
-      <TabHeader title="Settings" subtitle={`${habits.filter(h => !h.archivedAt).length} habits · ${recurring.length} recurring`} />
+      <TabHeader title="Settings" subtitle={`${habits.filter(h => !h.archivedAt).length} habits · ${recurring.length} recurring`} monadImage={monadImage} />
 
       {/* Theme picker — switches the whole UI palette */}
       <SectionHeader label="THEME" />
@@ -842,6 +1012,8 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
           <LevelBar levelInfo={levelInfo} onClaim={claimNextLevel} />
         </div>
       )}
+
+      <MonadPicker monadImage={monadImage} setMonadImage={setMonadImage} />
 
       <StrictStreakToggle on={!!strictStreak} setOn={setStrictStreak} />
 

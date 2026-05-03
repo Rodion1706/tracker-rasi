@@ -70,7 +70,7 @@ function computeStats(days, habits) {
   };
 }
 
-export default function StatsTab({ days, habits, today, levelInfo, badgeInfo, streak, claimNextLevel }) {
+export default function StatsTab({ days, habits, today, levelInfo, badgeInfo, streak, claimNextLevel, monadImage }) {
   const stats = computeStats(days, habits);
   const lifetimeXP = levelInfo ? levelInfo.xp : 0;
   const badgesUnlocked = badgeInfo ? badgeInfo.totalUnlocked : 0;
@@ -85,6 +85,7 @@ export default function StatsTab({ days, habits, today, levelInfo, badgeInfo, st
       <TabHeader
         title="Stats"
         subtitle={`${stats.daysTracked} days tracked · ${cleanRate}% clean`}
+        monadImage={monadImage}
       />
 
       {levelInfo && (

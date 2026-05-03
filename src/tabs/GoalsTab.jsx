@@ -45,7 +45,7 @@ function EditForm({ form, setForm, onSave, onCancel, showDelete, onDelete }) {
   );
 }
 
-export default function GoalsTab({ goals, setGoals }) {
+export default function GoalsTab({ goals, setGoals, monadImage }) {
   const [editId, setEditId] = useState(null);
   const [val, setVal] = useState(0);
   const [fullEditId, setFullEditId] = useState(null);
@@ -100,7 +100,7 @@ export default function GoalsTab({ goals, setGoals }) {
 
   return (
     <div>
-      <TabHeader title="Goals · 2026" subtitle={`${complete}/${goals.length} complete`} />
+      <TabHeader title="Goals · 2026" subtitle={`${complete}/${goals.length} complete`} monadImage={monadImage} />
 
       {QUARTERS.map(q => {
         const qGoals = goals.filter(g => g.quarter === q);
