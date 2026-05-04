@@ -703,7 +703,7 @@ function AccountSyncPanel({ data, accountEmail, accountUid, accountMode, dataSou
   );
 }
 
-export default function SettingsTab({ habits, setHabits, recurring, setRecurring, tags, setTags, renameTag, deleteTag, countTagUsage, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, claimNextLevel, bannerPhrases, setBannerPhrases, hardModeOn, setHardModeOn, strictStreak, setStrictStreak, tabVisibility, setTabVisibility, theme, setTheme, monadImage, setMonadImage, accountEmail, accountUid, accountMode, dataSource, syncError, onLogout, jumpToDay }) {
+export default function SettingsTab({ habits, setHabits, recurring, setRecurring, tags, setTags, renameTag, deleteTag, countTagUsage, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, claimNextLevel, bannerPhrases, setBannerPhrases, hardModeOn, setHardModeOn, strictStreak, setStrictStreak, tabVisibility, setTabVisibility, theme, setTheme, monadImage, setMonadImage, accountEmail, accountUid, accountMode, dataSource, syncError, localBackupInfo, restoreBackup, onLogout, jumpToDay }) {
   const [newH, setNewH] = useState("");
   const [newHS, setNewHS] = useState("");
   const [eId, setEId] = useState(null);
@@ -721,6 +721,8 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState(TAG_PALETTE[0]);
   const [newTagErr, setNewTagErr] = useState("");
+  const backupInputRef = useRef(null);
+  const [restoreMsg, setRestoreMsg] = useState("");
 
   function validateTagName(name, ignoreId) {
     const t = name.trim();
@@ -799,6 +801,41 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
     a.download = "command-center-backup-" + argDate(0) + ".json";
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  function backupStats(raw) {
+    const dd = (raw && raw.days) || {};
+    const dayKeys = Object.keys(dd).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k));
+    let tasks = 0;
+    for (const k of dayKeys) {
+      const day = dd[k];
+      if (day && Array.isArray(day.tasks)) tasks += day.tasks.length;
+    }
+    return { days: dayKeys.length, tasks };
+  }
+
+  async function importBackupFile(e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file || !restoreBackup) return;
+    setRestoreMsg("");
+    try {
+      const raw = JSON.parse(await file.text());
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new Error("Backup file is not a tracker JSON object.");
+      const incoming = backupStats(raw);
+      const current = backupStats(data);
+      if (incoming.days === 0 && current.days > 0) {
+        throw new Error("Blocked empty backup restore. Current tracker has history.");
+      }
+      const ok = confirm(
+        `Restore this backup?\n\nBackup: ${incoming.days} days · ${incoming.tasks} tasks\nCurrent: ${current.days} days · ${current.tasks} tasks\n\nThis writes the backup into your current cloud profile.`
+      );
+      if (!ok) return;
+      await restoreBackup(raw);
+      setRestoreMsg(`Restored backup: ${incoming.days} days · ${incoming.tasks} tasks.`);
+    } catch (err) {
+      setRestoreMsg(err && err.message ? err.message : "Could not restore backup JSON.");
+    }
   }
 
   // CSV: one row per item (habit or task) per day. Easy to pivot in Sheets.
@@ -1119,6 +1156,43 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
         </div>
         <span style={{ fontSize: 11, color: "var(--red)", fontWeight: 700, letterSpacing: "0.18em", fontFamily: "'Cinzel', serif", textShadow: "0 0 6px var(--red)" }}>DOWNLOAD</span>
       </div>
+
+      <input
+        ref={backupInputRef}
+        type="file"
+        accept="application/json,.json"
+        onChange={importBackupFile}
+        style={{ display: "none" }}
+      />
+      <div
+        onClick={() => backupInputRef.current && backupInputRef.current.click()}
+        className="row"
+        style={{ gap: 10, justifyContent: "space-between", marginTop: 6 }}
+      >
+        <div className="row-body">
+          <div className="row-text">Restore backup (JSON)</div>
+          <div className="row-sub">Import a Command Center backup into this cloud profile</div>
+        </div>
+        <span style={{ fontSize: 11, color: "var(--red)", fontWeight: 700, letterSpacing: "0.18em", fontFamily: "'Cinzel', serif", textShadow: "0 0 6px var(--red)" }}>IMPORT</span>
+      </div>
+
+      {localBackupInfo && (
+        <div className="row" style={{ gap: 10, justifyContent: "space-between", marginTop: 6, cursor: "default" }}>
+          <div className="row-body">
+            <div className="row-text">Local emergency snapshot</div>
+            <div className="row-sub">
+              {localBackupInfo.dayCount} days · {localBackupInfo.taskCount} tasks · {new Date(localBackupInfo.savedAt).toLocaleString()}
+            </div>
+          </div>
+          <span style={{ fontSize: 11, color: "var(--t3)", fontWeight: 700, letterSpacing: "0.18em", fontFamily: "'Cinzel', serif" }}>ARMED</span>
+        </div>
+      )}
+
+      {restoreMsg && (
+        <div style={{ marginTop: 8, fontSize: 11, color: "var(--t2)", fontFamily: "'JetBrains Mono', monospace", lineHeight: 1.6 }}>
+          {restoreMsg}
+        </div>
+      )}
 
       <div
         onClick={() => {

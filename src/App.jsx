@@ -7,9 +7,11 @@ import { scheduleReminders } from "./notifications";
 
 /* ══════ ACCESS CONTROL ══════ */
 // Only these emails can sign in. Add more if needed.
-const ALLOWED_EMAILS = ["radzivonlavyshwork@gmail.com", "dmytro.merzliakov@gmail.com"];
+const ALLOWED_EMAILS = ["radzivonlavyshwork@gmail.com", "dmytro.merzliakov@gmail.com", "j.lavysh@gmail.com"];
 const LOCAL_PREVIEW_UID = "__local_preview__";
 const LOCAL_PREVIEW_STORAGE_KEY = "command-center-local-preview";
+const EMERGENCY_SNAPSHOT_PREFIX = "command-center-emergency-snapshots-v1:";
+const EMERGENCY_SNAPSHOT_LIMIT = 14;
 
 function emptyData() {
   return { days: {}, habits: null, recurring: [], goals: DEF_GOALS, logs: {} };
@@ -29,6 +31,73 @@ function formatFirebaseError(e) {
 
 function dayCount(data) {
   return Object.keys((data && data.days) || {}).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).length;
+}
+
+function taskCount(data) {
+  let n = 0;
+  const days = (data && data.days) || {};
+  for (const key of Object.keys(days)) {
+    const d = days[key];
+    if (d && Array.isArray(d.tasks)) n += d.tasks.length;
+  }
+  return n;
+}
+
+function snapshotKey(uid) {
+  return EMERGENCY_SNAPSHOT_PREFIX + uid;
+}
+
+function cleanForLocalSnapshot(data) {
+  return JSON.parse(JSON.stringify(data || emptyData()));
+}
+
+function summarizeSnapshot(snapshot) {
+  if (!snapshot) return null;
+  return {
+    id: snapshot.id,
+    savedAt: snapshot.savedAt,
+    reason: snapshot.reason,
+    dayCount: snapshot.dayCount || 0,
+    taskCount: snapshot.taskCount || 0,
+  };
+}
+
+function readEmergencySnapshots(uid) {
+  if (!uid) return [];
+  try {
+    const raw = localStorage.getItem(snapshotKey(uid));
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list.filter(s => s && s.data) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function latestEmergencySnapshot(uid) {
+  return readEmergencySnapshots(uid)[0] || null;
+}
+
+function writeEmergencySnapshot(uid, data, reason) {
+  if (!uid) return null;
+  const days = dayCount(data);
+  const tasks = taskCount(data);
+  if (days === 0 && tasks === 0) return null;
+  try {
+    const snapshot = {
+      id: makeWriteId(),
+      savedAt: new Date().toISOString(),
+      reason,
+      dayCount: days,
+      taskCount: tasks,
+      data: cleanForLocalSnapshot(data),
+    };
+    const existing = readEmergencySnapshots(uid);
+    const next = [snapshot].concat(existing).slice(0, EMERGENCY_SNAPSHOT_LIMIT);
+    localStorage.setItem(snapshotKey(uid), JSON.stringify(next));
+    return snapshot;
+  } catch (e) {
+    return null;
+  }
 }
 
 function makeWriteId() {
@@ -100,6 +169,8 @@ function useData(uid) {
   const [syncError, setSyncError] = useState(null);
   const [saveStatus, setSaveStatus] = useState("idle");
   const [dataSource, setDataSource] = useState("loading");
+  const [recoverySnapshot, setRecoverySnapshot] = useState(null);
+  const [localBackupInfo, setLocalBackupInfo] = useState(null);
   const dataRef = useRef(d);
   const readyRef = useRef(false);
   const errorRef = useRef(null);
@@ -125,6 +196,8 @@ function useData(uid) {
     setLoadError(null);
     setSyncError(null);
     setSaveStatus("idle");
+    setRecoverySnapshot(null);
+    setLocalBackupInfo(summarizeSnapshot(latestEmergencySnapshot(uid)));
     setDataSource("loading");
     setD(emptyData());
     if (!uid) {
@@ -138,6 +211,8 @@ function useData(uid) {
         const next = normalizeData(stored);
         setD(next);
         dataRef.current = next;
+        const snap = writeEmergencySnapshot(uid, next, "local-preview-read");
+        if (snap) setLocalBackupInfo(summarizeSnapshot(snap));
       } catch (e) { /* no-op */ }
       readyRef.current = true;
       setDataSource("local-preview");
@@ -149,10 +224,21 @@ function useData(uid) {
         const s = await getDoc(doc(db, "users", uid));
         if (cancelled) return;
         const next = s.exists() ? normalizeData(s.data()) : emptyData();
+        const localSnap = latestEmergencySnapshot(uid);
+        if (dayCount(next) === 0 && localSnap && (localSnap.dayCount || 0) > 0) {
+          setD(normalizeData(localSnap.data));
+          dataRef.current = normalizeData(localSnap.data);
+          setRecoverySnapshot(summarizeSnapshot(localSnap));
+          setLocalBackupInfo(summarizeSnapshot(localSnap));
+          setDataSource("recovery-available");
+          return;
+        }
         setD(next);
         dataRef.current = next;
         readyRef.current = true;
         setDataSource(s.exists() ? "remote-existing" : "remote-new");
+        const snap = writeEmergencySnapshot(uid, next, "cloud-read");
+        if (snap) setLocalBackupInfo(summarizeSnapshot(snap));
       } catch (e) {
         if (cancelled) return;
         const message = formatFirebaseError(e);
@@ -191,6 +277,54 @@ function useData(uid) {
     });
   }
 
+  function restoreData(rawData, reason) {
+    if (!uid) return Promise.reject(new Error("No active account."));
+    const nd = normalizeData(rawData);
+    const prevDays = dayCount(dataRef.current);
+    const nextDays = dayCount(nd);
+    if (prevDays > 0 && nextDays === 0) {
+      const message = "Blocked restore because the selected backup has no tracked days.";
+      setSyncError(message);
+      setSaveStatus("error");
+      return Promise.reject(new Error(message));
+    }
+    dataRef.current = nd;
+    setD(nd);
+    readyRef.current = true;
+    errorRef.current = null;
+    setRecoverySnapshot(null);
+    setDataSource(uid === LOCAL_PREVIEW_UID ? "local-preview" : "remote-existing");
+    setSyncError(null);
+    const writeNumber = writeSeqRef.current + 1;
+    writeSeqRef.current = writeNumber;
+    const snap = writeEmergencySnapshot(uid, nd, reason || "manual-restore");
+    if (snap) setLocalBackupInfo(summarizeSnapshot(snap));
+    if (uid === LOCAL_PREVIEW_UID) {
+      try { localStorage.setItem(LOCAL_PREVIEW_STORAGE_KEY, JSON.stringify(nd)); } catch (e) { /* no-op */ }
+      markSaved(writeNumber);
+      return Promise.resolve(nd);
+    }
+    setSaveStatus("saving");
+    const remoteData = Object.assign({}, nd, {
+      schemaVersion: 2,
+      updatedAt: serverTimestamp(),
+      restoredAt: serverTimestamp(),
+      lastWriteId: makeWriteId(),
+    });
+    const writeTask = writeChainRef.current
+      .catch(() => {})
+      .then(() => setDoc(doc(db, "users", uid), remoteData, { merge: true }));
+    writeChainRef.current = writeTask.catch(() => {});
+    return writeTask.then(() => {
+      setSyncError(null);
+      markSaved(writeNumber);
+      return nd;
+    }).catch(e => {
+      markFailed(writeNumber, e);
+      throw e;
+    });
+  }
+
   function saveComputed(compute) {
     if (!uid || !readyRef.current || errorRef.current) return;
     const prev = dataRef.current;
@@ -206,6 +340,8 @@ function useData(uid) {
     }
     dataRef.current = nd;
     setD(nd);
+    const snap = writeEmergencySnapshot(uid, nd, "local-write");
+    if (snap) setLocalBackupInfo(summarizeSnapshot(snap));
     if (!writeFailureRef.current) setSyncError(null);
     const writeNumber = writeSeqRef.current + 1;
     writeSeqRef.current = writeNumber;
@@ -269,7 +405,21 @@ function useData(uid) {
     });
   }
 
-  return { data: d, loading: ld, loadError, syncError, saveStatus, dataSource, saveFields, saveDay, saveDays, saveComputed };
+  return {
+    data: d,
+    loading: ld,
+    loadError,
+    syncError,
+    saveStatus,
+    dataSource,
+    recoverySnapshot,
+    localBackupInfo,
+    saveFields,
+    saveDay,
+    saveDays,
+    saveComputed,
+    restoreData,
+  };
 }
 
 /* ══════ KEYBOARD SHORTCUTS (desktop) ══════ */
@@ -469,9 +619,62 @@ function DataLoadError({ message, onRetry, onLogout }) {
   );
 }
 
+function DataRecovery({ snapshot, onRestore, onRetry, onLogout }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function restore() {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      await onRestore();
+    } catch (e) {
+      setError(e && e.message ? e.message : "Could not restore local emergency backup.");
+      setBusy(false);
+    }
+  }
+  return (
+    <div style={{ background: "var(--bg)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center" }}>
+      <div style={{ maxWidth: 520 }}>
+        <div style={{
+          fontFamily: "'Oswald', sans-serif",
+          fontSize: 34,
+          fontWeight: 700,
+          letterSpacing: "0.2em",
+          color: "var(--red)",
+          marginBottom: 16,
+        }}>RECOVERY AVAILABLE</div>
+        <div style={{
+          color: "var(--t2)",
+          fontSize: 12,
+          lineHeight: 1.7,
+          letterSpacing: "0.08em",
+          fontFamily: "'JetBrains Mono', monospace",
+          marginBottom: 18,
+        }}>
+          Cloud profile looks empty, but this browser has a local emergency snapshot:
+          <br />
+          {(snapshot && snapshot.dayCount) || 0} days · {(snapshot && snapshot.taskCount) || 0} tasks
+          {snapshot && snapshot.savedAt ? " · " + new Date(snapshot.savedAt).toLocaleString() : ""}
+          <br />
+          Writes are blocked until you restore or retry, so the empty cloud state cannot overwrite history.
+        </div>
+        {error && (
+          <div className="sync-alert" style={{ textAlign: "left" }}>{error}</div>
+        )}
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+          <div onClick={restore} className="add-btn">{busy ? "RESTORING..." : "RESTORE LOCAL BACKUP"}</div>
+          <div onClick={onRetry} className="add-btn" style={{ background: "rgba(var(--accent-rgb), 0.06)" }}>RETRY CLOUD</div>
+          <div onClick={onLogout} className="add-btn" style={{ background: "rgba(var(--accent-rgb), 0.06)" }}>SIGN OUT</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ══════ TRACKER ══════ */
 function Tracker({ uid, accountEmail, accountMode, onLogout }) {
-  const { data, loading, loadError, syncError, saveStatus, dataSource, saveFields, saveDay, saveDays, saveComputed } = useData(uid);
+  const { data, loading, loadError, syncError, saveStatus, dataSource, recoverySnapshot, localBackupInfo, saveFields, saveDay, saveDays, saveComputed, restoreData } = useData(uid);
   const [tab, setTab] = useState("day");
   const [dayOff, setDayOff] = useState(0);
   const [mOff, setMOff] = useState(0);
@@ -766,6 +969,16 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
       </div>
     );
   }
+  if (recoverySnapshot) {
+    return (
+      <DataRecovery
+        snapshot={recoverySnapshot}
+        onRestore={() => restoreData(data, "emergency-local-restore")}
+        onRetry={() => window.location.reload()}
+        onLogout={onLogout}
+      />
+    );
+  }
   if (loadError) {
     return <DataLoadError message={loadError} onRetry={() => window.location.reload()} onLogout={onLogout} />;
   }
@@ -884,6 +1097,8 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
             accountMode={accountMode}
             dataSource={dataSource}
             syncError={syncError}
+            localBackupInfo={localBackupInfo}
+            restoreBackup={raw => restoreData(raw, "json-backup-restore")}
             onLogout={onLogout}
             jumpToDay={dateKey => {
               const offset = Math.round(
