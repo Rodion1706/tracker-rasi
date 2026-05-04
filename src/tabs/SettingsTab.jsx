@@ -728,6 +728,10 @@ function DataHealthPanel({ data, localBackupInfo }) {
           <div className="account-sync-main">{splitOn ? "Armed" : "Limited"}</div>
         </div>
         <div>
+          <div className="brute-field-l">Watchdog</div>
+          <div className="account-sync-main">Armed</div>
+        </div>
+        <div>
           <div className="brute-field-l">Current health</div>
           <div className="account-sync-sub">{dayKeys.length} days · {tasks} tasks</div>
         </div>

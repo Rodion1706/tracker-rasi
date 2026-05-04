@@ -11,10 +11,13 @@ const ALLOWED_EMAILS = ["radzivonlavyshwork@gmail.com", "dmytro.merzliakov@gmail
 const LOCAL_PREVIEW_UID = "__local_preview__";
 const LOCAL_PREVIEW_STORAGE_KEY = "command-center-local-preview";
 const EMERGENCY_SNAPSHOT_PREFIX = "command-center-emergency-snapshots-v1:";
+const HEALTH_WATCHDOG_PREFIX = "command-center-health-watchdog-v1:";
 const EMERGENCY_SNAPSHOT_LIMIT = 14;
 const DAY_KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
 const SPLIT_DAYS_SCHEMA_VERSION = 3;
 const BATCH_WRITE_LIMIT = 430;
+const TASK_DROP_ALERT_MIN = 8;
+const TASK_DROP_ALERT_RATIO = 0.55;
 
 function emptyData() {
   return { days: {}, habits: null, recurring: [], goals: DEF_GOALS, logs: {} };
@@ -50,6 +53,10 @@ function snapshotKey(uid) {
   return EMERGENCY_SNAPSHOT_PREFIX + uid;
 }
 
+function healthWatchKey(uid) {
+  return HEALTH_WATCHDOG_PREFIX + uid;
+}
+
 function cleanForLocalSnapshot(data) {
   return JSON.parse(JSON.stringify(data || emptyData()));
 }
@@ -78,6 +85,87 @@ function readEmergencySnapshots(uid) {
 
 function latestEmergencySnapshot(uid) {
   return readEmergencySnapshots(uid)[0] || null;
+}
+
+function summarizeDataForWatchdog(data, reason) {
+  const range = dayRange(data);
+  return {
+    reason: reason || "unknown",
+    savedAt: new Date().toISOString(),
+    dayCount: dayCount(data),
+    taskCount: taskCount(data),
+    firstDay: range.firstDay,
+    lastDay: range.lastDay,
+  };
+}
+
+function readHealthWatchdog(uid) {
+  if (!uid) return null;
+  try {
+    const raw = localStorage.getItem(healthWatchKey(uid));
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function writeHealthWatchdog(uid, data, reason, options) {
+  if (!uid) return null;
+  const current = summarizeDataForWatchdog(data, reason);
+  if (current.dayCount === 0 && current.taskCount === 0 && !(options && options.forceReset)) return null;
+  try {
+    const prev = readHealthWatchdog(uid) || {};
+    const forceReset = !!(options && options.forceReset);
+    const bestDayCount = forceReset ? current.dayCount : Math.max(prev.bestDayCount || 0, current.dayCount);
+    const bestTaskCount = forceReset ? current.taskCount : Math.max(prev.bestTaskCount || 0, current.taskCount);
+    const next = {
+      version: 1,
+      updatedAt: current.savedAt,
+      lastHealthy: current,
+      bestDayCount,
+      bestTaskCount,
+      bestSavedAt: (bestDayCount > (prev.bestDayCount || 0) || bestTaskCount > (prev.bestTaskCount || 0) || forceReset)
+        ? current.savedAt
+        : (prev.bestSavedAt || current.savedAt),
+    };
+    localStorage.setItem(healthWatchKey(uid), JSON.stringify(next));
+    return next;
+  } catch (e) {
+    return null;
+  }
+}
+
+function detectHealthWarning(uid, cloudData, localSnapshot) {
+  if (!uid || uid === LOCAL_PREVIEW_UID) return null;
+  const cloud = summarizeDataForWatchdog(cloudData, "cloud-read");
+  const watch = readHealthWatchdog(uid);
+  const local = summarizeSnapshot(localSnapshot);
+  const localHasMoreDays = local && local.dayCount > cloud.dayCount;
+  const storedHasMoreDays = watch && (watch.bestDayCount || 0) > cloud.dayCount;
+  const storedTaskDrop = watch
+    && (watch.bestTaskCount || 0) >= TASK_DROP_ALERT_MIN
+    && (watch.bestTaskCount || 0) - cloud.taskCount >= TASK_DROP_ALERT_MIN
+    && cloud.taskCount <= Math.floor((watch.bestTaskCount || 0) * TASK_DROP_ALERT_RATIO);
+  const localHasMoreTasks = local
+    && local.taskCount >= TASK_DROP_ALERT_MIN
+    && local.taskCount - cloud.taskCount >= TASK_DROP_ALERT_MIN
+    && cloud.taskCount <= Math.floor(local.taskCount * TASK_DROP_ALERT_RATIO);
+
+  if (!localHasMoreDays && !storedHasMoreDays && !storedTaskDrop && !localHasMoreTasks) return null;
+
+  const preferredSnapshot = localSnapshot && (localHasMoreDays || localHasMoreTasks) ? localSnapshot : null;
+  const reason = localHasMoreDays || storedHasMoreDays
+    ? "History day count dropped"
+    : "Task count dropped sharply";
+  return {
+    id: makeWriteId(),
+    reason,
+    cloud,
+    local,
+    watch,
+    snapshot: preferredSnapshot,
+    cloudData: cleanForLocalSnapshot(cloudData),
+  };
 }
 
 function writeEmergencySnapshot(uid, data, reason) {
@@ -348,6 +436,7 @@ function useData(uid) {
   const [saveStatus, setSaveStatus] = useState("idle");
   const [dataSource, setDataSource] = useState("loading");
   const [recoverySnapshot, setRecoverySnapshot] = useState(null);
+  const [healthWarning, setHealthWarning] = useState(null);
   const [localBackupInfo, setLocalBackupInfo] = useState(null);
   const dataRef = useRef(d);
   const readyRef = useRef(false);
@@ -377,6 +466,7 @@ function useData(uid) {
     setSyncError(null);
     setSaveStatus("idle");
     setRecoverySnapshot(null);
+    setHealthWarning(null);
     setLocalBackupInfo(summarizeSnapshot(latestEmergencySnapshot(uid)));
     setDataSource("loading");
     setD(emptyData());
@@ -393,6 +483,7 @@ function useData(uid) {
         dataRef.current = next;
         const snap = writeEmergencySnapshot(uid, next, "local-preview-read");
         if (snap) setLocalBackupInfo(summarizeSnapshot(snap));
+        writeHealthWatchdog(uid, next, "local-preview-read");
       } catch (e) { /* no-op */ }
       readyRef.current = true;
       setDataSource("local-preview");
@@ -416,9 +507,23 @@ function useData(uid) {
           storageMode: splitDaysAvailableRef.current ? "split-days-v1" : (rootData.storageMode || "legacy-document-fallback"),
         }));
         const localSnap = latestEmergencySnapshot(uid);
+        const warning = detectHealthWarning(uid, next, localSnap);
+        if (warning) {
+          const previewData = warning.snapshot && warning.snapshot.data
+            ? normalizeData(warning.snapshot.data)
+            : next;
+          setD(previewData);
+          dataRef.current = previewData;
+          setHealthWarning(warning);
+          setRecoverySnapshot(summarizeSnapshot(warning.snapshot) || warning.local);
+          setLocalBackupInfo(summarizeSnapshot(localSnap));
+          setDataSource("recovery-available");
+          return;
+        }
         if (dayCount(next) === 0 && localSnap && (localSnap.dayCount || 0) > 0) {
-          setD(normalizeData(localSnap.data));
-          dataRef.current = normalizeData(localSnap.data);
+          const localData = normalizeData(localSnap.data);
+          setD(localData);
+          dataRef.current = localData;
           setRecoverySnapshot(summarizeSnapshot(localSnap));
           setLocalBackupInfo(summarizeSnapshot(localSnap));
           setDataSource("recovery-available");
@@ -430,6 +535,7 @@ function useData(uid) {
         setDataSource(s.exists() ? "remote-existing" : "remote-new");
         const snap = writeEmergencySnapshot(uid, next, "cloud-read");
         if (snap) setLocalBackupInfo(summarizeSnapshot(snap));
+        writeHealthWatchdog(uid, next, "cloud-read");
       } catch (e) {
         if (cancelled) return;
         const message = formatFirebaseError(e);
@@ -569,6 +675,7 @@ function useData(uid) {
     readyRef.current = true;
     errorRef.current = null;
     setRecoverySnapshot(null);
+    setHealthWarning(null);
     setDataSource(uid === LOCAL_PREVIEW_UID ? "local-preview" : "remote-existing");
     setSyncError(null);
     const writeNumber = writeSeqRef.current + 1;
@@ -577,6 +684,7 @@ function useData(uid) {
     if (snap) setLocalBackupInfo(summarizeSnapshot(snap));
     if (uid === LOCAL_PREVIEW_UID) {
       try { localStorage.setItem(LOCAL_PREVIEW_STORAGE_KEY, JSON.stringify(nd)); } catch (e) { /* no-op */ }
+      writeHealthWatchdog(uid, nd, reason || "restore", { forceReset: true });
       markSaved(writeNumber);
       return Promise.resolve(nd);
     }
@@ -608,12 +716,29 @@ function useData(uid) {
     writeChainRef.current = writeTask.catch(() => {});
     return writeTask.then(() => {
       setSyncError(null);
+      writeHealthWatchdog(uid, nd, reason || "restore", { forceReset: true });
       markSaved(writeNumber);
       return nd;
     }).catch(e => {
       markFailed(writeNumber, e);
       throw e;
     });
+  }
+
+  function acceptHealthWarning() {
+    if (!healthWarning) return;
+    const cloudData = normalizeData(healthWarning.cloudData || emptyData());
+    dataRef.current = cloudData;
+    setD(cloudData);
+    readyRef.current = true;
+    errorRef.current = null;
+    setHealthWarning(null);
+    setRecoverySnapshot(null);
+    setDataSource(uid === LOCAL_PREVIEW_UID ? "local-preview" : "remote-existing");
+    setSyncError(null);
+    writeHealthWatchdog(uid, cloudData, "watchdog-accepted", { forceReset: true });
+    const snap = writeEmergencySnapshot(uid, cloudData, "watchdog-accepted");
+    if (snap) setLocalBackupInfo(summarizeSnapshot(snap));
   }
 
   function saveComputed(compute, reason) {
@@ -640,6 +765,7 @@ function useData(uid) {
     writeSeqRef.current = writeNumber;
     if (uid === LOCAL_PREVIEW_UID) {
       try { localStorage.setItem(LOCAL_PREVIEW_STORAGE_KEY, JSON.stringify(nd)); } catch (e) { /* no-op */ }
+      writeHealthWatchdog(uid, nd, writeReason);
       markSaved(writeNumber);
       return;
     }
@@ -675,6 +801,7 @@ function useData(uid) {
     writeTask.then(() => {
       if (writeNumber === writeSeqRef.current && !writeFailureRef.current) {
         setSyncError(null);
+        writeHealthWatchdog(uid, nd, writeReason);
         markSaved(writeNumber);
       }
     }).catch(e => {
@@ -722,12 +849,14 @@ function useData(uid) {
     saveStatus,
     dataSource,
     recoverySnapshot,
+    healthWarning,
     localBackupInfo,
     saveFields,
     saveDay,
     saveDays,
     saveComputed,
     restoreData,
+    acceptHealthWarning,
   };
 }
 
@@ -928,7 +1057,7 @@ function DataLoadError({ message, onRetry, onLogout }) {
   );
 }
 
-function DataRecovery({ snapshot, onRestore, onRetry, onLogout }) {
+function DataRecovery({ snapshot, warning, onRestore, onRetry, onLogout, onContinue }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   async function restore() {
@@ -936,6 +1065,7 @@ function DataRecovery({ snapshot, onRestore, onRetry, onLogout }) {
     setBusy(true);
     setError("");
     try {
+      if (!onRestore) throw new Error("No local emergency snapshot is available for one-tap restore.");
       await onRestore();
     } catch (e) {
       setError(e && e.message ? e.message : "Could not restore local emergency backup.");
@@ -952,7 +1082,7 @@ function DataRecovery({ snapshot, onRestore, onRetry, onLogout }) {
           letterSpacing: "0.2em",
           color: "var(--red)",
           marginBottom: 16,
-        }}>RECOVERY AVAILABLE</div>
+        }}>{warning ? "HEALTH WARNING" : "RECOVERY AVAILABLE"}</div>
         <div style={{
           color: "var(--t2)",
           fontSize: 12,
@@ -961,19 +1091,36 @@ function DataRecovery({ snapshot, onRestore, onRetry, onLogout }) {
           fontFamily: "'JetBrains Mono', monospace",
           marginBottom: 18,
         }}>
-          Cloud profile looks empty, but this browser has a local emergency snapshot:
+          {warning ? warning.reason + "." : "Cloud profile looks empty, but this browser has a local emergency snapshot:"}
           <br />
-          {(snapshot && snapshot.dayCount) || 0} days · {(snapshot && snapshot.taskCount) || 0} tasks
+          Cloud: {(warning && warning.cloud && warning.cloud.dayCount) || 0} days · {(warning && warning.cloud && warning.cloud.taskCount) || 0} tasks
+          {warning && warning.watch ? (
+            <>
+              <br />
+              Last healthy max: {warning.watch.bestDayCount || 0} days · {warning.watch.bestTaskCount || 0} tasks
+            </>
+          ) : null}
+          <br />
+          Local rescue: {(snapshot && snapshot.dayCount) || 0} days · {(snapshot && snapshot.taskCount) || 0} tasks
           {snapshot && snapshot.savedAt ? " · " + new Date(snapshot.savedAt).toLocaleString() : ""}
           <br />
-          Writes are blocked until you restore or retry, so the empty cloud state cannot overwrite history.
+          Writes are blocked until you restore, retry, or consciously continue with the current cloud state.
         </div>
         {error && (
           <div className="sync-alert" style={{ textAlign: "left" }}>{error}</div>
         )}
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
-          <div onClick={restore} className="add-btn">{busy ? "RESTORING..." : "RESTORE LOCAL BACKUP"}</div>
+          <div
+            onClick={snapshot ? restore : undefined}
+            className="add-btn"
+            style={!snapshot ? { opacity: 0.45, cursor: "not-allowed" } : undefined}
+          >
+            {busy ? "RESTORING..." : "RESTORE LOCAL BACKUP"}
+          </div>
           <div onClick={onRetry} className="add-btn" style={{ background: "rgba(var(--accent-rgb), 0.06)" }}>RETRY CLOUD</div>
+          {warning && onContinue && (
+            <div onClick={onContinue} className="add-btn" style={{ background: "rgba(var(--accent-rgb), 0.06)" }}>CONTINUE ANYWAY</div>
+          )}
           <div onClick={onLogout} className="add-btn" style={{ background: "rgba(var(--accent-rgb), 0.06)" }}>SIGN OUT</div>
         </div>
       </div>
@@ -983,7 +1130,7 @@ function DataRecovery({ snapshot, onRestore, onRetry, onLogout }) {
 
 /* ══════ TRACKER ══════ */
 function Tracker({ uid, accountEmail, accountMode, onLogout }) {
-  const { data, loading, loadError, syncError, saveStatus, dataSource, recoverySnapshot, localBackupInfo, saveFields, saveDay, saveDays, saveComputed, restoreData } = useData(uid);
+  const { data, loading, loadError, syncError, saveStatus, dataSource, recoverySnapshot, healthWarning, localBackupInfo, saveFields, saveDay, saveDays, saveComputed, restoreData, acceptHealthWarning } = useData(uid);
   const [tab, setTab] = useState("day");
   const [dayOff, setDayOff] = useState(0);
   const [mOff, setMOff] = useState(0);
@@ -1278,12 +1425,17 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
       </div>
     );
   }
-  if (recoverySnapshot) {
+  if (recoverySnapshot || healthWarning) {
+    const restoreSource = healthWarning && healthWarning.snapshot && healthWarning.snapshot.data
+      ? healthWarning.snapshot.data
+      : data;
     return (
       <DataRecovery
         snapshot={recoverySnapshot}
-        onRestore={() => restoreData(data, "emergency-local-restore")}
+        warning={healthWarning}
+        onRestore={restoreSource ? () => restoreData(restoreSource, healthWarning ? "watchdog-local-restore" : "emergency-local-restore") : null}
         onRetry={() => window.location.reload()}
+        onContinue={healthWarning ? acceptHealthWarning : null}
         onLogout={onLogout}
       />
     );
