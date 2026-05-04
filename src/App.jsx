@@ -769,8 +769,14 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
       {/* Yesterday's rollover toast */}
       <RolloverToast info={rolloverInfo} />
 
-      {/* Floating + (mobile only via CSS) — quick scroll-to-input on Day tab */}
-      {tab === "day" && <FloatingAdd />}
+      {/* Floating quick actions — settings is always one tap away. */}
+      <FloatingAdd
+        showAdd={tab === "day"}
+        onSettings={() => {
+          setTab("settings");
+          setDayOff(0);
+        }}
+      />
 
       {/* Level claim cinematic — fires on tap-to-claim */}
       <LevelClaim fireId={levelClaimState.id} level={levelClaimState.level} />

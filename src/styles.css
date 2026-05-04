@@ -1439,20 +1439,28 @@ body::after {
   gap: 18px;
   align-items: center;
   padding: 16px 18px;
-  background: rgba(14, 8, 16, 0.5);
+  background: var(--glass-soft);
   border: 1px solid var(--brd);
   border-radius: 10px;
   margin-bottom: 14px;
-  overflow: hidden;
+  overflow: visible;
 }
 .monad-picker-preview {
-  width: 102px;
-  min-height: 132px;
+  width: 112px;
+  height: 132px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-right: 1px dashed rgba(232, 16, 42, 0.18);
+  border-right: 1px dashed rgba(var(--accent-rgb), 0.16);
   padding-right: 14px;
+  flex-shrink: 0;
+}
+.monad-picker-preview .monad {
+  width: 92px !important;
+  height: 123px !important;
+  flex: 0 0 auto;
+  transform: none !important;
+  transition: none !important;
 }
 .monad-picker-body { min-width: 0; }
 .monad-picker-label {
@@ -1483,19 +1491,19 @@ body::after {
   font-weight: 700;
   letter-spacing: 0.16em;
   text-align: center;
-  transition: all 0.2s;
+  transition: border-color 0.16s, color 0.16s, background 0.16s;
 }
 .monad-preset:hover {
   border-color: var(--red-b);
   color: var(--t1);
-  transform: translateY(-1px);
+  background: var(--glass-firm);
 }
 .monad-preset.active {
-  background: linear-gradient(135deg, rgba(232, 16, 42, 0.18), var(--item));
-  border-color: var(--red);
+  background: var(--glass-firm);
+  border-color: var(--red-b);
   color: var(--red-b);
-  box-shadow: 0 0 14px rgba(232, 16, 42, 0.25);
-  text-shadow: 0 0 6px rgba(232, 16, 42, 0.4);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.28);
+  text-shadow: none;
 }
 .monad-preset.custom {
   border-style: dashed;
@@ -3761,10 +3769,15 @@ body::after {
   }
   .monad-picker-preview {
     width: 100%;
-    min-height: 110px;
+    height: 112px;
+    min-height: 112px;
     border-right: 0;
-    border-bottom: 1px dashed rgba(232, 16, 42, 0.18);
+    border-bottom: 1px dashed rgba(var(--accent-rgb), 0.16);
     padding: 0 0 10px;
+  }
+  .monad-picker-preview .monad {
+    width: 78px !important;
+    height: 104px !important;
   }
   .monad-picker-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3779,27 +3792,47 @@ body::after {
   .kbd-hint { padding: 12px 14px; }
 }
 
-/* ════════ FLOATING ADD BUTTON (all devices) ════════ */
-.fab {
+/* ════════ FLOATING QUICK ACTIONS (all devices) ════════ */
+.fab-stack {
   display: flex;
   position: fixed;
   bottom: 22px;
   right: 18px;
   z-index: 60;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.fab {
+  display: flex;
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--red-b), var(--red), var(--red-d));
   align-items: center;
   justify-content: center;
-  color: var(--t-strong);
+  color: var(--t1);
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(var(--accent-rgb), 0.55), 0 0 32px rgba(var(--accent-rgb), 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  padding: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
   border: 1px solid rgba(255, 255, 255, 0.15);
   transition: transform 0.15s ease-out, box-shadow 0.2s;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+}
+.fab-add {
+  background: linear-gradient(135deg, var(--red-b), var(--red), var(--red-d));
+  color: var(--t-strong);
+  box-shadow: 0 8px 24px rgba(var(--accent-rgb), 0.55), 0 0 32px rgba(var(--accent-rgb), 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
   animation: fabPulse 4s ease-in-out infinite;
+}
+.fab-settings {
+  width: 48px;
+  height: 48px;
+  background: var(--glass-firm);
+  border-color: rgba(var(--accent-rgb), 0.24);
+  color: var(--red-b);
 }
 .fab:hover { transform: scale(1.06); box-shadow: 0 10px 30px rgba(var(--accent-rgb), 0.7), 0 0 40px rgba(var(--accent-rgb), 0.45); }
 .fab:active { transform: scale(0.92); box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.45); }
@@ -3809,7 +3842,9 @@ body::after {
 }
 @media (min-width: 900px) {
   /* On desktop the FAB sits a touch further from the corner. */
-  .fab { bottom: 32px; right: 32px; width: 60px; height: 60px; }
+  .fab-stack { bottom: 32px; right: 32px; }
+  .fab-add { width: 60px; height: 60px; }
+  .fab-settings { width: 50px; height: 50px; }
 }
 
 /* ══════ HABIT REORDER (iOS jiggle/drag mode) ══════ */
@@ -3904,21 +3939,25 @@ body::after {
   border-radius: 10px;
   cursor: pointer;
   transition: border-color 0.2s, transform 0.15s, background 0.2s;
+  min-height: 72px;
 }
 .theme-opt:hover { border-color: var(--red); }
 .theme-opt.active { border-color: var(--red); box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.18); }
 .theme-radio {
-  width: 18px; height: 18px;
+  width: 22px;
+  height: 22px;
   border: 1.5px solid var(--brd);
   border-radius: 50%;
   flex-shrink: 0;
-  position: relative;
+  display: grid;
+  place-items: center;
+  align-self: center;
   transition: border-color 0.2s;
 }
 .theme-radio.on { border-color: var(--red); }
 .theme-radio-dot {
-  position: absolute;
-  inset: 3px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: var(--red);
   transform: scale(0);
