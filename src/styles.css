@@ -294,6 +294,27 @@ body::after {
   margin-top: 6px;
   font-weight: 500;
 }
+.save-state {
+  display: inline-flex;
+  justify-content: flex-end;
+  margin-top: 7px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
+.save-state-saving {
+  color: var(--red-b);
+}
+.save-state-saved {
+  color: var(--red);
+}
+.save-state-error {
+  color: var(--red-b);
+  text-shadow: 0 0 10px rgba(var(--accent-rgb), 0.5);
+}
 
 /* ════════ APP LAYOUT ════════ */
 .app {

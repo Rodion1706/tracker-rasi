@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { db, auth, provider, doc, getDoc, setDoc, signInWithPopup, signOut, onAuthStateChanged } from "./firebase";
+import { db, auth, provider, doc, getDoc, setDoc, serverTimestamp, FieldPath, signInWithPopup, signOut, onAuthStateChanged } from "./firebase";
 import { DEF_HABITS, DEF_GOALS, DEF_TAGS, argDate, niceDate } from "./config";
 import { isDayClean, getLevel, getDisplayLevel, applyGamificationUpdates, BADGES } from "./gamification";
 import { applyRollover } from "./rollover";
@@ -29,6 +29,26 @@ function formatFirebaseError(e) {
 
 function dayCount(data) {
   return Object.keys((data && data.days) || {}).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).length;
+}
+
+function makeWriteId() {
+  return Date.now() + "-" + Math.random().toString(36).slice(2, 10);
+}
+
+function patchFieldCount(patch) {
+  return Object.keys(patch || {}).length;
+}
+
+function mergeFieldsForPatch(patch) {
+  const fields = [];
+  for (const key of Object.keys(patch || {})) {
+    if (key === "days" && patch.days && typeof patch.days === "object" && !Array.isArray(patch.days)) {
+      for (const dayKey of Object.keys(patch.days)) fields.push(new FieldPath("days", dayKey));
+    } else {
+      fields.push(key);
+    }
+  }
+  return fields;
 }
 
 import PillTabs from "./components/PillTabs";
@@ -78,20 +98,33 @@ function useData(uid) {
   const [ld, setLd] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [syncError, setSyncError] = useState(null);
+  const [saveStatus, setSaveStatus] = useState("idle");
   const [dataSource, setDataSource] = useState("loading");
   const dataRef = useRef(d);
   const readyRef = useRef(false);
   const errorRef = useRef(null);
+  const writeSeqRef = useRef(0);
+  const writeChainRef = useRef(Promise.resolve());
+  const writeFailureRef = useRef(false);
+  const savedTimerRef = useRef(null);
+  useEffect(() => () => {
+    if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+  }, []);
   useEffect(() => {
     dataRef.current = d;
   }, [d]);
   useEffect(() => {
     let cancelled = false;
+    if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
     readyRef.current = false;
     errorRef.current = null;
+    writeSeqRef.current += 1;
+    writeChainRef.current = Promise.resolve();
+    writeFailureRef.current = false;
     setLd(true);
     setLoadError(null);
     setSyncError(null);
+    setSaveStatus("idle");
     setDataSource("loading");
     setD(emptyData());
     if (!uid) {
@@ -132,28 +165,111 @@ function useData(uid) {
     })();
     return () => { cancelled = true; };
   }, [uid]);
-  function save(next) {
+
+  function markSaved(writeNumber) {
+    if (writeNumber !== writeSeqRef.current) return;
+    setSaveStatus("saved");
+    if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+    savedTimerRef.current = setTimeout(() => {
+      if (writeNumber === writeSeqRef.current) setSaveStatus("idle");
+    }, 1800);
+  }
+
+  function markFailed(_writeNumber, e) {
+    writeFailureRef.current = true;
+    setSaveStatus("error");
+    setSyncError(formatFirebaseError(e));
+  }
+
+  function sendPatch(userRef, remotePatch, mergeFields, attempt) {
+    return setDoc(userRef, remotePatch, { mergeFields }).catch(e => {
+      if (attempt < 2) {
+        return new Promise(resolve => setTimeout(resolve, 700 * (attempt + 1)))
+          .then(() => sendPatch(userRef, remotePatch, mergeFields, attempt + 1));
+      }
+      throw e;
+    });
+  }
+
+  function saveComputed(compute) {
     if (!uid || !readyRef.current || errorRef.current) return;
-    const nd = typeof next === "function" ? next(dataRef.current) : next;
-    if (nd === dataRef.current) return;
-    const prevDays = dayCount(dataRef.current);
+    const prev = dataRef.current;
+    const result = compute(prev);
+    if (!result || !result.nextData || result.nextData === prev || !patchFieldCount(result.patch)) return;
+    const nd = result.nextData;
+    const prevDays = dayCount(prev);
     const nextDays = dayCount(nd);
     if (prevDays > 0 && nextDays === 0) {
       setSyncError("Blocked a write that would clear all tracked days.");
+      setSaveStatus("error");
       return;
     }
     dataRef.current = nd;
     setD(nd);
-    setSyncError(null);
+    if (!writeFailureRef.current) setSyncError(null);
+    const writeNumber = writeSeqRef.current + 1;
+    writeSeqRef.current = writeNumber;
     if (uid === LOCAL_PREVIEW_UID) {
       try { localStorage.setItem(LOCAL_PREVIEW_STORAGE_KEY, JSON.stringify(nd)); } catch (e) { /* no-op */ }
+      markSaved(writeNumber);
       return;
     }
-    setDoc(doc(db, "users", uid), nd, { merge: true }).catch(e => {
-      setSyncError(formatFirebaseError(e));
+    setSaveStatus("saving");
+    if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+    const remotePatch = Object.assign({}, result.patch, {
+      schemaVersion: 2,
+      updatedAt: serverTimestamp(),
+      lastWriteId: makeWriteId(),
+    });
+    const userRef = doc(db, "users", uid);
+    const mergeFields = mergeFieldsForPatch(remotePatch);
+    const writeTask = writeChainRef.current
+      .catch(() => {})
+      .then(() => sendPatch(userRef, remotePatch, mergeFields, 0));
+    writeChainRef.current = writeTask.catch(() => {});
+    writeTask.then(() => {
+      if (writeNumber === writeSeqRef.current && !writeFailureRef.current) {
+        setSyncError(null);
+        markSaved(writeNumber);
+      }
+    }).catch(e => {
+      markFailed(writeNumber, e);
     });
   }
-  return { data: d, loading: ld, loadError, syncError, dataSource, save };
+
+  function saveFields(patchOrFn) {
+    saveComputed(prev => {
+      const patch = typeof patchOrFn === "function" ? patchOrFn(prev) : patchOrFn;
+      if (!patchFieldCount(patch)) return null;
+      return { nextData: Object.assign({}, prev, patch), patch };
+    });
+  }
+
+  function saveDay(key, val) {
+    saveComputed(prev => {
+      const prevDays = prev.days || {};
+      const prevDay = prevDays[key] || { checks: {}, tasks: [] };
+      const nextDay = typeof val === "function" ? val(prevDay) : val;
+      if (nextDay === prevDay) return null;
+      return {
+        nextData: Object.assign({}, prev, { days: Object.assign({}, prevDays, { [key]: nextDay }) }),
+        patch: { days: { [key]: nextDay } },
+      };
+    });
+  }
+
+  function saveDays(updates) {
+    if (!patchFieldCount(updates)) return;
+    saveComputed(prev => {
+      const prevDays = prev.days || {};
+      return {
+        nextData: Object.assign({}, prev, { days: Object.assign({}, prevDays, updates) }),
+        patch: { days: updates },
+      };
+    });
+  }
+
+  return { data: d, loading: ld, loadError, syncError, saveStatus, dataSource, saveFields, saveDay, saveDays, saveComputed };
 }
 
 /* ══════ KEYBOARD SHORTCUTS (desktop) ══════ */
@@ -355,7 +471,7 @@ function DataLoadError({ message, onRetry, onLogout }) {
 
 /* ══════ TRACKER ══════ */
 function Tracker({ uid, accountEmail, accountMode, onLogout }) {
-  const { data, loading, loadError, syncError, dataSource, save } = useData(uid);
+  const { data, loading, loadError, syncError, saveStatus, dataSource, saveFields, saveDay, saveDays, saveComputed } = useData(uid);
   const [tab, setTab] = useState("day");
   const [dayOff, setDayOff] = useState(0);
   const [mOff, setMOff] = useState(0);
@@ -416,37 +532,47 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
   const logs = data.logs || {};
   const monadImage = data.monadImage || { variant: "original" };
 
-  function setHabits(h) { save(Object.assign({}, data, { habits: h })); }
-  function setGoals(g) { save(Object.assign({}, data, { goals: g })); }
-  function setRecurring(r) { save(Object.assign({}, data, { recurring: r })); }
-  function setLogs(l) { save(Object.assign({}, data, { logs: l })); }
-  function setTags(t) { save(Object.assign({}, data, { tags: t })); }
+  function setHabits(h) { saveFields({ habits: h }); }
+  function setGoals(g) { saveFields({ goals: g }); }
+  function setRecurring(r) { saveFields({ recurring: r }); }
+  function setLogs(l) { saveFields({ logs: l }); }
+  function setTags(t) { saveFields({ tags: t }); }
 
   // Rename a tag: update the entry in tags AND sweep every task and
   // recurring item that references the old name. Past data included —
   // a renamed tag is still "the same tag", just with a new label.
   function renameTag(id, newName, newColor) {
-    const old = tags.find(t => t.id === id);
-    if (!old) return;
     const trimmed = newName.trim();
-    const nextTags = tags.map(t => t.id === id ? Object.assign({}, t, { name: trimmed, color: newColor }) : t);
-    const nd = Object.assign({}, data, { tags: nextTags });
-    if (old.name !== trimmed) {
-      const nextDays = Object.assign({}, data.days || {});
-      for (const k of Object.keys(nextDays)) {
-        const dd = nextDays[k];
-        if (!dd || !dd.tasks) continue;
-        let touched = false;
-        const nextTasks = dd.tasks.map(t => {
-          if (t && t.tag === old.name) { touched = true; return Object.assign({}, t, { tag: trimmed }); }
-          return t;
-        });
-        if (touched) nextDays[k] = Object.assign({}, dd, { tasks: nextTasks });
+    saveComputed(prev => {
+      const prevTags = prev.tags || DEF_TAGS;
+      const old = prevTags.find(t => t.id === id);
+      if (!old) return null;
+      const nextTags = prevTags.map(t => t.id === id ? Object.assign({}, t, { name: trimmed, color: newColor }) : t);
+      const patch = { tags: nextTags };
+      const nextData = Object.assign({}, prev, { tags: nextTags });
+      if (old.name !== trimmed) {
+        const dayUpdates = {};
+        const prevDays = prev.days || {};
+        for (const k of Object.keys(prevDays)) {
+          const dd = prevDays[k];
+          if (!dd || !dd.tasks) continue;
+          let touched = false;
+          const nextTasks = dd.tasks.map(t => {
+            if (t && t.tag === old.name) { touched = true; return Object.assign({}, t, { tag: trimmed }); }
+            return t;
+          });
+          if (touched) dayUpdates[k] = Object.assign({}, dd, { tasks: nextTasks });
+        }
+        const nextRecurring = (prev.recurring || []).map(r => r && r.tag === old.name ? Object.assign({}, r, { tag: trimmed }) : r);
+        patch.recurring = nextRecurring;
+        nextData.recurring = nextRecurring;
+        if (patchFieldCount(dayUpdates)) {
+          patch.days = dayUpdates;
+          nextData.days = Object.assign({}, prevDays, dayUpdates);
+        }
       }
-      nd.days = nextDays;
-      nd.recurring = (data.recurring || []).map(r => r && r.tag === old.name ? Object.assign({}, r, { tag: trimmed }) : r);
-    }
-    save(nd);
+      return { nextData, patch };
+    });
   }
 
   // Delete a tag: drop from tags, strip the tag string from tasks ONLY
@@ -454,25 +580,35 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
   // historical record stays honest. Recurring items always feed future
   // days, so we strip the tag there too.
   function deleteTag(id) {
-    const old = tags.find(t => t.id === id);
-    if (!old) return;
-    const nextTags = tags.filter(t => t.id !== id);
-    const nd = Object.assign({}, data, { tags: nextTags });
-    const nextDays = Object.assign({}, data.days || {});
-    for (const k of Object.keys(nextDays)) {
-      if (k < today) continue;
-      const dd = nextDays[k];
-      if (!dd || !dd.tasks) continue;
-      let touched = false;
-      const nextTasks = dd.tasks.map(t => {
-        if (t && t.tag === old.name) { touched = true; return Object.assign({}, t, { tag: "" }); }
-        return t;
-      });
-      if (touched) nextDays[k] = Object.assign({}, dd, { tasks: nextTasks });
-    }
-    nd.days = nextDays;
-    nd.recurring = (data.recurring || []).map(r => r && r.tag === old.name ? Object.assign({}, r, { tag: "" }) : r);
-    save(nd);
+    saveComputed(prev => {
+      const prevTags = prev.tags || DEF_TAGS;
+      const old = prevTags.find(t => t.id === id);
+      if (!old) return null;
+      const nextTags = prevTags.filter(t => t.id !== id);
+      const patch = { tags: nextTags };
+      const nextData = Object.assign({}, prev, { tags: nextTags });
+      const dayUpdates = {};
+      const prevDays = prev.days || {};
+      for (const k of Object.keys(prevDays)) {
+        if (k < today) continue;
+        const dd = prevDays[k];
+        if (!dd || !dd.tasks) continue;
+        let touched = false;
+        const nextTasks = dd.tasks.map(t => {
+          if (t && t.tag === old.name) { touched = true; return Object.assign({}, t, { tag: "" }); }
+          return t;
+        });
+        if (touched) dayUpdates[k] = Object.assign({}, dd, { tasks: nextTasks });
+      }
+      const nextRecurring = (prev.recurring || []).map(r => r && r.tag === old.name ? Object.assign({}, r, { tag: "" }) : r);
+      patch.recurring = nextRecurring;
+      nextData.recurring = nextRecurring;
+      if (patchFieldCount(dayUpdates)) {
+        patch.days = dayUpdates;
+        nextData.days = Object.assign({}, prevDays, dayUpdates);
+      }
+      return { nextData, patch };
+    });
   }
 
   // How many today+future tasks reference a tag (used by the delete confirm dialog).
@@ -488,23 +624,10 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
     return n;
   }
   function setDay(key, val) {
-    save(prev => {
-      const prevDays = prev.days || {};
-      const prevDay = prevDays[key] || { checks: {}, tasks: [] };
-      const nextDay = typeof val === "function" ? val(prevDay) : val;
-      if (nextDay === prevDay) return prev;
-      const nd = Object.assign({}, prev);
-      nd.days = Object.assign({}, prevDays);
-      nd.days[key] = nextDay;
-      return nd;
-    });
+    saveDay(key, val);
   }
   function bulkSetDays(updates) {
-    save(prev => {
-      const nd = Object.assign({}, prev);
-      nd.days = Object.assign({}, prev.days || {}, updates);
-      return nd;
-    });
+    saveDays(updates);
   }
 
   function getDayData(key) {
@@ -573,7 +696,7 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
     if (!levelInfo.available) return;
     const newClaimed = claimedLevel + 1;
     const nextLevel = LEVELS.find(l => l.id === newClaimed);
-    save(Object.assign({}, data, { claimedLevel: newClaimed }));
+    saveFields({ claimedLevel: newClaimed });
     setLevelClaimState(s => ({ id: s.id + 1, level: nextLevel || null }));
   }
   // Run the gamification update pass when days/habits/data change.
@@ -581,7 +704,13 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
   useEffect(() => {
     if (loading || loadError) return;
     const next = applyGamificationUpdates(data, habits, today);
-    if (next) save(next);
+    if (next) {
+      const patch = {};
+      for (const key of ["habits", "unlockedBadges", "creditedDays", "lifetimeXP", "_justUnlocked"]) {
+        if (next[key] !== data[key]) patch[key] = next[key];
+      }
+      saveFields(patch);
+    }
   }, [days, habits, loading, loadError]);
 
   // Auto-rollover unchecked tasks from previous unprocessed days → today.
@@ -590,14 +719,28 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
   useEffect(() => {
     if (loading || loadError) return;
     let info = null;
-    save(current => {
+    saveComputed(current => {
       const result = applyRollover(current);
       if (!result) {
-        if (current._lastRolloverDay === today) return current;
-        return Object.assign({}, current, { _lastRolloverDay: today });
+        if (current._lastRolloverDay === today) return null;
+        return {
+          nextData: Object.assign({}, current, { _lastRolloverDay: today }),
+          patch: { _lastRolloverDay: today },
+        };
       }
       info = { rolled: result.rolled, dropped: result.dropped };
-      return Object.assign({}, result.nextData, { _lastRolloverDay: today });
+      const prevDays = current.days || {};
+      const nextDays = result.nextData.days || {};
+      const dayUpdates = {};
+      for (const k of Object.keys(nextDays)) {
+        if (prevDays[k] !== nextDays[k]) dayUpdates[k] = nextDays[k];
+      }
+      const patch = { _lastRolloverDay: today };
+      if (patchFieldCount(dayUpdates)) patch.days = dayUpdates;
+      return {
+        nextData: Object.assign({}, result.nextData, { _lastRolloverDay: today }),
+        patch,
+      };
     });
     if (info && (info.rolled > 0 || info.dropped.length > 0)) {
       setRolloverInfo(info);
@@ -609,9 +752,7 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
   useEffect(() => {
     if (loadError || justUnlocked.length === 0) return;
     const t = setTimeout(() => {
-      const cleared = Object.assign({}, data);
-      delete cleared._justUnlocked;
-      save(cleared);
+      saveFields({ _justUnlocked: [] });
     }, 5000);
     return () => clearTimeout(t);
   }, [justUnlocked.length, loadError]);
@@ -647,6 +788,9 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
             <div className="date-sub">
               W{getWeekNum(today)} · Q{getQuarter(today)} · {today.split("-")[0]}
             </div>
+            <div className={`save-state save-state-${syncError ? "error" : saveStatus}`}>
+              {syncError ? "SAVE FAILED" : saveStatus === "saving" ? "SAVING..." : saveStatus === "saved" ? "SAVED" : "SYNC READY"}
+            </div>
           </div>
         </div>
 
@@ -679,9 +823,11 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
             levelInfo={levelInfo} badgeInfo={badgeInfo}
             claimNextLevel={claimNextLevel}
             celebratedThresholds={data.celebratedThresholds || []}
-            markThresholdCelebrated={n => save(Object.assign({}, data, {
-              celebratedThresholds: (data.celebratedThresholds || []).concat([n])
-            }))}
+            markThresholdCelebrated={n => saveFields(prev => {
+              const current = prev.celebratedThresholds || [];
+              if (current.includes(n)) return null;
+              return { celebratedThresholds: current.concat([n]) };
+            })}
             bannerPhrases={data.bannerPhrases || []}
           />
         )}
@@ -722,17 +868,17 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
             badgeInfo={badgeInfo} levelInfo={levelInfo}
             claimNextLevel={claimNextLevel}
             bannerPhrases={data.bannerPhrases || []}
-            setBannerPhrases={p => save(Object.assign({}, data, { bannerPhrases: p }))}
+            setBannerPhrases={p => saveFields({ bannerPhrases: p })}
             hardModeOn={!!data.hardModeOn}
-            setHardModeOn={v => save(Object.assign({}, data, { hardModeOn: v }))}
+            setHardModeOn={v => saveFields({ hardModeOn: v })}
             strictStreak={!!data.strictStreak}
-            setStrictStreak={v => save(Object.assign({}, data, { strictStreak: v }))}
+            setStrictStreak={v => saveFields({ strictStreak: v })}
             tabVisibility={tabVisibility}
-            setTabVisibility={v => save(Object.assign({}, data, { tabVisibility: v }))}
+            setTabVisibility={v => saveFields({ tabVisibility: v })}
             theme={data.theme || "command"}
-            setTheme={v => save(Object.assign({}, data, { theme: v }))}
+            setTheme={v => saveFields({ theme: v })}
             monadImage={monadImage}
-            setMonadImage={v => save(Object.assign({}, data, { monadImage: v }))}
+            setMonadImage={v => saveFields({ monadImage: v })}
             accountEmail={accountEmail}
             accountUid={accountMode === "google" ? uid : ""}
             accountMode={accountMode}

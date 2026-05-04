@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp, FieldPath } from "firebase/firestore";
 import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged } from "firebase/auth";
 
 // ┌─────────────────────────────────────────────┐
@@ -20,4 +20,4 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const provider = new GoogleAuthProvider();
-export { doc, getDoc, setDoc, signInWithPopup, signOut, onAuthStateChanged };
+export { doc, getDoc, setDoc, serverTimestamp, FieldPath, signInWithPopup, signOut, onAuthStateChanged };
