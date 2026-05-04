@@ -20,6 +20,9 @@
   --red: #e8102a;
   --red-b: #ff4d6d;
   --red-d: #7a0a15;
+  --fab-bg: #d8112b;
+  --fab-border: #ff4d6d;
+  --fab-icon: #fff;
   /* RGB triple of --red — used in rgba() calls for glows / shadows
      so they re-tint per theme. Keep in sync with --red. */
   --accent-rgb: 232, 16, 42;
@@ -74,6 +77,9 @@
   --red: #f5b876;
   --red-b: #f7c98e;
   --red-d: #d99c5e;
+  --fab-bg: #d99c5e;
+  --fab-border: #f7c98e;
+  --fab-icon: #fff;
   --accent-rgb: 245, 184, 118;
   --pink: #f5b876;
   --pink-b: #f7c98e;
@@ -117,6 +123,9 @@
   --red: #268bd2;
   --red-b: #5ba6de;
   --red-d: #1d6fa8;
+  --fab-bg: #268bd2;
+  --fab-border: #5ba6de;
+  --fab-icon: #fff;
   --accent-rgb: 38, 139, 210;
   --pink: #268bd2;
   --pink-b: #5ba6de;
@@ -2126,13 +2135,9 @@ body::after {
   display: inline-block;
   width: 0.62em;
   height: 1em;
-  /* overflow: clip + overflow-clip-margin lets the text-shadow bleed
-     outside the digit's bounding box without revealing adjacent
-     digits in the column. Falls back to overflow: hidden where unsupported,
-     which crops shadow into a hard rectangle (the bug we are fixing). */
   overflow: hidden;
   overflow: clip;
-  overflow-clip-margin: 0.6em;
+  overflow-clip-margin: 0;
   position: relative;
   vertical-align: baseline;
 }
@@ -3820,9 +3825,9 @@ body::after {
   bottom: 22px;
   right: 18px;
   z-index: 60;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 .fab {
   display: flex;
@@ -3842,18 +3847,16 @@ body::after {
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
-.fab-add {
-  background: linear-gradient(135deg, var(--red-b), var(--red), var(--red-d));
-  color: var(--t-strong);
-  box-shadow: 0 8px 24px rgba(var(--accent-rgb), 0.55), 0 0 32px rgba(var(--accent-rgb), 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-  animation: fabPulse 4s ease-in-out infinite;
+.fab-add,
+.fab-settings {
+  background: var(--fab-bg, var(--red));
+  border-color: var(--fab-border, var(--red-b));
+  color: var(--fab-icon, var(--t-strong));
+  animation: none;
 }
 .fab-settings {
-  width: 48px;
-  height: 48px;
-  background: var(--glass-firm);
-  border-color: rgba(var(--accent-rgb), 0.24);
-  color: var(--red-b);
+  width: 56px;
+  height: 56px;
 }
 .fab:hover { transform: scale(1.06); box-shadow: 0 10px 30px rgba(var(--accent-rgb), 0.7), 0 0 40px rgba(var(--accent-rgb), 0.45); }
 .fab:active { transform: scale(0.92); box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.45); }
@@ -3865,7 +3868,7 @@ body::after {
   /* On desktop the FAB sits a touch further from the corner. */
   .fab-stack { bottom: 32px; right: 32px; }
   .fab-add { width: 60px; height: 60px; }
-  .fab-settings { width: 50px; height: 50px; }
+  .fab-settings { width: 60px; height: 60px; }
 }
 
 /* ══════ HABIT REORDER (iOS jiggle/drag mode) ══════ */

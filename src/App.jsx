@@ -477,8 +477,8 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
   const [mOff, setMOff] = useState(0);
   const [habitModal, setHabitModal] = useState(null);
 
-  // Tab visibility (Settings → TABS). Day / Month / Log / Settings are
-  // always shown. Week / Stats / Goals are opt-in and start hidden.
+  // Tab visibility (Settings → TABS). Day / Month / Log are always
+  // shown. Settings is opened by the floating gear so tabs stay compact.
   const tabVisibility = data.tabVisibility || {};
   const allTabs = [
     ["day", "DAY", "always"],
@@ -487,7 +487,6 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
     ["stats", "STATS", "optional"],
     ["log", "LOG", "always"],
     ["goals", "GOALS", "optional"],
-    ["settings", "SET", "always"],
   ];
   const tabs = allTabs
     .filter(([id, , kind]) => kind === "always" || tabVisibility[id])
@@ -496,9 +495,10 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
 
   useKeyboardShortcuts(setTab, setDayOff, tab, visibleTabIds);
 
-  // If the active tab gets toggled off in Settings, fall back to Day.
+  // If an optional tab gets toggled off in Settings, fall back to Day.
+  // Settings itself is a floating-button route, not a pill tab.
   useEffect(() => {
-    if (!visibleTabIds.includes(tab)) {
+    if (tab !== "settings" && !visibleTabIds.includes(tab)) {
       setTab("day");
       setDayOff(0);
     }
@@ -917,7 +917,11 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
 
       {/* Floating quick actions — settings is always one tap away. */}
       <FloatingAdd
-        showAdd={tab === "day"}
+        showAdd={true}
+        onAddFallback={() => {
+          setTab("day");
+          setDayOff(0);
+        }}
         onSettings={() => {
           setTab("settings");
           setDayOff(0);

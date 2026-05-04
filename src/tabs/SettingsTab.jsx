@@ -878,7 +878,7 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
       <SectionHeader label="THEME" />
       <ThemePicker theme={theme} setTheme={setTheme} />
 
-      {/* Tab visibility — Day / Month / Log / Settings always show.
+      {/* Tab visibility — Day / Month / Log always show.
           Week / Stats / Goals are opt-in, hidden by default. */}
       <div style={{ marginTop: 22 }} />
       <SectionHeader label="TABS" />
