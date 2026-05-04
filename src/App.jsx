@@ -11,6 +11,26 @@ const ALLOWED_EMAILS = ["radzivonlavyshwork@gmail.com", "dmytro.merzliakov@gmail
 const LOCAL_PREVIEW_UID = "__local_preview__";
 const LOCAL_PREVIEW_STORAGE_KEY = "command-center-local-preview";
 
+function emptyData() {
+  return { days: {}, habits: null, recurring: [], goals: DEF_GOALS, logs: {} };
+}
+
+function normalizeData(remote) {
+  return Object.assign(emptyData(), remote || {});
+}
+
+function formatFirebaseError(e) {
+  const code = e && e.code ? e.code : "unknown";
+  if (code === "permission-denied") return "Firestore denied access for this Google account.";
+  if (code === "unavailable") return "Firestore is temporarily unavailable. Try again in a moment.";
+  if (code === "unauthenticated") return "Google session expired. Sign out and sign in again.";
+  return "Could not sync with Firestore. Code: " + code;
+}
+
+function dayCount(data) {
+  return Object.keys((data && data.days) || {}).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).length;
+}
+
 import PillTabs from "./components/PillTabs";
 import YearStrip from "./components/YearStrip";
 import HabitCalendarModal from "./components/HabitCalendarModal";
@@ -54,42 +74,86 @@ function useAuth() {
 }
 
 function useData(uid) {
-  const [d, setD] = useState({ days: {}, habits: null, recurring: [], goals: DEF_GOALS, logs: {} });
+  const [d, setD] = useState(emptyData);
   const [ld, setLd] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [syncError, setSyncError] = useState(null);
+  const [dataSource, setDataSource] = useState("loading");
   const dataRef = useRef(d);
+  const readyRef = useRef(false);
+  const errorRef = useRef(null);
   useEffect(() => {
     dataRef.current = d;
   }, [d]);
   useEffect(() => {
-    if (!uid) return;
+    let cancelled = false;
+    readyRef.current = false;
+    errorRef.current = null;
+    setLd(true);
+    setLoadError(null);
+    setSyncError(null);
+    setDataSource("loading");
+    setD(emptyData());
+    if (!uid) {
+      setLd(false);
+      return () => { cancelled = true; };
+    }
     if (uid === LOCAL_PREVIEW_UID) {
       try {
         const stored = JSON.parse(localStorage.getItem(LOCAL_PREVIEW_STORAGE_KEY) || "null");
-        if (stored) setD(prev => Object.assign({}, prev, stored));
+        if (cancelled) return;
+        const next = normalizeData(stored);
+        setD(next);
+        dataRef.current = next;
       } catch (e) { /* no-op */ }
+      readyRef.current = true;
+      setDataSource("local-preview");
       setLd(false);
-      return;
+      return () => { cancelled = true; };
     }
     (async () => {
       try {
         const s = await getDoc(doc(db, "users", uid));
-        if (s.exists()) setD(prev => Object.assign({}, prev, s.data()));
-      } catch (e) { /* no-op */ }
-      setLd(false);
+        if (cancelled) return;
+        const next = s.exists() ? normalizeData(s.data()) : emptyData();
+        setD(next);
+        dataRef.current = next;
+        readyRef.current = true;
+        setDataSource(s.exists() ? "remote-existing" : "remote-new");
+      } catch (e) {
+        if (cancelled) return;
+        const message = formatFirebaseError(e);
+        errorRef.current = message;
+        setLoadError(message);
+        setDataSource("error");
+      } finally {
+        if (!cancelled) setLd(false);
+      }
     })();
+    return () => { cancelled = true; };
   }, [uid]);
   function save(next) {
+    if (!uid || !readyRef.current || errorRef.current) return;
     const nd = typeof next === "function" ? next(dataRef.current) : next;
     if (nd === dataRef.current) return;
+    const prevDays = dayCount(dataRef.current);
+    const nextDays = dayCount(nd);
+    if (prevDays > 0 && nextDays === 0) {
+      setSyncError("Blocked a write that would clear all tracked days.");
+      return;
+    }
     dataRef.current = nd;
     setD(nd);
+    setSyncError(null);
     if (uid === LOCAL_PREVIEW_UID) {
       try { localStorage.setItem(LOCAL_PREVIEW_STORAGE_KEY, JSON.stringify(nd)); } catch (e) { /* no-op */ }
       return;
     }
-    if (uid) setDoc(doc(db, "users", uid), nd, { merge: true }).catch(() => {});
+    setDoc(doc(db, "users", uid), nd, { merge: true }).catch(e => {
+      setSyncError(formatFirebaseError(e));
+    });
   }
-  return { data: d, loading: ld, save };
+  return { data: d, loading: ld, loadError, syncError, dataSource, save };
 }
 
 /* ══════ KEYBOARD SHORTCUTS (desktop) ══════ */
@@ -162,6 +226,11 @@ export default function App() {
     }
     setBusy(false);
   }
+  async function logout() {
+    setLoginError("");
+    setLocalPreview(false);
+    try { await signOut(auth); } catch (e) { /* no-op */ }
+  }
 
   if (authLd) {
     return (
@@ -173,9 +242,9 @@ export default function App() {
     );
   }
   if (denied) return <AccessDenied email={denied} onRetry={() => { clearDenied(); setLoginError(""); }} />;
-  if (localPreview) return <Tracker uid={LOCAL_PREVIEW_UID} />;
+  if (localPreview) return <Tracker uid={LOCAL_PREVIEW_UID} accountEmail="Local preview" accountMode="local" onLogout={() => setLocalPreview(false)} />;
   if (!user) return <Login onLogin={login} busy={busy} error={loginError} canLocalPreview={canLocalPreview} onLocalPreview={() => { setLoginError(""); setLocalPreview(true); }} />;
-  return <Tracker uid={user.uid} />;
+  return <Tracker uid={user.uid} accountEmail={user.email || ""} accountMode="google" onLogout={logout} />;
 }
 
 /* ══════ ACCESS DENIED SCREEN ══════ */
@@ -244,9 +313,49 @@ function AccessDenied({ email, onRetry }) {
   );
 }
 
+function DataLoadError({ message, onRetry, onLogout }) {
+  return (
+    <div style={{
+      background: "var(--bg)",
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 22,
+      textAlign: "center",
+    }}>
+      <div className="top-strip" />
+      <div style={{
+        fontFamily: "'Oswald', sans-serif",
+        fontSize: 34,
+        fontWeight: 700,
+        letterSpacing: "0.22em",
+        color: "var(--red)",
+        marginBottom: 16,
+      }}>SYNC BLOCKED</div>
+      <div style={{
+        maxWidth: 460,
+        color: "var(--t2)",
+        fontSize: 12,
+        lineHeight: 1.7,
+        letterSpacing: "0.08em",
+        fontFamily: "'JetBrains Mono', monospace",
+        marginBottom: 24,
+      }}>
+        {message || "Could not load tracker data. Writes are blocked so history cannot be overwritten by an empty state."}
+      </div>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+        <div onClick={onRetry} className="add-btn">RETRY</div>
+        <div onClick={onLogout} className="add-btn" style={{ background: "rgba(var(--accent-rgb), 0.06)" }}>SIGN OUT</div>
+      </div>
+    </div>
+  );
+}
+
 /* ══════ TRACKER ══════ */
-function Tracker({ uid }) {
-  const { data, loading, save } = useData(uid);
+function Tracker({ uid, accountEmail, accountMode, onLogout }) {
+  const { data, loading, loadError, syncError, dataSource, save } = useData(uid);
   const [tab, setTab] = useState("day");
   const [dayOff, setDayOff] = useState(0);
   const [mOff, setMOff] = useState(0);
@@ -470,16 +579,16 @@ function Tracker({ uid }) {
   // Run the gamification update pass when days/habits/data change.
   // Also migrates habits without createdAt on first run.
   useEffect(() => {
-    if (loading) return;
+    if (loading || loadError) return;
     const next = applyGamificationUpdates(data, habits, today);
     if (next) save(next);
-  }, [days, habits, loading]);
+  }, [days, habits, loading, loadError]);
 
   // Auto-rollover unchecked tasks from previous unprocessed days → today.
   // Tracked via data._lastRolloverDay plus per-task rolledOver guards.
   const [rolloverInfo, setRolloverInfo] = useState(null);
   useEffect(() => {
-    if (loading) return;
+    if (loading || loadError) return;
     let info = null;
     save(current => {
       const result = applyRollover(current);
@@ -495,17 +604,17 @@ function Tracker({ uid }) {
       const t = setTimeout(() => setRolloverInfo(null), 7000);
       return () => clearTimeout(t);
     }
-  }, [loading, today]);
+  }, [loading, loadError, today]);
   // Clear the _justUnlocked flag once the toast has had a chance to render.
   useEffect(() => {
-    if (justUnlocked.length === 0) return;
+    if (loadError || justUnlocked.length === 0) return;
     const t = setTimeout(() => {
       const cleared = Object.assign({}, data);
       delete cleared._justUnlocked;
       save(cleared);
     }, 5000);
     return () => clearTimeout(t);
-  }, [justUnlocked.length]);
+  }, [justUnlocked.length, loadError]);
 
   if (loading) {
     return (
@@ -515,6 +624,9 @@ function Tracker({ uid }) {
         </div>
       </div>
     );
+  }
+  if (loadError) {
+    return <DataLoadError message={loadError} onRetry={() => window.location.reload()} onLogout={onLogout} />;
   }
 
   return (
@@ -537,6 +649,12 @@ function Tracker({ uid }) {
             </div>
           </div>
         </div>
+
+        {syncError && (
+          <div className="sync-alert">
+            {syncError}
+          </div>
+        )}
 
         {/* Pill tabs */}
         <PillTabs
@@ -615,6 +733,12 @@ function Tracker({ uid }) {
             setTheme={v => save(Object.assign({}, data, { theme: v }))}
             monadImage={monadImage}
             setMonadImage={v => save(Object.assign({}, data, { monadImage: v }))}
+            accountEmail={accountEmail}
+            accountUid={accountMode === "google" ? uid : ""}
+            accountMode={accountMode}
+            dataSource={dataSource}
+            syncError={syncError}
+            onLogout={onLogout}
             jumpToDay={dateKey => {
               const offset = Math.round(
                 (new Date(dateKey + "T12:00:00") - new Date(today + "T12:00:00")) / 86400000

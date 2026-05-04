@@ -650,7 +650,60 @@ function ThemePicker({ theme, setTheme }) {
   );
 }
 
-export default function SettingsTab({ habits, setHabits, recurring, setRecurring, tags, setTags, renameTag, deleteTag, countTagUsage, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, claimNextLevel, bannerPhrases, setBannerPhrases, hardModeOn, setHardModeOn, strictStreak, setStrictStreak, tabVisibility, setTabVisibility, theme, setTheme, monadImage, setMonadImage, jumpToDay }) {
+function shortUid(uid) {
+  if (!uid) return "local";
+  if (uid.length <= 12) return uid;
+  return uid.slice(0, 6) + "..." + uid.slice(-4);
+}
+
+function sourceLabel(source) {
+  if (source === "remote-existing") return "Existing cloud profile";
+  if (source === "remote-new") return "New cloud profile";
+  if (source === "local-preview") return "Local preview";
+  if (source === "error") return "Sync blocked";
+  return "Loading";
+}
+
+function AccountSyncPanel({ data, accountEmail, accountUid, accountMode, dataSource, syncError, onLogout }) {
+  const dayKeys = Object.keys((data && data.days) || {})
+    .filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k))
+    .sort();
+  const firstDay = dayKeys[0] || "none";
+  const lastDay = dayKeys[dayKeys.length - 1] || "none";
+  const tasks = dayKeys.reduce((sum, k) => {
+    const d = data.days[k];
+    return sum + (d && Array.isArray(d.tasks) ? d.tasks.length : 0);
+  }, 0);
+  return (
+    <div className={`brute account-sync ${syncError ? "account-sync-warn" : ""}`}>
+      <div className="account-sync-grid">
+        <div>
+          <div className="brute-field-l">Google account</div>
+          <div className="account-sync-main">{accountEmail || (accountMode === "local" ? "Local preview" : "Unknown")}</div>
+        </div>
+        <div>
+          <div className="brute-field-l">Database</div>
+          <div className="account-sync-main">{sourceLabel(dataSource)}</div>
+        </div>
+        <div>
+          <div className="brute-field-l">Profile ID</div>
+          <div className="account-sync-sub">{shortUid(accountUid)}</div>
+        </div>
+        <div>
+          <div className="brute-field-l">History</div>
+          <div className="account-sync-sub">{dayKeys.length} days · {tasks} tasks</div>
+        </div>
+      </div>
+      <div className="account-sync-range">{firstDay} → {lastDay}</div>
+      {syncError && <div className="account-sync-error">{syncError}</div>}
+      {onLogout && (
+        <div onClick={onLogout} className="add-btn account-sync-out">SIGN OUT / SWITCH ACCOUNT</div>
+      )}
+    </div>
+  );
+}
+
+export default function SettingsTab({ habits, setHabits, recurring, setRecurring, tags, setTags, renameTag, deleteTag, countTagUsage, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, claimNextLevel, bannerPhrases, setBannerPhrases, hardModeOn, setHardModeOn, strictStreak, setStrictStreak, tabVisibility, setTabVisibility, theme, setTheme, monadImage, setMonadImage, accountEmail, accountUid, accountMode, dataSource, syncError, onLogout, jumpToDay }) {
   const [newH, setNewH] = useState("");
   const [newHS, setNewHS] = useState("");
   const [eId, setEId] = useState(null);
@@ -809,7 +862,19 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
     <div>
       <TabHeader title="Settings" subtitle={`${habits.filter(h => !h.archivedAt).length} habits · ${recurring.length} recurring`} monadImage={monadImage} />
 
+      <SectionHeader label="ACCOUNT" />
+      <AccountSyncPanel
+        data={data}
+        accountEmail={accountEmail}
+        accountUid={accountUid}
+        accountMode={accountMode}
+        dataSource={dataSource}
+        syncError={syncError}
+        onLogout={onLogout}
+      />
+
       {/* Theme picker — switches the whole UI palette */}
+      <div style={{ marginTop: 22 }} />
       <SectionHeader label="THEME" />
       <ThemePicker theme={theme} setTheme={setTheme} />
 
