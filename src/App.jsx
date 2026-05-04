@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { db, auth, provider, doc, getDoc, setDoc, serverTimestamp, FieldPath, signInWithPopup, signOut, onAuthStateChanged } from "./firebase";
+import { db, auth, provider, doc, collection, getDoc, getDocs, setDoc, writeBatch, serverTimestamp, FieldPath, signInWithPopup, signOut, onAuthStateChanged } from "./firebase";
 import { DEF_HABITS, DEF_GOALS, DEF_TAGS, argDate, niceDate } from "./config";
 import { isDayClean, getLevel, getDisplayLevel, applyGamificationUpdates, BADGES } from "./gamification";
 import { applyRollover } from "./rollover";
@@ -12,6 +12,9 @@ const LOCAL_PREVIEW_UID = "__local_preview__";
 const LOCAL_PREVIEW_STORAGE_KEY = "command-center-local-preview";
 const EMERGENCY_SNAPSHOT_PREFIX = "command-center-emergency-snapshots-v1:";
 const EMERGENCY_SNAPSHOT_LIMIT = 14;
+const DAY_KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
+const SPLIT_DAYS_SCHEMA_VERSION = 3;
+const BATCH_WRITE_LIMIT = 430;
 
 function emptyData() {
   return { days: {}, habits: null, recurring: [], goals: DEF_GOALS, logs: {} };
@@ -30,7 +33,7 @@ function formatFirebaseError(e) {
 }
 
 function dayCount(data) {
-  return Object.keys((data && data.days) || {}).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).length;
+  return Object.keys((data && data.days) || {}).filter(k => DAY_KEY_RE.test(k)).length;
 }
 
 function taskCount(data) {
@@ -108,7 +111,22 @@ function patchFieldCount(patch) {
   return Object.keys(patch || {}).length;
 }
 
-function mergeFieldsForPatch(patch) {
+function splitPatch(patch) {
+  const rootPatch = {};
+  const dayUpdates = {};
+  for (const key of Object.keys(patch || {})) {
+    if (key === "days" && patch.days && typeof patch.days === "object" && !Array.isArray(patch.days)) {
+      for (const dayKey of Object.keys(patch.days)) {
+        if (DAY_KEY_RE.test(dayKey)) dayUpdates[dayKey] = patch.days[dayKey];
+      }
+    } else {
+      rootPatch[key] = patch[key];
+    }
+  }
+  return { rootPatch, dayUpdates };
+}
+
+function legacyMergeFieldsForPatch(patch) {
   const fields = [];
   for (const key of Object.keys(patch || {})) {
     if (key === "days" && patch.days && typeof patch.days === "object" && !Array.isArray(patch.days)) {
@@ -118,6 +136,166 @@ function mergeFieldsForPatch(patch) {
     }
   }
   return fields;
+}
+
+function changedKeys(obj) {
+  return Object.keys(obj || {}).sort();
+}
+
+function dayRange(data) {
+  const keys = changedKeys((data && data.days) || {}).filter(k => DAY_KEY_RE.test(k));
+  return { firstDay: keys[0] || "none", lastDay: keys[keys.length - 1] || "none" };
+}
+
+function dataHealth(data, source, storageMode) {
+  const range = dayRange(data);
+  return {
+    schemaVersion: SPLIT_DAYS_SCHEMA_VERSION,
+    storageMode: storageMode || "split-days-v1",
+    source: source || "client",
+    dayCount: dayCount(data),
+    taskCount: taskCount(data),
+    firstDay: range.firstDay,
+    lastDay: range.lastDay,
+    clientCheckedAt: new Date().toISOString(),
+  };
+}
+
+function cleanDayDoc(day) {
+  const next = Object.assign({}, day || {});
+  delete next._updatedAt;
+  delete next._lastWriteId;
+  return next;
+}
+
+function cleanDayForRemote(day) {
+  return JSON.parse(JSON.stringify(cleanDayDoc(day || { checks: {}, tasks: [] })));
+}
+
+function cleanRootPatch(rootPatch) {
+  const next = Object.assign({}, rootPatch || {});
+  delete next.days;
+  return next;
+}
+
+function rootDataWithoutDays(data) {
+  const root = {};
+  for (const key of Object.keys(data || {})) {
+    if (key !== "days") root[key] = data[key];
+  }
+  return root;
+}
+
+function summarizeDayChange(prevDay, nextDay) {
+  const prevChecks = (prevDay && prevDay.checks) || {};
+  const nextChecks = (nextDay && nextDay.checks) || {};
+  const checkIds = new Set(changedKeys(prevChecks).concat(changedKeys(nextChecks)));
+  let checkFlips = 0;
+  checkIds.forEach(id => {
+    if (!!prevChecks[id] !== !!nextChecks[id]) checkFlips++;
+  });
+
+  const prevTasks = new Map(((prevDay && prevDay.tasks) || []).filter(Boolean).map(t => [String(t.id), t]));
+  const nextTasks = new Map(((nextDay && nextDay.tasks) || []).filter(Boolean).map(t => [String(t.id), t]));
+  let taskAdds = 0, taskDeletes = 0, taskDoneFlips = 0, taskEdits = 0, rolloverMarks = 0;
+  nextTasks.forEach((t, id) => {
+    const old = prevTasks.get(id);
+    if (!old) {
+      taskAdds++;
+      return;
+    }
+    if (!!old.done !== !!t.done) taskDoneFlips++;
+    if ((old.text || "") !== (t.text || "") || (old.tag || "") !== (t.tag || "")) taskEdits++;
+    if (!!old.rolledOver !== !!t.rolledOver) rolloverMarks++;
+  });
+  prevTasks.forEach((_, id) => {
+    if (!nextTasks.has(id)) taskDeletes++;
+  });
+
+  return {
+    checkFlips,
+    taskAdds,
+    taskDeletes,
+    taskDoneFlips,
+    taskEdits,
+    rolloverMarks,
+    hardDayChanged: !!(prevDay && prevDay.hardDay) !== !!(nextDay && nextDay.hardDay),
+  };
+}
+
+function inferWriteReason(patch, fallback) {
+  if (fallback) return fallback;
+  const keys = changedKeys(patch);
+  if (patch && patch.days) return keys.length > 1 ? "mixed-day-write" : "day-write";
+  if (keys.includes("goals")) return "goals-write";
+  if (keys.includes("logs")) return "logs-write";
+  if (keys.includes("habits")) return "habits-write";
+  if (keys.includes("recurring")) return "recurring-write";
+  if (keys.includes("tags")) return "tags-write";
+  if (keys.includes("theme") || keys.includes("monadImage") || keys.includes("tabVisibility")) return "settings-write";
+  return "profile-write";
+}
+
+function buildAuditEntry(uid, prev, next, patch, reason, writeId) {
+  const split = splitPatch(patch);
+  const dayKeys = changedKeys(split.dayUpdates);
+  const daySummaries = {};
+  dayKeys.slice(0, 60).forEach(k => {
+    daySummaries[k] = summarizeDayChange((prev.days || {})[k], split.dayUpdates[k]);
+  });
+  return {
+    id: writeId,
+    userId: uid,
+    schemaVersion: SPLIT_DAYS_SCHEMA_VERSION,
+    storageMode: "split-days-v1",
+    reason: inferWriteReason(patch, reason),
+    rootFields: changedKeys(split.rootPatch),
+    dayKeys: dayKeys.slice(0, 80),
+    dayKeyCount: dayKeys.length,
+    before: Object.assign({ taskCount: taskCount(prev) }, dayRange(prev), { dayCount: dayCount(prev) }),
+    after: Object.assign({ taskCount: taskCount(next) }, dayRange(next), { dayCount: dayCount(next) }),
+    daySummaries,
+    clientAt: new Date().toISOString(),
+    createdAt: serverTimestamp(),
+  };
+}
+
+async function commitBatched(ops) {
+  let batch = writeBatch(db);
+  let count = 0;
+  async function flush() {
+    if (count === 0) return;
+    const current = batch;
+    batch = writeBatch(db);
+    count = 0;
+    await current.commit();
+  }
+  for (const op of ops) {
+    if (count >= BATCH_WRITE_LIMIT) await flush();
+    if (op.type === "set") batch.set(op.ref, op.data, op.options || {});
+    if (op.type === "delete") batch.delete(op.ref);
+    count++;
+  }
+  await flush();
+}
+
+async function readSplitDays(uid) {
+  const snap = await getDocs(collection(db, "users", uid, "days"));
+  const days = {};
+  snap.forEach(dayDoc => {
+    if (DAY_KEY_RE.test(dayDoc.id)) days[dayDoc.id] = cleanDayDoc(dayDoc.data());
+  });
+  return days;
+}
+
+function addRemoteMetadata(data, source, storageMode) {
+  const mode = storageMode || "split-days-v1";
+  const health = dataHealth(data, source, mode);
+  return Object.assign({}, data, {
+    schemaVersion: Math.max(data.schemaVersion || 0, SPLIT_DAYS_SCHEMA_VERSION),
+    storageMode: mode,
+    _health: health,
+  });
 }
 
 import PillTabs from "./components/PillTabs";
@@ -177,6 +355,7 @@ function useData(uid) {
   const writeSeqRef = useRef(0);
   const writeChainRef = useRef(Promise.resolve());
   const writeFailureRef = useRef(false);
+  const splitDaysAvailableRef = useRef(true);
   const savedTimerRef = useRef(null);
   useEffect(() => () => {
     if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
@@ -192,6 +371,7 @@ function useData(uid) {
     writeSeqRef.current += 1;
     writeChainRef.current = Promise.resolve();
     writeFailureRef.current = false;
+    splitDaysAvailableRef.current = true;
     setLd(true);
     setLoadError(null);
     setSyncError(null);
@@ -223,7 +403,18 @@ function useData(uid) {
       try {
         const s = await getDoc(doc(db, "users", uid));
         if (cancelled) return;
-        const next = s.exists() ? normalizeData(s.data()) : emptyData();
+        const rootData = s.exists() ? s.data() : {};
+        let splitDays = {};
+        try {
+          splitDays = await readSplitDays(uid);
+        } catch (splitError) {
+          splitDaysAvailableRef.current = false;
+        }
+        if (cancelled) return;
+        const next = normalizeData(Object.assign({}, rootData, {
+          days: Object.assign({}, (rootData && rootData.days) || {}, splitDays),
+          storageMode: splitDaysAvailableRef.current ? "split-days-v1" : (rootData.storageMode || "legacy-document-fallback"),
+        }));
         const localSnap = latestEmergencySnapshot(uid);
         if (dayCount(next) === 0 && localSnap && (localSnap.dayCount || 0) > 0) {
           setD(normalizeData(localSnap.data));
@@ -267,19 +458,104 @@ function useData(uid) {
     setSyncError(formatFirebaseError(e));
   }
 
-  function sendPatch(userRef, remotePatch, mergeFields, attempt) {
+  function sendLegacyPatch(userRef, remotePatch, mergeFields, attempt) {
     return setDoc(userRef, remotePatch, { mergeFields }).catch(e => {
       if (attempt < 2) {
         return new Promise(resolve => setTimeout(resolve, 700 * (attempt + 1)))
-          .then(() => sendPatch(userRef, remotePatch, mergeFields, attempt + 1));
+          .then(() => sendLegacyPatch(userRef, remotePatch, mergeFields, attempt + 1));
       }
       throw e;
     });
   }
 
+  function sendSplitPatch(uidValue, prevData, nextData, patch, reason, writeId, attempt) {
+    const userRef = doc(db, "users", uidValue);
+    const { rootPatch, dayUpdates } = splitPatch(patch);
+    const health = dataHealth(nextData, reason || "write");
+    const remoteRootPatch = Object.assign({}, cleanRootPatch(rootPatch), {
+      schemaVersion: SPLIT_DAYS_SCHEMA_VERSION,
+      storageMode: "split-days-v1",
+      updatedAt: serverTimestamp(),
+      lastWriteId: writeId,
+      _health: Object.assign({}, health, { updatedAt: serverTimestamp() }),
+    });
+    const auditEntry = buildAuditEntry(uidValue, prevData, nextData, patch, reason, writeId);
+    const ops = [
+      { type: "set", ref: userRef, data: remoteRootPatch, options: { merge: true } },
+    ];
+    for (const dayKey of changedKeys(dayUpdates)) {
+      ops.push({
+        type: "set",
+        ref: doc(db, "users", uidValue, "days", dayKey),
+        data: Object.assign({}, cleanDayForRemote(dayUpdates[dayKey]), {
+          _updatedAt: serverTimestamp(),
+          _lastWriteId: writeId,
+        }),
+        options: { merge: true },
+      });
+    }
+    ops.push({
+      type: "set",
+      ref: doc(db, "users", uidValue, "events", writeId),
+      data: auditEntry,
+      options: { merge: false },
+    });
+
+    return commitBatched(ops).catch(e => {
+      if (attempt < 2) {
+        return new Promise(resolve => setTimeout(resolve, 700 * (attempt + 1)))
+          .then(() => sendSplitPatch(uidValue, prevData, nextData, patch, reason, writeId, attempt + 1));
+      }
+      throw e;
+    });
+  }
+
+  async function writeFullRestore(uidValue, prevData, nextData, reason, writeId) {
+    const existing = await getDocs(collection(db, "users", uidValue, "days"));
+    const keep = new Set(changedKeys((nextData && nextData.days) || {}).filter(k => DAY_KEY_RE.test(k)));
+    const userRef = doc(db, "users", uidValue);
+    const rootData = Object.assign({}, rootDataWithoutDays(nextData), {
+      days: {},
+      schemaVersion: SPLIT_DAYS_SCHEMA_VERSION,
+      storageMode: "split-days-v1",
+      updatedAt: serverTimestamp(),
+      restoredAt: serverTimestamp(),
+      lastWriteId: writeId,
+      _health: Object.assign({}, dataHealth(nextData, reason || "restore"), { updatedAt: serverTimestamp() }),
+    });
+    const ops = [
+      { type: "set", ref: userRef, data: rootData, options: { merge: true } },
+    ];
+    for (const dayKey of keep) {
+      ops.push({
+        type: "set",
+        ref: doc(db, "users", uidValue, "days", dayKey),
+        data: Object.assign({}, cleanDayForRemote(nextData.days[dayKey]), {
+          _updatedAt: serverTimestamp(),
+          _lastWriteId: writeId,
+        }),
+        options: { merge: false },
+      });
+    }
+    existing.forEach(dayDoc => {
+      if (DAY_KEY_RE.test(dayDoc.id) && !keep.has(dayDoc.id)) {
+        ops.push({ type: "delete", ref: doc(db, "users", uidValue, "days", dayDoc.id) });
+      }
+    });
+    ops.push({
+      type: "set",
+      ref: doc(db, "users", uidValue, "events", writeId),
+      data: buildAuditEntry(uidValue, prevData, nextData, { days: nextData.days || {}, restoredAt: true }, reason || "restore", writeId),
+      options: { merge: false },
+    });
+    await commitBatched(ops);
+  }
+
   function restoreData(rawData, reason) {
     if (!uid) return Promise.reject(new Error("No active account."));
-    const nd = normalizeData(rawData);
+    const restoreStorageMode = splitDaysAvailableRef.current ? "split-days-v1" : "legacy-document-fallback";
+    const nd = addRemoteMetadata(normalizeData(rawData), reason || "restore", restoreStorageMode);
+    const prev = dataRef.current;
     const prevDays = dayCount(dataRef.current);
     const nextDays = dayCount(nd);
     if (prevDays > 0 && nextDays === 0) {
@@ -305,15 +581,30 @@ function useData(uid) {
       return Promise.resolve(nd);
     }
     setSaveStatus("saving");
-    const remoteData = Object.assign({}, nd, {
-      schemaVersion: 2,
-      updatedAt: serverTimestamp(),
-      restoredAt: serverTimestamp(),
-      lastWriteId: makeWriteId(),
-    });
+    const writeId = makeWriteId();
     const writeTask = writeChainRef.current
       .catch(() => {})
-      .then(() => setDoc(doc(db, "users", uid), remoteData, { merge: true }));
+      .then(() => {
+        const legacyRestore = () => {
+          const remoteData = Object.assign({}, nd, {
+            schemaVersion: 2,
+            updatedAt: serverTimestamp(),
+            restoredAt: serverTimestamp(),
+            lastWriteId: writeId,
+          });
+          return setDoc(doc(db, "users", uid), remoteData, { merge: true });
+        };
+        if (splitDaysAvailableRef.current) {
+          return writeFullRestore(uid, prev, nd, reason || "restore", writeId).catch(e => {
+            if (e && e.code === "permission-denied") {
+              splitDaysAvailableRef.current = false;
+              return legacyRestore();
+            }
+            throw e;
+          });
+        }
+        return legacyRestore();
+      });
     writeChainRef.current = writeTask.catch(() => {});
     return writeTask.then(() => {
       setSyncError(null);
@@ -325,12 +616,14 @@ function useData(uid) {
     });
   }
 
-  function saveComputed(compute) {
+  function saveComputed(compute, reason) {
     if (!uid || !readyRef.current || errorRef.current) return;
     const prev = dataRef.current;
     const result = compute(prev);
     if (!result || !result.nextData || result.nextData === prev || !patchFieldCount(result.patch)) return;
-    const nd = result.nextData;
+    const writeReason = inferWriteReason(result.patch, reason || result.reason);
+    const storageMode = splitDaysAvailableRef.current ? "split-days-v1" : "legacy-document-fallback";
+    const nd = addRemoteMetadata(result.nextData, writeReason, storageMode);
     const prevDays = dayCount(prev);
     const nextDays = dayCount(nd);
     if (prevDays > 0 && nextDays === 0) {
@@ -352,16 +645,32 @@ function useData(uid) {
     }
     setSaveStatus("saving");
     if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
-    const remotePatch = Object.assign({}, result.patch, {
-      schemaVersion: 2,
+    const writeId = makeWriteId();
+    const rootMetaPatch = {
+      schemaVersion: SPLIT_DAYS_SCHEMA_VERSION,
+      storageMode: splitDaysAvailableRef.current ? "split-days-v1" : "legacy-document-fallback",
+      _health: dataHealth(nd, writeReason, storageMode),
+    };
+    const remotePatch = Object.assign({}, result.patch, rootMetaPatch, {
       updatedAt: serverTimestamp(),
-      lastWriteId: makeWriteId(),
+      lastWriteId: writeId,
     });
     const userRef = doc(db, "users", uid);
-    const mergeFields = mergeFieldsForPatch(remotePatch);
+    const mergeFields = legacyMergeFieldsForPatch(remotePatch);
     const writeTask = writeChainRef.current
       .catch(() => {})
-      .then(() => sendPatch(userRef, remotePatch, mergeFields, 0));
+      .then(() => {
+        if (splitDaysAvailableRef.current) {
+          return sendSplitPatch(uid, prev, nd, result.patch, writeReason, writeId, 0).catch(e => {
+            if (e && e.code === "permission-denied") {
+              splitDaysAvailableRef.current = false;
+              return sendLegacyPatch(userRef, remotePatch, mergeFields, 0);
+            }
+            throw e;
+          });
+        }
+        return sendLegacyPatch(userRef, remotePatch, mergeFields, 0);
+      });
     writeChainRef.current = writeTask.catch(() => {});
     writeTask.then(() => {
       if (writeNumber === writeSeqRef.current && !writeFailureRef.current) {
@@ -373,15 +682,15 @@ function useData(uid) {
     });
   }
 
-  function saveFields(patchOrFn) {
+  function saveFields(patchOrFn, reason) {
     saveComputed(prev => {
       const patch = typeof patchOrFn === "function" ? patchOrFn(prev) : patchOrFn;
       if (!patchFieldCount(patch)) return null;
       return { nextData: Object.assign({}, prev, patch), patch };
-    });
+    }, reason);
   }
 
-  function saveDay(key, val) {
+  function saveDay(key, val, reason) {
     saveComputed(prev => {
       const prevDays = prev.days || {};
       const prevDay = prevDays[key] || { checks: {}, tasks: [] };
@@ -391,10 +700,10 @@ function useData(uid) {
         nextData: Object.assign({}, prev, { days: Object.assign({}, prevDays, { [key]: nextDay }) }),
         patch: { days: { [key]: nextDay } },
       };
-    });
+    }, reason || "day-write");
   }
 
-  function saveDays(updates) {
+  function saveDays(updates, reason) {
     if (!patchFieldCount(updates)) return;
     saveComputed(prev => {
       const prevDays = prev.days || {};
@@ -402,7 +711,7 @@ function useData(uid) {
         nextData: Object.assign({}, prev, { days: Object.assign({}, prevDays, updates) }),
         patch: { days: updates },
       };
-    });
+    }, reason || "days-bulk-write");
   }
 
   return {
@@ -735,11 +1044,11 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
   const logs = data.logs || {};
   const monadImage = data.monadImage || { variant: "original" };
 
-  function setHabits(h) { saveFields({ habits: h }); }
-  function setGoals(g) { saveFields({ goals: g }); }
-  function setRecurring(r) { saveFields({ recurring: r }); }
-  function setLogs(l) { saveFields({ logs: l }); }
-  function setTags(t) { saveFields({ tags: t }); }
+  function setHabits(h) { saveFields({ habits: h }, "habits-write"); }
+  function setGoals(g) { saveFields({ goals: g }, "goals-write"); }
+  function setRecurring(r) { saveFields({ recurring: r }, "recurring-write"); }
+  function setLogs(l) { saveFields({ logs: l }, "logs-write"); }
+  function setTags(t) { saveFields({ tags: t }, "tags-write"); }
 
   // Rename a tag: update the entry in tags AND sweep every task and
   // recurring item that references the old name. Past data included —
@@ -775,7 +1084,7 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
         }
       }
       return { nextData, patch };
-    });
+    }, "tag-rename");
   }
 
   // Delete a tag: drop from tags, strip the tag string from tasks ONLY
@@ -811,7 +1120,7 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
         nextData.days = Object.assign({}, prevDays, dayUpdates);
       }
       return { nextData, patch };
-    });
+    }, "tag-delete");
   }
 
   // How many today+future tasks reference a tag (used by the delete confirm dialog).
@@ -827,10 +1136,10 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
     return n;
   }
   function setDay(key, val) {
-    saveDay(key, val);
+    saveDay(key, val, "day-write");
   }
   function bulkSetDays(updates) {
-    saveDays(updates);
+    saveDays(updates, "days-bulk-write");
   }
 
   function getDayData(key) {
@@ -899,7 +1208,7 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
     if (!levelInfo.available) return;
     const newClaimed = claimedLevel + 1;
     const nextLevel = LEVELS.find(l => l.id === newClaimed);
-    saveFields({ claimedLevel: newClaimed });
+    saveFields({ claimedLevel: newClaimed }, "level-claim");
     setLevelClaimState(s => ({ id: s.id + 1, level: nextLevel || null }));
   }
   // Run the gamification update pass when days/habits/data change.
@@ -912,7 +1221,7 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
       for (const key of ["habits", "unlockedBadges", "creditedDays", "lifetimeXP", "_justUnlocked"]) {
         if (next[key] !== data[key]) patch[key] = next[key];
       }
-      saveFields(patch);
+      saveFields(patch, "gamification");
     }
   }, [days, habits, loading, loadError]);
 
@@ -944,7 +1253,7 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
         nextData: Object.assign({}, result.nextData, { _lastRolloverDay: today }),
         patch,
       };
-    });
+    }, "rollover");
     if (info && (info.rolled > 0 || info.dropped.length > 0)) {
       setRolloverInfo(info);
       const t = setTimeout(() => setRolloverInfo(null), 7000);
@@ -955,7 +1264,7 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
   useEffect(() => {
     if (loadError || justUnlocked.length === 0) return;
     const t = setTimeout(() => {
-      saveFields({ _justUnlocked: [] });
+      saveFields({ _justUnlocked: [] }, "badge-toast-clear");
     }, 5000);
     return () => clearTimeout(t);
   }, [justUnlocked.length, loadError]);
@@ -1081,17 +1390,17 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
             badgeInfo={badgeInfo} levelInfo={levelInfo}
             claimNextLevel={claimNextLevel}
             bannerPhrases={data.bannerPhrases || []}
-            setBannerPhrases={p => saveFields({ bannerPhrases: p })}
+            setBannerPhrases={p => saveFields({ bannerPhrases: p }, "banner-phrases-write")}
             hardModeOn={!!data.hardModeOn}
-            setHardModeOn={v => saveFields({ hardModeOn: v })}
+            setHardModeOn={v => saveFields({ hardModeOn: v }, "hard-mode-write")}
             strictStreak={!!data.strictStreak}
-            setStrictStreak={v => saveFields({ strictStreak: v })}
+            setStrictStreak={v => saveFields({ strictStreak: v }, "strict-streak-write")}
             tabVisibility={tabVisibility}
-            setTabVisibility={v => saveFields({ tabVisibility: v })}
+            setTabVisibility={v => saveFields({ tabVisibility: v }, "tab-visibility-write")}
             theme={data.theme || "command"}
-            setTheme={v => saveFields({ theme: v })}
+            setTheme={v => saveFields({ theme: v }, "theme-write")}
             monadImage={monadImage}
-            setMonadImage={v => saveFields({ monadImage: v })}
+            setMonadImage={v => saveFields({ monadImage: v }, "monad-image-write")}
             accountEmail={accountEmail}
             accountUid={accountMode === "google" ? uid : ""}
             accountMode={accountMode}

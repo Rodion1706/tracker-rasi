@@ -703,6 +703,58 @@ function AccountSyncPanel({ data, accountEmail, accountUid, accountMode, dataSou
   );
 }
 
+function DataHealthPanel({ data, localBackupInfo }) {
+  const dayKeys = Object.keys((data && data.days) || {})
+    .filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k))
+    .sort();
+  const tasks = dayKeys.reduce((sum, k) => {
+    const d = data.days[k];
+    return sum + (d && Array.isArray(d.tasks) ? d.tasks.length : 0);
+  }, 0);
+  const health = (data && data._health) || {};
+  const storageMode = (data && data.storageMode) || health.storageMode || "legacy";
+  const splitOn = storageMode === "split-days-v1";
+  const emptyWarning = dayKeys.length === 0 && (!localBackupInfo || localBackupInfo.dayCount === 0);
+  const localMismatch = localBackupInfo && localBackupInfo.dayCount > dayKeys.length;
+  return (
+    <div className={`brute account-sync ${emptyWarning || localMismatch ? "account-sync-warn" : ""}`}>
+      <div className="account-sync-grid">
+        <div>
+          <div className="brute-field-l">Storage</div>
+          <div className="account-sync-main">{splitOn ? "Split days active" : "Legacy fallback"}</div>
+        </div>
+        <div>
+          <div className="brute-field-l">Audit log</div>
+          <div className="account-sync-main">{splitOn ? "Armed" : "Limited"}</div>
+        </div>
+        <div>
+          <div className="brute-field-l">Current health</div>
+          <div className="account-sync-sub">{dayKeys.length} days · {tasks} tasks</div>
+        </div>
+        <div>
+          <div className="brute-field-l">Local rescue</div>
+          <div className="account-sync-sub">
+            {localBackupInfo ? `${localBackupInfo.dayCount} days · ${localBackupInfo.taskCount} tasks` : "none yet"}
+          </div>
+        </div>
+      </div>
+      <div className="account-sync-range">
+        {(dayKeys[0] || "none")} → {(dayKeys[dayKeys.length - 1] || "none")}
+      </div>
+      {localMismatch && (
+        <div className="account-sync-error">
+          Local emergency snapshot has more history than current cloud view. Recovery screen will block empty overwrites.
+        </div>
+      )}
+      {emptyWarning && (
+        <div className="account-sync-error">
+          No tracked history is visible yet. Add one task/check or restore a backup before trusting this profile.
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SettingsTab({ habits, setHabits, recurring, setRecurring, tags, setTags, renameTag, deleteTag, countTagUsage, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, claimNextLevel, bannerPhrases, setBannerPhrases, hardModeOn, setHardModeOn, strictStreak, setStrictStreak, tabVisibility, setTabVisibility, theme, setTheme, monadImage, setMonadImage, accountEmail, accountUid, accountMode, dataSource, syncError, localBackupInfo, restoreBackup, onLogout, jumpToDay }) {
   const [newH, setNewH] = useState("");
   const [newHS, setNewHS] = useState("");
@@ -909,6 +961,9 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
         syncError={syncError}
         onLogout={onLogout}
       />
+
+      <div style={{ marginTop: 12 }} />
+      <DataHealthPanel data={data} localBackupInfo={localBackupInfo} />
 
       {/* Theme picker — switches the whole UI palette */}
       <div style={{ marginTop: 22 }} />
