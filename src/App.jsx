@@ -1504,6 +1504,7 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
             })}
             bannerPhrases={data.bannerPhrases || []}
             strictStreak={strictStreak}
+            hardModeOn={!!data.hardModeOn}
           />
         )}
         {tab === "week" && (

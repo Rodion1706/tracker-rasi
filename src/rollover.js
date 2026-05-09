@@ -2,17 +2,15 @@
 // Each rollover bumps task.rollCount and tags task.originalDate so the
 // procrastination escalation UI can shame the task into action.
 //
-// Hard Mode: when data.hardModeOn is true, a task that would land at
-// rollCount > HARD_MODE_LIMIT is dropped instead of rolled. Without
-// hard mode, tasks roll forever (just look more alarming each time).
+// Hard Mode used to drop tasks after too many rolls. It now does the
+// opposite: tasks never get auto-deleted; the UI locks deletion and
+// escalates pressure until the task is actually closed.
 //
 // We mark source tasks rolledOver: true after rolling so we never
 // roll the same task twice. The past day's record stays intact otherwise
 // (no flipping done state) so the past day's % stays accurate.
 
 import { argDate, dayDiff } from "./config";
-
-export const HARD_MODE_LIMIT = 5;
 
 export function applyRollover(data) {
   const days = data.days || {};
@@ -21,11 +19,9 @@ export function applyRollover(data) {
 
   const td = days[today] || { checks: {}, tasks: [] };
   const newTodayTasks = (td.tasks || []).slice();
-  const dropped = [];
   let rolled = 0;
   let touched = false;
 
-  const hardModeOn = !!data.hardModeOn;
   const startDay = data._lastRolloverDay && data._lastRolloverDay < today
     ? data._lastRolloverDay
     : yest;
@@ -48,12 +44,6 @@ export function applyRollover(data) {
       const originalDate = t.originalDate || sourceDay;
       const procrastinatedDays = Math.max(1, dayDiff(today, originalDate));
       const newCount = Math.max((t.rollCount || 0) + 1, procrastinatedDays);
-
-      // Hard Mode: drop instead of rolling once threshold crossed.
-      if (hardModeOn && newCount > HARD_MODE_LIMIT) {
-        dropped.push({ text: t.text, count: newCount });
-        continue;
-      }
 
       // Skip if today already has a task with same text + tag (manual dup).
       const dup = newTodayTasks.some(tt => tt.text === t.text && (tt.tag || "") === (t.tag || ""));
@@ -83,7 +73,7 @@ export function applyRollover(data) {
 
   if (!touched) return null;
 
-  // Nothing rolled in (all dups / all dropped) — still mark yesterday as processed.
+  // Nothing rolled in (all dups) — still mark yesterday as processed.
   if (newTodayTasks.length !== (td.tasks || []).length) {
     nextDays[today] = Object.assign({}, td, { tasks: newTodayTasks });
   }
@@ -91,6 +81,6 @@ export function applyRollover(data) {
   return {
     nextData: Object.assign({}, data, { days: nextDays }),
     rolled,
-    dropped,
+    dropped: [],
   };
 }

@@ -30,7 +30,7 @@ export default function DayTab({
   monadImage,
   levelInfo, badgeInfo, claimNextLevel,
   celebratedThresholds, markThresholdCelebrated,
-  bannerPhrases, tags, strictStreak,
+  bannerPhrases, tags, strictStreak, hardModeOn,
 }) {
   const [nt, setNt] = useState("");
   const [tag, setTag] = useState("");
@@ -40,6 +40,8 @@ export default function DayTab({
   const [eid, setEid] = useState(null);
   const [ev, setEv] = useState("");
   const [tagFilter, setTagFilter] = useState("");
+  const [hardDeleteNotice, setHardDeleteNotice] = useState("");
+  const [pressureDismissed, setPressureDismissed] = useState(false);
 
   const viewDay = argDate(dayOff);
   const isToday = viewDay === today;
@@ -90,6 +92,11 @@ export default function DayTab({
     }));
   }
   function delTask(id) {
+    if (hardModeOn) {
+      setHardDeleteNotice("HARD MODE: deletion is locked. Finish it or edit it into the real next action.");
+      window.setTimeout(() => setHardDeleteNotice(""), 2800);
+      return;
+    }
     setDay(viewDay, current => Object.assign({}, current, {
       checks: current.checks || {},
       tasks: (current.tasks || []).filter(t => t.id !== id),
@@ -129,6 +136,11 @@ export default function DayTab({
   });
   const filteredTasks = tagFilter ? sortedTasks.filter(t => t.tag === tagFilter) : sortedTasks;
   const tasksDone = tasks.filter(t => t.done).length;
+  const hardPressureTasks = sortedTasks
+    .filter(t => !t.done && ((t.rollCount || 0) > 0 || t.rolledFromDate || t.originalDate))
+    .slice(0, 6);
+  const maxRollCount = hardPressureTasks.reduce((max, t) => Math.max(max, t.rollCount || 0), 0);
+  const hardPressureKey = `command-center-hard-pressure:${today}:${hardPressureTasks.length}:${maxRollCount}`;
   const total = dayHabits.length + tasks.length;
   const totDone = checksDone + tasksDone;
   const pct = total > 0 ? Math.round(totDone / total * 100) : 0;
@@ -136,6 +148,27 @@ export default function DayTab({
   const tasksClean = tasks.length === 0 || tasks.every(t => t.done);
   const streakClean = habitsClean && (!strictStreak || tasksClean);
   const taskClearEligible = !strictStreak && habitsClean && tasks.length > 0 && tasks.every(t => t.done);
+
+  useEffect(() => {
+    if (!hardModeOn || !isToday || hardPressureTasks.length === 0) {
+      setPressureDismissed(false);
+      return;
+    }
+    try {
+      setPressureDismissed(localStorage.getItem(hardPressureKey) === "1");
+    } catch (e) {
+      setPressureDismissed(false);
+    }
+  }, [hardModeOn, isToday, hardPressureKey, hardPressureTasks.length]);
+
+  function dismissPressure() {
+    setPressureDismissed(true);
+    try { localStorage.setItem(hardPressureKey, "1"); } catch (e) { /* no-op */ }
+  }
+  function jumpToPressureTasks() {
+    const el = document.querySelector(".hard-mode-target");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
 
   // ════════ CELEBRATION TRIGGER ════════
   // Main cinematic fires when the day transitions into the exact state
@@ -292,6 +325,34 @@ export default function DayTab({
       {/* OVERDUE panel removed — auto-rollover already brings yesterday's
           undone tasks onto today with the procrastination badge. */}
 
+      {hardModeOn && isToday && hardPressureTasks.length > 0 && !pressureDismissed && (
+        <div className={`hard-pressure-sheet hard-pressure-${Math.min(maxRollCount || 1, 5)}`}>
+          <div className="hard-pressure-head">
+            <div>
+              <div className="hard-pressure-kicker">HARD MODE ACTIVE</div>
+              <div className="hard-pressure-title">
+                {maxRollCount >= 5 ? "THESE TASKS ARE NOT LEAVING" : "CLOSE THE ROLLED TASKS"}
+              </div>
+            </div>
+            <button type="button" className="hard-pressure-dismiss" onClick={dismissPressure}>LATER</button>
+          </div>
+          <div className="hard-pressure-sub">
+            Delete is locked. Every rollover makes the task louder until it is done.
+          </div>
+          <div className="hard-pressure-list">
+            {hardPressureTasks.slice(0, 3).map(t => (
+              <div key={t.id} className="hard-pressure-item">
+                <span>↻{t.rollCount || 1}</span>
+                <b>{t.text}</b>
+              </div>
+            ))}
+          </div>
+          <button type="button" className="hard-pressure-action" onClick={jumpToPressureTasks}>
+            SHOW TASKS
+          </button>
+        </div>
+      )}
+
       {/* Daily checklist — using .row style (same as tasks) */}
       {!isFuture && (
         <div style={{ marginBottom: 20 }}>
@@ -321,6 +382,10 @@ export default function DayTab({
 
       {/* Tasks */}
       <SectionHeader label="TASKS" count={tasksDone} total={tasks.length} />
+
+      {hardDeleteNotice && (
+        <div className="hard-delete-notice">{hardDeleteNotice}</div>
+      )}
 
       {/* Tag filter */}
       {tasks.length > 0 && (
@@ -361,7 +426,7 @@ export default function DayTab({
             ? (t.rolledFromYesterday || !t.rolledFromDate ? "rolled from yesterday" : `rolled from ${niceDate(t.rolledFromDate)}`)
             : rc < 5 ? `procrastinating · ${rc} rolls` : `PROCRASTINATING · ${rc} rolls`;
           return (
-            <div key={t.id} className={`row ${t.done ? "done" : ""} ${rcTier > 0 ? `row-roll-${rcTier}` : ""}`}
+            <div key={t.id} className={`row ${t.done ? "done" : ""} ${rcTier > 0 ? `row-roll-${rcTier}` : ""} ${hardModeOn && rcTier > 0 && !t.done ? "hard-mode-target" : ""}`}
               onClick={() => toggleTask(t.id)}>
               <DiamondCheck done={t.done} onClick={(e) => { if (e) e.stopPropagation(); toggleTask(t.id); }} />
               <div className="row-body">
@@ -396,7 +461,13 @@ export default function DayTab({
                 const c = tagObj ? tagObj.color : null;
                 return <div className={`row-tag ${c ? "" : "orphan"}`} style={tagPillStyle(c)}>{t.tag}</div>;
               })()}
-              <div className="row-delete" onClick={(e) => { e.stopPropagation(); delTask(t.id); }}>×</div>
+              <div
+                className={`row-delete ${hardModeOn ? "locked" : ""}`}
+                title={hardModeOn ? "Hard Mode locks task deletion" : "Delete task"}
+                onClick={(e) => { e.stopPropagation(); delTask(t.id); }}
+              >
+                {hardModeOn ? "LOCK" : "×"}
+              </div>
             </div>
           );
         })}

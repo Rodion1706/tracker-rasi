@@ -348,8 +348,8 @@ function HardModeToggle({ on, setOn }) {
         <div className="sound-toggle-label">HARD MODE</div>
         <div className="sound-toggle-sub">
           {on
-            ? "Tasks rolled 5+ times get auto-dropped. No mercy."
-            : "Off — tasks roll forever, just look angrier."}
+            ? "On — rolled tasks cannot be deleted. The tracker will keep calling them out."
+            : "Off — tasks can be deleted and rollover pressure stays softer."}
         </div>
       </div>
     </div>
