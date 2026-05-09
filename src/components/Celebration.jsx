@@ -24,6 +24,14 @@ export const DEFAULT_BANNER_LINES = [
   "ALL GREEN",
 ];
 
+function viewportBurstDistance(minBase, maxBase) {
+  if (typeof window === "undefined") return minBase + Math.random() * (maxBase - minBase);
+  const shortSide = Math.min(window.innerWidth || 390, window.innerHeight || 720);
+  const max = Math.max(150, Math.min(maxBase, shortSide * 0.52));
+  const min = Math.min(minBase, max * 0.45);
+  return min + Math.random() * Math.max(36, max - min);
+}
+
 function tierConfig(tier) {
   if (tier === 5) return {
     particleCount: 240, colors: COLORS_GOLD, banner: "CENTURY",
@@ -58,11 +66,13 @@ export default function Celebration({ fireId, streak, bannerPhrases }) {
   const { tier } = celebrationTier(streak || 0);
   const cfg = tierConfig(tier);
   const bannerText = cfg.banner || pickTier1Banner(fireId, bannerPhrases);
+  const isMobile = typeof window !== "undefined" && window.innerWidth <= 560;
+  const particleCount = isMobile ? Math.min(cfg.particleCount, tier >= 4 ? 110 : 72) : cfg.particleCount;
 
   const particles = [];
-  for (let i = 0; i < cfg.particleCount; i++) {
-    const angle = (i / cfg.particleCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.2;
-    const dist = 220 + Math.random() * 320;
+  for (let i = 0; i < particleCount; i++) {
+    const angle = (i / particleCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.2;
+    const dist = viewportBurstDistance(220, 540);
     const color = cfg.colors[i % cfg.colors.length];
     const size = 5 + Math.random() * 8;
     const delay = Math.random() * 0.2;

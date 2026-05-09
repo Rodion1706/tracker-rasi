@@ -32,6 +32,14 @@ function pickQuote(levelId) {
   return QUOTES[idx];
 }
 
+function viewportBurstDistance(minBase, maxBase) {
+  if (typeof window === "undefined") return minBase + Math.random() * (maxBase - minBase);
+  const shortSide = Math.min(window.innerWidth || 390, window.innerHeight || 720);
+  const max = Math.max(170, Math.min(maxBase, shortSide * 0.58));
+  const min = Math.min(minBase, max * 0.48);
+  return min + Math.random() * Math.max(42, max - min);
+}
+
 export default function LevelClaim({ fireId, level }) {
   const [visible, setVisible] = useState(false);
 
@@ -46,11 +54,13 @@ export default function LevelClaim({ fireId, level }) {
 
   const quote = pickQuote(level.id);
 
-  // 160 particles
+  // 160 particles on desktop, trimmed on phone so the cinematic stays inside the viewport.
   const particles = [];
-  for (let i = 0; i < 160; i++) {
-    const angle = (i / 160) * Math.PI * 2 + (Math.random() - 0.5) * 0.2;
-    const dist = 320 + Math.random() * 380;
+  const isMobile = typeof window !== "undefined" && window.innerWidth <= 560;
+  const count = isMobile ? 96 : 160;
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.2;
+    const dist = viewportBurstDistance(320, 700);
     const size = 4 + Math.random() * 9;
     const delay = Math.random() * 0.25;
     const duration = 1.6 + Math.random() * 1.2;

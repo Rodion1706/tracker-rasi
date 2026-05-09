@@ -18,6 +18,14 @@ const THEMES = {
 
 export const TIER_UP_THRESHOLDS = [7, 14, 30, 100, 200, 365];
 
+function viewportBurstDistance(minBase, maxBase) {
+  if (typeof window === "undefined") return minBase + Math.random() * (maxBase - minBase);
+  const shortSide = Math.min(window.innerWidth || 390, window.innerHeight || 720);
+  const max = Math.max(170, Math.min(maxBase, shortSide * 0.58));
+  const min = Math.min(minBase, max * 0.48);
+  return min + Math.random() * Math.max(42, max - min);
+}
+
 export default function TierUp({ threshold, fireId }) {
   if (!threshold || !fireId) return null;
   const theme = THEMES[threshold];
@@ -25,10 +33,11 @@ export default function TierUp({ threshold, fireId }) {
 
   // 80 particles in a circular fan
   const particles = [];
-  const count = threshold >= 100 ? 200 : 120;
+  const isMobile = typeof window !== "undefined" && window.innerWidth <= 560;
+  const count = isMobile ? (threshold >= 100 ? 120 : 84) : (threshold >= 100 ? 200 : 120);
   for (let i = 0; i < count; i++) {
     const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.15;
-    const dist = 280 + Math.random() * 380;
+    const dist = viewportBurstDistance(280, 660);
     const size = 4 + Math.random() * 9;
     const delay = Math.random() * 0.25;
     const duration = 1.6 + Math.random() * 1.2;
