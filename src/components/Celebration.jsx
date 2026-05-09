@@ -60,12 +60,14 @@ function pickTier1Banner(fireId, customLines) {
   return list[fireId % list.length];
 }
 
-export default function Celebration({ fireId, streak, bannerPhrases }) {
+export default function Celebration({ fireId, streak, bannerPhrases, bannerOverride, subOverride, tierOverride, variant }) {
   if (!fireId) return null;
 
-  const { tier } = celebrationTier(streak || 0);
+  const tierInfo = celebrationTier(streak || 0);
+  const tier = tierOverride || tierInfo.tier;
   const cfg = tierConfig(tier);
-  const bannerText = cfg.banner || pickTier1Banner(fireId, bannerPhrases);
+  const bannerText = bannerOverride || cfg.banner || pickTier1Banner(fireId, bannerPhrases);
+  const subText = subOverride || cfg.sub;
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 560;
   const particleCount = isMobile ? Math.min(cfg.particleCount, tier >= 4 ? 110 : 72) : cfg.particleCount;
 
@@ -96,10 +98,10 @@ export default function Celebration({ fireId, streak, bannerPhrases }) {
   }
 
   return (
-    <div className={`celebration ${cfg.durClass}`} key={fireId}>
+    <div className={`celebration ${cfg.durClass} ${variant ? "celeb-" + variant : ""}`} key={fireId}>
       <div className="celeb-flash" />
       <div className="celeb-banner">{bannerText}</div>
-      <div className="celeb-banner-sub">{cfg.sub}</div>
+      <div className="celeb-banner-sub">{subText}</div>
       <div className="celeb-particles">{particles}</div>
     </div>
   );

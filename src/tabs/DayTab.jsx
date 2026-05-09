@@ -30,7 +30,7 @@ export default function DayTab({
   monadImage,
   levelInfo, badgeInfo, claimNextLevel,
   celebratedThresholds, markThresholdCelebrated,
-  bannerPhrases, tags,
+  bannerPhrases, tags, strictStreak,
 }) {
   const [nt, setNt] = useState("");
   const [tag, setTag] = useState("");
@@ -132,32 +132,44 @@ export default function DayTab({
   const total = dayHabits.length + tasks.length;
   const totDone = checksDone + tasksDone;
   const pct = total > 0 ? Math.round(totDone / total * 100) : 0;
+  const habitsClean = !!dd.hardDay || (dayHabits.length > 0 && dayHabits.every(h => ch[h.id]));
+  const tasksClean = tasks.length === 0 || tasks.every(t => t.done);
+  const streakClean = habitsClean && (!strictStreak || tasksClean);
+  const taskClearEligible = !strictStreak && habitsClean && tasks.length > 0 && tasks.every(t => t.done);
 
   // ════════ CELEBRATION TRIGGER ════════
-  // Fires every time the day transitions <100% → 100%. Re-fires if
-  // user unchecks then re-completes, or if a new task is added after
-  // a clean day and then finished. Tier scales with current streak.
+  // Main cinematic fires when the day transitions into the exact state
+  // that counts for streak. In normal mode that is habits-only; in
+  // Strict Streak it is habits + tasks. Tasks get a second smaller
+  // effect when the streak is habits-only and the task list later clears.
   // If this close crosses a TIER_UP_THRESHOLDS for the FIRST time
   // (per data.celebratedThresholds), fire the cinematic instead of
   // the regular celebration.
   const [celebState, setCelebState] = useState({ id: 0, streak: 0 });
+  const [taskCelebState, setTaskCelebState] = useState({ id: 0 });
   const [tierUpState, setTierUpState] = useState({ id: 0, threshold: null });
-  const wasCompleteRef = useRef(false);
+  const wasStreakCleanRef = useRef(false);
+  const wasTaskClearRef = useRef(false);
   const prevViewDayRef = useRef(viewDay);
+  const completionPrimedRef = useRef(false);
   useEffect(() => {
-    if (isFuture || total === 0) {
-      wasCompleteRef.current = false;
+    if (isFuture || (dayHabits.length === 0 && !dd.hardDay)) {
+      wasStreakCleanRef.current = false;
+      wasTaskClearRef.current = false;
       prevViewDayRef.current = viewDay;
+      completionPrimedRef.current = true;
       return;
     }
-    const isComplete = totDone === total;
-    if (prevViewDayRef.current !== viewDay) {
-      wasCompleteRef.current = isComplete;
+    if (!completionPrimedRef.current || prevViewDayRef.current !== viewDay) {
+      wasStreakCleanRef.current = streakClean;
+      wasTaskClearRef.current = taskClearEligible;
       prevViewDayRef.current = viewDay;
+      completionPrimedRef.current = true;
       return;
     }
-    if (isComplete && !wasCompleteRef.current) {
-      const effectiveStreak = isToday ? streak + 1 : streak;
+    let firedStreakEffect = false;
+    if (streakClean && !wasStreakCleanRef.current) {
+      const effectiveStreak = Math.max(1, streak || 1);
       // Threshold crossing? Pick the highest unseen threshold <= effectiveStreak.
       const seen = new Set((celebratedThresholds || []).map(Number));
       const unseen = TIER_UP_THRESHOLDS.filter(t => effectiveStreak >= t && !seen.has(t));
@@ -168,9 +180,14 @@ export default function DayTab({
       } else {
         setCelebState(s => ({ id: s.id + 1, streak: effectiveStreak }));
       }
+      firedStreakEffect = true;
     }
-    wasCompleteRef.current = isComplete;
-  }, [totDone, total, isFuture, viewDay, streak, isToday]);
+    if (taskClearEligible && !wasTaskClearRef.current && !firedStreakEffect) {
+      setTaskCelebState(s => ({ id: s.id + 1 }));
+    }
+    wasStreakCleanRef.current = streakClean;
+    wasTaskClearRef.current = taskClearEligible;
+  }, [streakClean, taskClearEligible, isFuture, viewDay, streak, dayHabits.length, dd.hardDay, strictStreak]);
 
   // ════════ HARD DAY TOGGLE ════════
   function toggleHardDay() {
@@ -199,6 +216,14 @@ export default function DayTab({
   return (
     <div>
       <Celebration fireId={celebState.id} streak={celebState.streak} bannerPhrases={bannerPhrases} />
+      <Celebration
+        fireId={taskCelebState.id}
+        streak={1}
+        tierOverride={1}
+        variant="tasks"
+        bannerOverride="TASKS CLEAR"
+        subOverride="EXECUTION CLOSED"
+      />
       <TierUp fireId={tierUpState.id} threshold={tierUpState.threshold} />
       {/* Day nav */}
       <div className="day-nav">

@@ -2012,6 +2012,10 @@ body::after {
 .celebration.celeb-tier-3 { animation-duration: 3.0s; }
 .celebration.celeb-tier-4 { animation-duration: 3.5s; }
 .celebration.celeb-tier-5 { animation-duration: 4.2s; animation: celebRoot 4.2s ease-out forwards, celebShake 0.3s ease-in-out 3; }
+.celebration.celeb-tasks {
+  z-index: 9998;
+  animation-duration: 1.9s;
+}
 @keyframes celebRoot {
   0%, 85% { opacity: 1; }
   100% { opacity: 0; }
@@ -2035,6 +2039,16 @@ body::after {
 .celeb-tier-5 .celeb-flash {
   background: radial-gradient(ellipse at 50% 42%, rgba(255, 215, 0, 0.35), rgba(var(--accent-rgb), 0.35) 30%, rgba(var(--accent-rgb), 0.12) 60%, transparent 78%);
   animation: celebFlash 2.4s cubic-bezier(0.15, 0.9, 0.3, 1) both;
+}
+.celeb-tasks .celeb-flash {
+  background: radial-gradient(ellipse at 50% 42%, rgba(var(--accent-rgb), 0.28), rgba(var(--accent-rgb), 0.1) 45%, transparent 70%);
+}
+.celeb-tasks .celeb-banner {
+  color: var(--red-b);
+  font-size: clamp(34px, 9vw, 66px);
+}
+.celeb-tasks .celeb-banner-sub {
+  color: var(--t-strong);
 }
 @keyframes celebFlash {
   0% { opacity: 0; transform: scale(0.6); }

@@ -1503,6 +1503,7 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
               return { celebratedThresholds: current.concat([n]) };
             })}
             bannerPhrases={data.bannerPhrases || []}
+            strictStreak={strictStreak}
           />
         )}
         {tab === "week" && (
