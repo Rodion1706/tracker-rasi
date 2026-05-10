@@ -461,13 +461,15 @@ export default function DayTab({
                 const c = tagObj ? tagObj.color : null;
                 return <div className={`row-tag ${c ? "" : "orphan"}`} style={tagPillStyle(c)}>{t.tag}</div>;
               })()}
-              <div
-                className={`row-delete ${hardModeOn ? "locked" : ""}`}
-                title={hardModeOn ? "Hard Mode locks task deletion" : "Delete task"}
-                onClick={(e) => { e.stopPropagation(); delTask(t.id); }}
-              >
-                {hardModeOn ? "LOCK" : "×"}
-              </div>
+              {!hardModeOn && (
+                <div
+                  className="row-delete"
+                  title="Delete task"
+                  onClick={(e) => { e.stopPropagation(); delTask(t.id); }}
+                >
+                  ×
+                </div>
+              )}
             </div>
           );
         })}

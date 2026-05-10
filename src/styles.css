@@ -3819,25 +3819,6 @@ body::after {
 }
 .row:hover .row-delete { opacity: 1; }
 .row-delete:hover { color: var(--red); }
-.row-delete.locked {
-  opacity: 1;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  line-height: 1;
-  color: var(--red-b);
-  border: 1px solid rgba(var(--accent-rgb), 0.38);
-  border-radius: 6px;
-  padding: 6px 7px;
-  background: rgba(var(--accent-rgb), 0.08);
-  box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.18);
-}
-.row-delete.locked:hover {
-  color: var(--t-strong);
-  border-color: var(--red);
-  box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.34);
-}
 
 /* Nav for day */
 .day-nav {
