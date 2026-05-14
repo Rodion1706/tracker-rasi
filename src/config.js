@@ -1,31 +1,28 @@
+export var DEFAULT_THEME = "seal-day";
+export var DEFAULT_TAB_VISIBILITY = { goals: true };
+
 export var DEF_HABITS = [
-  { id:"d01", text:"Morning without phone", sub:"Music OK. No screens." },
-  { id:"d02", text:"Glass of warm water", sub:"" },
-  { id:"d03", text:"Wake up 7:00-7:30", sub:"" },
-  { id:"d04", text:"Shower 9 min or less", sub:"Goal: 5 min by June" },
-  { id:"d05", text:"No TikTok before 2 PM", sub:"Work footage is allowed" },
-  { id:"d07", text:"No chess after 2 losses in a row", sub:"" },
-  { id:"d08", text:"Don't take a task your team can do", sub:"Unless no showcase creative this week" },
-  { id:"d09", text:"Gym", sub:"" },
-  { id:"d10", text:"Cardio", sub:"" },
-  { id:"d11", text:"Channel slot 20:00-21:00", sub:"" },
-  { id:"d12", text:"English before bed", sub:"During skincare routine" },
+  { id:"h01", text:"Plan the day", sub:"Pick the top 1-3 priorities." },
+  { id:"h02", text:"Move your body", sub:"Walk, gym, stretching, or sport." },
+  { id:"h03", text:"Study or skill block", sub:"At least one focused session." },
+  { id:"h04", text:"No doomscrolling before work", sub:"Start with action, not feed." },
+  { id:"h05", text:"Reset your space", sub:"One small cleanup before sleep." },
 ];
 
 export var DEF_GOALS = [
-  { id:"g1", text:"Videos published", target:20, current:0, unit:"videos", quarter:"Q2" },
-  { id:"g2", text:"Niche decided", target:1, current:0, unit:"yes/no", quarter:"Q2" },
-  { id:"g3", text:"Channel revenue", target:500, current:0, unit:"$/mo", quarter:"Q3" },
-  { id:"g4", text:"English level B2", target:1, current:0, unit:"yes/no", quarter:"Q4" },
-  { id:"g5", text:"Independent income", target:1000, current:0, unit:"$/mo", quarter:"Q4" },
+  { id:"g1", text:"Finish a course or study milestone", target:1, current:0, unit:"done", quarter:"Q2" },
+  { id:"g2", text:"Pass the driving test", target:1, current:0, unit:"done", quarter:"Q3" },
+  { id:"g3", text:"Build an emergency fund", target:1000, current:0, unit:"$", quarter:"Q3" },
+  { id:"g4", text:"Complete 40 workouts", target:40, current:0, unit:"workouts", quarter:"Q4" },
+  { id:"g5", text:"Launch one personal project", target:1, current:0, unit:"done", quarter:"Q4" },
 ];
 
 // Default tag set seeded into Firestore on first load. After that the
 // list lives at data.tags and is fully editable in Settings.
 export var DEF_TAGS = [
-  { id:"t01", name:"Work 1",   color:"#5b7fbf" },
-  { id:"t02", name:"Work 2",   color:"#d4a54a" },
-  { id:"t03", name:"Channel",  color:"#e8102a" },
+  { id:"t01", name:"Work",     color:"#5b7fbf" },
+  { id:"t02", name:"Study",    color:"#d4a54a" },
+  { id:"t03", name:"Health",   color:"#3aa15c" },
   { id:"t04", name:"Personal", color:"#ff6fb2" },
 ];
 
@@ -114,11 +111,11 @@ export function tagTickStyle(color, done) {
 export var MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
 export var WDAYS = ["M","T","W","T","F","S","S"];
 export var QUOTES = [
-  "Every no today is a yes to the Director you're becoming.",
+  "Every no today is a yes to the person you're becoming.",
   "You don't rise to motivation. You fall to systems.",
-  "The channel won't build itself.",
-  "Discipline = freedom in 18 months.",
-  "Ship it. Fix it later. But ship it today.",
+  "Small daily proof beats big future plans.",
+  "Discipline compounds quietly.",
+  "Do the next clean action.",
   "Доказывать нужно себе. Остальные подождут.",
 ];
 

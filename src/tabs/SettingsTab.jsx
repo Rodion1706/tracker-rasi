@@ -620,9 +620,9 @@ function TabVisibilityToggle({ id, label, sub, visibility, setVisibility }) {
 }
 
 const THEME_OPTIONS = [
-  { id: "command",    label: "Rasi Red",       sub: "Default — dark + brand red." },
-  { id: "seal-day",   label: "Seal Night",     sub: "Calm slate dark + warm peach accent. Easy on eyes at night." },
-  { id: "seal-night", label: "Seal Day",       sub: "Solarized Light — warm cream + muted blue accent. Mono." },
+  { id: "seal-day",   label: "Seal Dark",      sub: "Default — calm slate dark + warm peach accent." },
+  { id: "command",    label: "Rasi Red",       sub: "Dark + brand red." },
+  { id: "seal-night", label: "Seal Light",     sub: "Solarized light — warm cream + muted blue accent." },
 ];
 
 function ThemePicker({ theme, setTheme }) {

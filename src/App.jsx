@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { db, auth, provider, doc, collection, getDoc, getDocs, setDoc, writeBatch, serverTimestamp, FieldPath, signInWithPopup, signOut, onAuthStateChanged } from "./firebase";
-import { DEF_HABITS, DEF_GOALS, DEF_TAGS, argDate, niceDate } from "./config";
+import { DEFAULT_TAB_VISIBILITY, DEFAULT_THEME, DEF_HABITS, DEF_GOALS, DEF_TAGS, argDate, niceDate } from "./config";
 import { isDayClean, getLevel, getDisplayLevel, applyGamificationUpdates, BADGES } from "./gamification";
 import { applyRollover } from "./rollover";
 import { scheduleReminders } from "./notifications";
@@ -20,7 +20,15 @@ const TASK_DROP_ALERT_MIN = 8;
 const TASK_DROP_ALERT_RATIO = 0.55;
 
 function emptyData() {
-  return { days: {}, habits: null, recurring: [], goals: DEF_GOALS, logs: {} };
+  return {
+    days: {},
+    habits: DEF_HABITS,
+    recurring: [],
+    goals: DEF_GOALS,
+    logs: {},
+    theme: DEFAULT_THEME,
+    tabVisibility: DEFAULT_TAB_VISIBILITY,
+  };
 }
 
 function normalizeData(remote) {
@@ -1138,7 +1146,7 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
 
   // Tab visibility (Settings → TABS). Day / Month / Log are always
   // shown. Settings is opened by the floating gear so tabs stay compact.
-  const tabVisibility = data.tabVisibility || {};
+  const tabVisibility = data.tabVisibility || DEFAULT_TAB_VISIBILITY;
   const allTabs = [
     ["day", "DAY", "always"],
     ["week", "WEEK", "optional"],
@@ -1170,11 +1178,11 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
     scheduleReminders().catch(() => {});
   }, []);
 
-  // Apply theme (Command Center / Seal Day / Seal Night) to <html>.
+  // Apply theme (Command Center / Seal Dark / Seal Light) to <html>.
   // CSS variables on [data-theme="..."] override the :root defaults.
-  // Default = "command" (no attribute set, falls back to :root).
+  // Default = Seal Dark.
   useEffect(() => {
-    const theme = data.theme || "command";
+    const theme = data.theme || DEFAULT_THEME;
     if (theme === "command") {
       document.documentElement.removeAttribute("data-theme");
     } else {
@@ -1452,7 +1460,7 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
         {/* Header */}
         <div className="top-header">
           <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-            <div className="brand-katakana">{(data.theme || "command").startsWith("seal") ? "Seal" : "ロディオン"}</div>
+            <div className="brand-katakana">{(data.theme || DEFAULT_THEME).startsWith("seal") ? "Seal" : "ロディオン"}</div>
             <div className="brand-sub">Command · Center</div>
           </div>
           <div style={{ textAlign: "right" }}>
@@ -1551,7 +1559,7 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
             setStrictStreak={v => saveFields({ strictStreak: v }, "strict-streak-write")}
             tabVisibility={tabVisibility}
             setTabVisibility={v => saveFields({ tabVisibility: v }, "tab-visibility-write")}
-            theme={data.theme || "command"}
+            theme={data.theme || DEFAULT_THEME}
             setTheme={v => saveFields({ theme: v }, "theme-write")}
             monadImage={monadImage}
             setMonadImage={v => saveFields({ monadImage: v }, "monad-image-write")}
