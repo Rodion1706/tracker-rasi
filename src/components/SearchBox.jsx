@@ -3,6 +3,7 @@
 
 import { useState, useMemo } from "react";
 import { findTag, tagPillStyle } from "../config";
+import { isTaskDone, taskSteps } from "../checklists";
 
 export default function SearchBox({ days, logs, onJump, tags }) {
   const [q, setQ] = useState("");
@@ -17,13 +18,16 @@ export default function SearchBox({ days, logs, onJump, tags }) {
       if (!d || !d.tasks) continue;
       for (const t of d.tasks) {
         if (!t.text) continue;
-        if (t.text.toLowerCase().includes(ql)) {
+        const steps = taskSteps(t);
+        const stepMatch = steps.find(step => step.text.toLowerCase().includes(ql));
+        if (t.text.toLowerCase().includes(ql) || stepMatch) {
           out.push({
             kind: "task",
             date: dateKey,
             text: t.text,
+            stepText: stepMatch ? stepMatch.text : "",
             tag: t.tag,
-            done: t.done,
+            done: isTaskDone(t),
             rollCount: t.rollCount || 0,
           });
         }
@@ -69,6 +73,7 @@ export default function SearchBox({ days, logs, onJump, tags }) {
             >
               <div className="search-result-date">{r.date} · {r.kind === "task" ? "TASK" : "LOG"}</div>
               <div className="search-result-text">{r.text}</div>
+              {r.stepText && <div className="search-result-step">subtask · {r.stepText}</div>}
               <div className="search-result-meta">
                 {r.kind === "task" && r.tag && (() => {
                   const tagObj = findTag(r.tag, tags || []);

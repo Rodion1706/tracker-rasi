@@ -11,6 +11,7 @@
 // (no flipping done state) so the past day's % stays accurate.
 
 import { argDate, dayDiff } from "./config";
+import { isTaskDone, taskSteps } from "./checklists";
 
 export function applyRollover(data) {
   const days = data.days || {};
@@ -37,7 +38,7 @@ export function applyRollover(data) {
     const yd = days[sourceDay];
     if (!yd || !Array.isArray(yd.tasks)) continue;
 
-    const undoneUnrolled = yd.tasks.filter(t => t && !t.done && !t.rolledOver);
+    const undoneUnrolled = yd.tasks.filter(t => t && !isTaskDone(t) && !t.rolledOver);
     if (undoneUnrolled.length === 0) continue;
 
     for (const t of undoneUnrolled) {
@@ -54,6 +55,7 @@ export function applyRollover(data) {
         text: t.text,
         tag: t.tag || "",
         done: false,
+        steps: taskSteps(t),
         rollCount: newCount,
         originalDate,
         rolledFromYesterday: dayDiff(today, sourceDay) === 1,
@@ -65,7 +67,7 @@ export function applyRollover(data) {
     // Mark old undone tasks as rolledOver so a re-render doesn't roll them again.
     nextDays[sourceDay] = Object.assign({}, yd, {
       tasks: yd.tasks.map(t =>
-        t && !t.done && !t.rolledOver ? Object.assign({}, t, { rolledOver: true }) : t
+        t && !isTaskDone(t) && !t.rolledOver ? Object.assign({}, t, { rolledOver: true }) : t
       ),
     });
     touched = true;

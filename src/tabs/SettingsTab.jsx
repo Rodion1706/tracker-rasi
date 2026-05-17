@@ -12,6 +12,16 @@ import SearchBox from "../components/SearchBox";
 import NotificationSettings from "../components/NotificationSettings";
 import { isSoundOn, setSoundOn, playTick, SOUND_PACKS, getSoundPack, setSoundPack } from "../sound";
 import { DEFAULT_BANNER_LINES } from "../components/Celebration";
+import {
+  activeHabitSteps,
+  isHabitDone,
+  isTaskDone,
+  mergeHabitStepsFromText,
+  mergeStepsFromText,
+  recurringSteps,
+  stepsToText,
+  taskSteps,
+} from "../checklists";
 
 const DAY_LABELS = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
 const inputStyle = { width: "100%", background: "transparent", border: "none", borderBottom: "1px solid var(--brd)", color: "var(--t1)", fontSize: 14, outline: "none", padding: "5px 0", boxSizing: "border-box", fontFamily: "inherit" };
@@ -21,7 +31,7 @@ const inputStyle = { width: "100%", background: "transparent", border: "none", b
 // to make space. Tap DONE (or Esc) to exit. Order is just the array
 // index in data.habits — activeHabitsOn keeps order, so DayTab/WeekTab
 // pick up the new sequence automatically without any schema change.
-function SortableHabitRow({ habit, index, editMode, isInlineEditing, eT, eS, setET, setES, setEId, saveE, delH }) {
+function SortableHabitRow({ habit, index, editMode, isInlineEditing, eT, eS, eSteps, setET, setES, setESteps, setEId, startEdit, saveE, delH, today }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: habit.id,
     disabled: isInlineEditing,
@@ -44,9 +54,19 @@ function SortableHabitRow({ habit, index, editMode, isInlineEditing, eT, eS, set
           <div className="brute-field-l">Subtitle</div>
           <input value={eS} onChange={e => setES(e.target.value)} placeholder="Optional" style={{ ...inputStyle, fontSize: 12 }} />
         </div>
+        <div className="brute-field">
+          <div className="brute-field-l">Subtasks/details</div>
+          <textarea
+            value={eSteps}
+            onChange={e => setESteps(e.target.value)}
+            placeholder="Optional, one per line"
+            rows={Math.max(2, Math.min(5, eSteps.split("\n").length || 2))}
+            className="settings-textarea"
+          />
+        </div>
         <div style={{ display: "flex", gap: 10 }}>
           <div onClick={saveE} className="add-btn">SAVE</div>
-          <div onClick={() => setEId(null)} style={{ padding: "11px 16px", color: "var(--t3)", cursor: "pointer", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", fontFamily: "'Cinzel', serif" }}>CANCEL</div>
+          <div onClick={() => { setEId(null); setESteps(""); }} style={{ padding: "11px 16px", color: "var(--t3)", cursor: "pointer", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", fontFamily: "'Cinzel', serif" }}>CANCEL</div>
         </div>
       </div>
     );
@@ -78,12 +98,15 @@ function SortableHabitRow({ habit, index, editMode, isInlineEditing, eT, eS, set
       <div className="row-body">
         <div className="row-text">{habit.text}</div>
         {habit.sub && <div className="row-sub">{habit.sub}</div>}
+        {activeHabitSteps(habit, today).length > 0 && (
+          <div className="row-sub step-progress">{activeHabitSteps(habit, today).length} subtasks</div>
+        )}
       </div>
       {!editMode && (
         <>
           <div
             onPointerDown={e => e.stopPropagation()}
-            onClick={() => { setEId(habit.id); setET(habit.text); setES(habit.sub || ""); }}
+            onClick={() => startEdit(habit)}
             style={{ fontSize: 11, color: "var(--t2)", cursor: "pointer", fontFamily: "'Cinzel', serif", letterSpacing: "0.14em", padding: "4px 10px" }}
           >edit</div>
           <div
@@ -97,7 +120,7 @@ function SortableHabitRow({ habit, index, editMode, isInlineEditing, eT, eS, set
   );
 }
 
-function SortableHabitList({ habits, setHabits, eId, eT, eS, setEId, setET, setES, saveE, delH }) {
+function SortableHabitList({ habits, setHabits, eId, eT, eS, eSteps, setEId, setET, setES, setESteps, startEditHabit, saveE, delH, today }) {
   const [editMode, setEditMode] = useState(false);
   const visibleHabits = habits.filter(h => !h.archivedAt);
 
@@ -113,7 +136,10 @@ function SortableHabitList({ habits, setHabits, eId, eT, eS, setEId, setET, setE
   );
 
   function handleDragStart() {
-    if (eId) setEId(null);
+    if (eId) {
+      setEId(null);
+      setESteps("");
+    }
     if (!editMode) setEditMode(true);
   }
   function handleDragEnd(event) {
@@ -157,8 +183,10 @@ function SortableHabitList({ habits, setHabits, eId, eT, eS, setEId, setET, setE
               index={i}
               editMode={editMode}
               isInlineEditing={eId === h.id}
-              eT={eT} eS={eS} setET={setET} setES={setES}
-              setEId={setEId} saveE={saveE} delH={delH}
+              eT={eT} eS={eS} eSteps={eSteps}
+              setET={setET} setES={setES} setESteps={setESteps}
+              setEId={setEId} startEdit={startEditHabit}
+              saveE={saveE} delH={delH} today={today}
             />
           ))}
         </SortableContext>
@@ -762,12 +790,20 @@ function DataHealthPanel({ data, localBackupInfo }) {
 export default function SettingsTab({ habits, setHabits, recurring, setRecurring, tags, setTags, renameTag, deleteTag, countTagUsage, data, setDay, getDayData, today, bulkSetDays, badgeInfo, levelInfo, claimNextLevel, bannerPhrases, setBannerPhrases, hardModeOn, setHardModeOn, strictStreak, setStrictStreak, tabVisibility, setTabVisibility, theme, setTheme, monadImage, setMonadImage, accountEmail, accountUid, accountMode, dataSource, syncError, localBackupInfo, restoreBackup, onLogout, jumpToDay }) {
   const [newH, setNewH] = useState("");
   const [newHS, setNewHS] = useState("");
+  const [newHSteps, setNewHSteps] = useState("");
   const [eId, setEId] = useState(null);
   const [eT, setET] = useState("");
   const [eS, setES] = useState("");
+  const [eSteps, setESteps] = useState("");
   const [newR, setNewR] = useState("");
   const [newRTag, setNewRTag] = useState("");
   const [newRDays, setNewRDays] = useState([]);
+  const [newRSteps, setNewRSteps] = useState("");
+  const [rEId, setREId] = useState(null);
+  const [rET, setRET] = useState("");
+  const [rETag, setRETag] = useState("");
+  const [rEDays, setREDays] = useState([]);
+  const [rESteps, setRESteps] = useState("");
 
   // Tag editing state
   const [tagEId, setTagEId] = useState(null);          // id of tag being edited
@@ -827,27 +863,67 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
       id: "h" + Date.now(),
       text: newH.trim(),
       sub: newHS.trim(),
+      steps: mergeHabitStepsFromText(newHSteps, [], today),
       createdAt: today,
     }]));
-    setNewH(""); setNewHS("");
+    setNewH(""); setNewHS(""); setNewHSteps("");
   }
   // Soft-archive: keep the habit in the list but stamp archivedAt so it
   // stops applying to days >= today. Past clean days remain clean.
   function delH(id) {
     setHabits(habits.map(h => h.id === id ? Object.assign({}, h, { archivedAt: today }) : h));
   }
+  function startEditHabit(habit) {
+    setEId(habit.id);
+    setET(habit.text);
+    setES(habit.sub || "");
+    setESteps(stepsToText(activeHabitSteps(habit, today)));
+  }
   function saveE() {
     if (!eT.trim()) return;
-    setHabits(habits.map(h => h.id === eId ? { ...h, text: eT.trim(), sub: eS.trim() } : h));
+    setHabits(habits.map(h => h.id === eId ? {
+      ...h,
+      text: eT.trim(),
+      sub: eS.trim(),
+      steps: mergeHabitStepsFromText(eSteps, h.steps, today),
+    } : h));
     setEId(null);
+    setESteps("");
   }
   function addR() {
     if (!newR.trim() || newRDays.length === 0) return;
-    setRecurring(recurring.concat([{ id: "r" + Date.now(), text: newR.trim(), tag: newRTag, days: newRDays }]));
-    setNewR(""); setNewRTag(""); setNewRDays([]);
+    setRecurring(recurring.concat([{
+      id: "r" + Date.now(),
+      text: newR.trim(),
+      tag: newRTag,
+      days: newRDays,
+      steps: mergeStepsFromText(newRSteps, []),
+    }]));
+    setNewR(""); setNewRTag(""); setNewRDays([]); setNewRSteps("");
   }
   function delR(id) { setRecurring(recurring.filter(r => r.id !== id)); }
   function toggleRDay(d) { setNewRDays(newRDays.includes(d) ? newRDays.filter(x => x !== d) : newRDays.concat([d])); }
+  function startEditRecurring(r) {
+    setREId(r.id);
+    setRET(r.text || "");
+    setRETag(r.tag || "");
+    setREDays(Array.isArray(r.days) ? r.days : []);
+    setRESteps(stepsToText(r.steps));
+  }
+  function toggleEditRDay(d) {
+    setREDays(rEDays.includes(d) ? rEDays.filter(x => x !== d) : rEDays.concat([d]));
+  }
+  function saveR() {
+    if (!rET.trim() || rEDays.length === 0) return;
+    setRecurring(recurring.map(r => r.id === rEId ? Object.assign({}, r, {
+      text: rET.trim(),
+      tag: rETag,
+      days: rEDays,
+      steps: mergeStepsFromText(rESteps, r.steps),
+    }) : r));
+    setREId(null);
+    setRESteps("");
+  }
 
   function exportData() {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -897,7 +973,7 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
   // CSV: one row per item (habit or task) per day. Easy to pivot in Sheets.
   function exportCSV() {
     const rows = [
-      ["date", "type", "id", "text", "tag", "done", "rollCount", "originalDate", "hardDay"],
+      ["date", "type", "id", "text", "tag", "done", "steps", "rollCount", "originalDate", "hardDay"],
     ];
     function esc(v) {
       if (v === undefined || v === null) return "";
@@ -914,14 +990,17 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
       if (!d) continue;
       const hardDay = d.hardDay ? "1" : "";
       // Habits: emit one row per active-on-that-day habit, with done state
-      if (d.checks) {
-        for (const hid of Object.keys(d.checks)) {
+      if (d.checks || d.habitSteps) {
+        const habitIds = new Set(Object.keys(d.checks || {}));
+        Object.keys(d.habitSteps || {}).forEach(hid => habitIds.add(hid));
+        for (const hid of habitIds) {
           const h = habitMap.get(hid);
           rows.push([
             dateKey, "habit", hid,
             h ? h.text : "(deleted)",
             "",
-            d.checks[hid] ? "1" : "0",
+            h && isHabitDone(d, h, dateKey) ? "1" : ((d.checks || {})[hid] ? "1" : "0"),
+            h ? activeHabitSteps(h, dateKey).map(step => step.text).join(" | ") : "",
             "", "", hardDay,
           ]);
         }
@@ -933,7 +1012,8 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
             dateKey, "task", t.id || "",
             t.text || "",
             t.tag || "",
-            t.done ? "1" : "0",
+            isTaskDone(t) ? "1" : "0",
+            taskSteps(t).map(step => step.text).join(" | "),
             String(t.rollCount || 0),
             t.originalDate || "",
             hardDay,
@@ -1012,9 +1092,10 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
       <SortableHabitList
         habits={habits}
         setHabits={setHabits}
-        eId={eId} eT={eT} eS={eS}
-        setEId={setEId} setET={setET} setES={setES}
-        saveE={saveE} delH={delH}
+        eId={eId} eT={eT} eS={eS} eSteps={eSteps}
+        setEId={setEId} setET={setET} setES={setES} setESteps={setESteps}
+        startEditHabit={startEditHabit}
+        saveE={saveE} delH={delH} today={today}
       />
       <div className="brute" style={{ marginTop: 10 }}>
         <div className="brute-field">
@@ -1025,6 +1106,16 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
           <div className="brute-field-l">Subtitle (optional)</div>
           <input value={newHS} onChange={e => setNewHS(e.target.value)} placeholder="e.g. Right after coffee" style={{ ...inputStyle, fontSize: 12 }} />
         </div>
+        <div className="brute-field">
+          <div className="brute-field-l">Subtasks/details (optional)</div>
+          <textarea
+            value={newHSteps}
+            onChange={e => setNewHSteps(e.target.value)}
+            placeholder={"e.g. Stairs\nBike\nStretch"}
+            rows={3}
+            className="settings-textarea"
+          />
+        </div>
         <div onClick={addH} className="add-btn" style={{ display: "inline-flex", marginTop: 4 }}>ADD HABIT</div>
       </div>
 
@@ -1033,15 +1124,62 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
         <SectionHeader label="RECURRING TASKS" count={recurring.length} />
       </div>
       {recurring.map(r => (
-        <div key={r.id} className="row" style={{ cursor: "default", gap: 10 }}>
-          <div className="row-body">
-            <div className="row-text">{r.text}</div>
-            <div className="row-sub" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-              {r.days.join(" · ")}{r.tag ? " · " + r.tag : ""}
+        rEId === r.id ? (
+          <div key={r.id} className="brute" style={{ marginBottom: 8 }}>
+            <div className="brute-field">
+              <div className="brute-field-l">Task text</div>
+              <input value={rET} onChange={e => setRET(e.target.value)} style={inputStyle} autoFocus />
+            </div>
+            <div className="brute-field-l">Days</div>
+            <div className="chip-row" style={{ marginBottom: 14 }}>
+              {DAY_LABELS.map(d => (
+                <div key={d} className={`chip ${rEDays.includes(d) ? "active" : ""}`} onClick={() => toggleEditRDay(d)}>{d}</div>
+              ))}
+            </div>
+            <div className="brute-field-l">Tag (optional)</div>
+            <div className="chip-row" style={{ marginBottom: 14 }}>
+              {tags.map(t => {
+                const active = rETag === t.name;
+                return (
+                  <div
+                    key={t.id}
+                    className={`chip ${active ? "active" : ""}`}
+                    style={tagChipActiveStyle(t.color, active)}
+                    onClick={() => setRETag(active ? "" : t.name)}
+                  >{t.name}</div>
+                );
+              })}
+            </div>
+            <div className="brute-field">
+              <div className="brute-field-l">Subtasks/details</div>
+              <textarea
+                value={rESteps}
+                onChange={e => setRESteps(e.target.value)}
+                placeholder="Optional, one per line"
+                rows={Math.max(2, Math.min(5, rESteps.split("\n").length || 2))}
+                className="settings-textarea"
+              />
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <div onClick={saveR} className="add-btn">SAVE</div>
+              <div onClick={() => { setREId(null); setRESteps(""); }} style={{ padding: "11px 16px", color: "var(--t3)", cursor: "pointer", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", fontFamily: "'Cinzel', serif" }}>CANCEL</div>
             </div>
           </div>
-          <div onClick={() => delR(r.id)} style={{ fontSize: 18, color: "var(--t3)", cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>×</div>
-        </div>
+        ) : (
+          <div key={r.id} className="row" style={{ cursor: "default", gap: 10 }}>
+            <div className="row-body">
+              <div className="row-text">{r.text}</div>
+              <div className="row-sub" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                {r.days.join(" · ")}{r.tag ? " · " + r.tag : ""}
+              </div>
+              {recurringSteps(r).length > 0 && (
+                <div className="row-sub step-progress">{recurringSteps(r).length} subtasks</div>
+              )}
+            </div>
+            <div onClick={() => startEditRecurring(r)} style={{ fontSize: 11, color: "var(--t2)", cursor: "pointer", fontFamily: "'Cinzel', serif", letterSpacing: "0.14em", padding: "4px 10px" }}>edit</div>
+            <div onClick={() => delR(r.id)} style={{ fontSize: 18, color: "var(--t3)", cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>×</div>
+          </div>
+        )
       ))}
       <div className="brute" style={{ marginTop: 10 }}>
         <div className="brute-field">
@@ -1067,6 +1205,16 @@ export default function SettingsTab({ habits, setHabits, recurring, setRecurring
               >{t.name}</div>
             );
           })}
+        </div>
+        <div className="brute-field">
+          <div className="brute-field-l">Subtasks/details (optional)</div>
+          <textarea
+            value={newRSteps}
+            onChange={e => setNewRSteps(e.target.value)}
+            placeholder={"e.g. Omega\nVitamin C\nCreatine"}
+            rows={3}
+            className="settings-textarea"
+          />
         </div>
         <div onClick={addR} className="add-btn" style={{ display: "inline-flex" }}>ADD RECURRING</div>
       </div>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { argDate, MONTHS, WDAYS, monthDays, monStart } from "../config";
+import { isHabitDone } from "../checklists";
 
 export default function HabitCalendarModal({ habit, days, today, onClose }) {
   const [mOff, setMOff] = useState(0);
@@ -13,7 +14,7 @@ export default function HabitCalendarModal({ habit, days, today, onClose }) {
   for (let i = 0; i < 365; i++) {
     const k = argDate(-i);
     const x = days[k];
-    if (x && x.checks && x.checks[habit.id]) curStreak++;
+    if (x && isHabitDone(x, habit, k)) curStreak++;
     else break;
   }
 
@@ -22,9 +23,9 @@ export default function HabitCalendarModal({ habit, days, today, onClose }) {
   const allDates = Object.keys(days).sort();
   for (const kk of allDates) {
     const xx = days[kk];
-    if (xx && xx.checks) {
+    if (xx && (xx.checks || xx.habitSteps)) {
       totalTracked++;
-      if (xx.checks[habit.id]) {
+      if (isHabitDone(xx, habit, kk)) {
         totalDone++;
         running++;
         if (running > bestStreak) bestStreak = running;
@@ -90,8 +91,9 @@ export default function HabitCalendarModal({ habit, days, today, onClose }) {
           {Array.from({ length: fO }).map((_, i) => <div key={"e" + i} />)}
           {mDays.map(day => {
             const x = days[day] || {};
-            const done = x.checks && x.checks[habit.id];
-            const hasData = x.checks && Object.keys(x.checks).length > 0;
+            const done = isHabitDone(x, habit, day);
+            const hasData = (x.checks && Object.keys(x.checks).length > 0) ||
+              (x.habitSteps && x.habitSteps[habit.id] && Object.keys(x.habitSteps[habit.id]).length > 0);
             const isToday = day === today;
             const future = day > today;
             const dn = parseInt(day.split("-")[2]);

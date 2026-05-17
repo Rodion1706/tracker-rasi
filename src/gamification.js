@@ -4,6 +4,7 @@
 // guarantees each clean day is counted once even if Boss rechecks days.
 
 import { argDate } from "./config";
+import { isHabitDone, isTaskDone } from "./checklists";
 
 // ══════ CORE: which habits were active on a given date ══════
 // Habits carry createdAt (date string YYYY-MM-DD) when added, and
@@ -32,11 +33,10 @@ export function isDayClean(dayData, habits, dateStr, strict = false) {
   if (dayData.hardDay) return true;
   const active = dateStr ? activeHabitsOn(habits, dateStr) : (habits || []);
   if (!active || active.length === 0) return false;
-  if (!dayData.checks) return false;
-  if (!active.every(h => dayData.checks[h.id])) return false;
+  if (!active.every(h => isHabitDone(dayData, h, dateStr))) return false;
   if (strict) {
     const tasks = dayData.tasks || [];
-    if (tasks.length > 0 && !tasks.every(t => t.done)) return false;
+    if (tasks.length > 0 && !tasks.every(isTaskDone)) return false;
   }
   return true;
 }
@@ -190,7 +190,7 @@ export function computeBadgesEarnable(days, habits, strict = false) {
       curStreakUsedHardDay = false;
     }
     if (d && d.tasks) {
-      totalTasksDone += d.tasks.filter(t => t.done).length;
+      totalTasksDone += d.tasks.filter(isTaskDone).length;
     }
   }
 

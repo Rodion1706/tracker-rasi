@@ -7,6 +7,7 @@ import LevelBar from "../components/LevelBar";
 import CountUp from "../components/CountUp";
 import BadgeWall from "../components/BadgeWall";
 import { isDayClean, BADGES } from "../gamification";
+import { isTaskDone } from "../checklists";
 
 function computeStats(days, habits) {
   let totalClean = 0, totalFullClean = 0;
@@ -40,7 +41,7 @@ function computeStats(days, habits) {
     if (d) {
       if (d.tasks) {
         totalTasks += d.tasks.length;
-        totalTasksDone += d.tasks.filter(t => t.done).length;
+        totalTasksDone += d.tasks.filter(isTaskDone).length;
       }
       if (d.checks) {
         totalChecks += Object.values(d.checks).filter(Boolean).length;

@@ -1,6 +1,7 @@
 import { MONTHS, WDAYS, monthDays, monStart, dayDiff } from "../config";
 import TabHeader from "../components/TabHeader";
 import { activeHabitsOn, isDayClean } from "../gamification";
+import { isHabitDone, isTaskDone } from "../checklists";
 
 export default function MonthTab({ days, habits, today, mOff, setMOff, setDayOff, setTab, monadImage }) {
   const now = new Date();
@@ -13,7 +14,7 @@ export default function MonthTab({ days, habits, today, mOff, setMOff, setDayOff
   const actv = past.filter(d => {
     const x = days[d];
     if (!x) return false;
-    return activeHabitsOn(habits, d).some(h => x.checks && x.checks[h.id]);
+    return activeHabitsOn(habits, d).some(h => isHabitDone(x, h, d));
   }).length;
 
   return (
@@ -43,8 +44,8 @@ export default function MonthTab({ days, habits, today, mOff, setMOff, setDayOff
         {mDays.map((day, idx) => {
           const x = days[day] || {};
           const dayHabits = activeHabitsOn(habits, day);
-          const dc = x.checks ? dayHabits.filter(h => x.checks[h.id]).length : 0;
-          const tc = x.tasks ? x.tasks.filter(t => t.done).length : 0;
+          const dc = dayHabits.filter(h => isHabitDone(x, h, day)).length;
+          const tc = x.tasks ? x.tasks.filter(isTaskDone).length : 0;
           const tt = x.tasks ? x.tasks.length : 0;
           const tot = dc + tc;
           const mx = dayHabits.length + tt;

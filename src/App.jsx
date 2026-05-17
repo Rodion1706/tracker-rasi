@@ -4,6 +4,7 @@ import { DEFAULT_TAB_VISIBILITY, DEFAULT_THEME, DEF_HABITS, DEF_GOALS, DEF_TAGS,
 import { isDayClean, getLevel, getDisplayLevel, applyGamificationUpdates, BADGES } from "./gamification";
 import { applyRollover } from "./rollover";
 import { scheduleReminders } from "./notifications";
+import { isHabitDone, isTaskDone } from "./checklists";
 
 /* ══════ ACCESS CONTROL ══════ */
 // Only these emails can sign in. Add more if needed.
@@ -290,6 +291,17 @@ function summarizeDayChange(prevDay, nextDay) {
   checkIds.forEach(id => {
     if (!!prevChecks[id] !== !!nextChecks[id]) checkFlips++;
   });
+  const prevHabitSteps = (prevDay && prevDay.habitSteps) || {};
+  const nextHabitSteps = (nextDay && nextDay.habitSteps) || {};
+  const habitStepIds = new Set(changedKeys(prevHabitSteps).concat(changedKeys(nextHabitSteps)));
+  habitStepIds.forEach(hid => {
+    const prevSteps = prevHabitSteps[hid] || {};
+    const nextSteps = nextHabitSteps[hid] || {};
+    const stepIds = new Set(changedKeys(prevSteps).concat(changedKeys(nextSteps)));
+    stepIds.forEach(stepId => {
+      if (!!prevSteps[stepId] !== !!nextSteps[stepId]) checkFlips++;
+    });
+  });
 
   const prevTasks = new Map(((prevDay && prevDay.tasks) || []).filter(Boolean).map(t => [String(t.id), t]));
   const nextTasks = new Map(((nextDay && nextDay.tasks) || []).filter(Boolean).map(t => [String(t.id), t]));
@@ -300,8 +312,12 @@ function summarizeDayChange(prevDay, nextDay) {
       taskAdds++;
       return;
     }
-    if (!!old.done !== !!t.done) taskDoneFlips++;
-    if ((old.text || "") !== (t.text || "") || (old.tag || "") !== (t.tag || "")) taskEdits++;
+    if (isTaskDone(old) !== isTaskDone(t)) taskDoneFlips++;
+    if (
+      (old.text || "") !== (t.text || "") ||
+      (old.tag || "") !== (t.tag || "") ||
+      JSON.stringify(old.steps || []) !== JSON.stringify(t.steps || [])
+    ) taskEdits++;
     if (!!old.rolledOver !== !!t.rolledOver) rolloverMarks++;
   });
   prevTasks.forEach((_, id) => {
@@ -1335,7 +1351,7 @@ function Tracker({ uid, accountEmail, accountMode, onLogout }) {
   for (let si = todayClean ? 0 : 1, count = 0; count < streak; si++) {
     const k = argDate(-si);
     const dd = days[k];
-    if (dd && dd.hardDay && !(dd.checks && habits.length > 0 && habits.every(h => dd.checks[h.id]))) {
+    if (dd && dd.hardDay && !(habits.length > 0 && habits.every(h => isHabitDone(dd, h, k)))) {
       hardInStreak++;
     }
     count++;

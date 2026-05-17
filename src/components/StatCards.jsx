@@ -5,6 +5,7 @@
 import { useEffect, useRef } from "react";
 import Odometer from "./Odometer";
 import { activeHabitsOn } from "../gamification";
+import { isHabitDone, isTaskDone } from "../checklists";
 
 // Streak tier → flame appearance. Returns null for < 3 days (no flame).
 function streakFlameTier(n) {
@@ -184,8 +185,11 @@ export function WeekStat({ weekDays, today, habits, days }) {
         {weekDays.map((wd, i) => {
           const x = days[wd];
           const dayHabits = activeHabitsOn(habits, wd);
-          const done = x && x.checks && dayHabits.length > 0 && dayHabits.every(h => x.checks[h.id]);
-          const hasData = x && x.checks && Object.keys(x.checks).length > 0;
+          const done = x && dayHabits.length > 0 && dayHabits.every(h => isHabitDone(x, h, wd));
+          const hasData = x && (
+            (x.checks && Object.keys(x.checks).length > 0) ||
+            (x.habitSteps && Object.keys(x.habitSteps).length > 0)
+          );
           const isToday = wd === today;
           const future = wd > today;
           const cls = [
@@ -214,8 +218,8 @@ export function WeekBigStrip({ weekDays, today, habits, days }) {
         {weekDays.map((wd, i) => {
           const x = days[wd];
           const dayHabits = activeHabitsOn(habits, wd);
-          const dc = dayHabits.filter(h => x && x.checks && x.checks[h.id]).length;
-          const tc = x && x.tasks ? x.tasks.filter(t => t.done).length : 0;
+          const dc = dayHabits.filter(h => x && isHabitDone(x, h, wd)).length;
+          const tc = x && x.tasks ? x.tasks.filter(isTaskDone).length : 0;
           const tt = x && x.tasks ? x.tasks.length : 0;
           const tot = dc + tc;
           const mx = dayHabits.length + tt;
@@ -249,6 +253,6 @@ function countDone(weekDays, habits, days) {
   return weekDays.filter(d => {
     const x = days[d];
     const dayHabits = activeHabitsOn(habits, d);
-    return x && x.checks && dayHabits.length > 0 && dayHabits.every(h => x.checks[h.id]);
+    return x && dayHabits.length > 0 && dayHabits.every(h => isHabitDone(x, h, d));
   }).length;
 }

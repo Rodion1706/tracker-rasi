@@ -2006,6 +2006,14 @@ body::after {
   line-height: 1.4;
   word-break: break-word;
 }
+.search-result-step {
+  margin-top: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--t3);
+  line-height: 1.4;
+  word-break: break-word;
+}
 .search-result-meta {
   display: flex;
   align-items: center;
@@ -3431,6 +3439,52 @@ body::after {
   padding: 2px 0;
   font-family: inherit;
 }
+.task-edit-stack {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+.task-edit-textarea,
+.settings-textarea {
+  width: 100%;
+  background: var(--item);
+  border: 1px solid var(--brd);
+  border-radius: 8px;
+  color: var(--t1);
+  font-size: 12px;
+  line-height: 1.45;
+  outline: none;
+  padding: 10px 12px;
+  resize: vertical;
+  box-sizing: border-box;
+  font-family: 'JetBrains Mono', monospace;
+}
+.task-edit-textarea:focus,
+.settings-textarea:focus {
+  border-color: var(--red);
+  background: var(--item-on);
+}
+.task-edit-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.task-edit-save,
+.task-edit-cancel {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+.task-edit-save {
+  color: var(--red);
+}
+.task-edit-cancel {
+  color: var(--t3);
+}
 
 /* Overdue task row — dim red variant */
 .overdue-row {
@@ -3479,7 +3533,8 @@ body::after {
 /* Mobile: when the input is focused, give the page enough bottom
    padding that the entire add-form sits above the soft keyboard. */
 @media (max-width: 620px) {
-  body:has(.add-input:focus) { padding-bottom: 50vh; }
+  body:has(.add-input:focus),
+  body:has(.add-textarea:focus) { padding-bottom: 50vh; }
 }
 .add-form::before {
   content: '';
@@ -3509,6 +3564,27 @@ body::after {
   box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15) !important;
 }
 .add-input::placeholder { color: var(--t3); }
+.add-textarea {
+  width: 100%;
+  min-height: 68px;
+  margin-top: 8px;
+  background: var(--item);
+  border: 1px solid var(--brd);
+  border-radius: 8px;
+  color: var(--t1);
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 11px 14px;
+  outline: none;
+  resize: vertical;
+  font-family: 'JetBrains Mono', monospace;
+}
+.add-textarea:focus {
+  border-color: var(--red);
+  background: var(--item-on);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12);
+}
+.add-textarea::placeholder { color: var(--t3); }
 .add-btn {
   padding: 13px 22px;
   background: var(--red);
@@ -3781,6 +3857,54 @@ body::after {
   text-decoration-thickness: 1.5px;
 }
 .row-sub { font-size: 11px; color: var(--t3); }
+.step-progress {
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.subtask-list {
+  display: grid;
+  gap: 5px;
+  margin-top: 8px;
+}
+.subtask-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 24px;
+  padding: 3px 8px 3px 2px;
+  border-radius: 8px;
+  color: var(--t2);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.subtask-row:hover {
+  background: rgba(var(--accent-rgb), 0.08);
+  color: var(--t1);
+}
+.subtask-row.done {
+  color: var(--t3);
+}
+.subtask-row.done .subtask-text {
+  text-decoration: line-through;
+  text-decoration-color: rgba(var(--accent-rgb), 0.35);
+}
+.subtask-check.check-diamond {
+  width: 14px;
+  height: 14px;
+  border-width: 1px;
+}
+.subtask-check.check-diamond svg path {
+  stroke-width: 3.4;
+}
+.subtask-text {
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.3;
+  word-break: break-word;
+}
 .row-streak {
   font-family: 'Oswald', sans-serif;
   font-weight: 700;
